@@ -8,10 +8,23 @@ namespace SMMS.Domain.Interface.Repositories
 {
 	public interface IRepositoryManager
 	{
-		//Fill with each interface entity repository
+		IBlogRepository BlogRepository { get; }
+		IClassRepository ClassRepository { get; }
+		IConselingRepository ConselingRepository { get; }
+		IDocumentRepository DocumentRepository { get; }
+		IHealthActivityRepository HealthActivityRepository { get; }
+		IHealthCheckupRepository HealthCheckRepository { get; }
+		IHealthProfileRepository HealthProfileRepository { get; }
+		IMedicalIncidentRepository MedicalIncidentRepository { get; }
+		IMedicalRequestRepository MedicalRequestRepository { get; }
+		IMedicalStockRepository MedicalStockRepository { get; }
+		IMedicalUsageRepository MedicalUsageRepository { get; }
+		INotificationRepository NotificationRepository { get; }
+		IRoleRepository RoleRepository { get; }
+		IStudentRepository StudentRepository { get; }
 		IUserRepository UserRepository { get; }
-		//Fill with each entity repository
-
+		IVaccinationCampaignRepository VaccinationCampaignRepository { get; }
+		IVaccinationRecordRepository VaccinationRecordRepository { get; }
 		Task SaveAsync();
 	}
 }
