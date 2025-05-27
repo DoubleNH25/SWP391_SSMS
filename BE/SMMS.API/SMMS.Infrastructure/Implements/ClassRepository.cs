@@ -4,7 +4,7 @@ using SMMS.Infrastructure.Context;
 
 namespace SMMS.Infrastructure.Implements
 {
-    public class ClassRepository : RepositoryBase<Class>, IClassRepository
+    public class ClassRepository : RepositoryBase<SchoolClass>, IClassRepository
     {
         public ClassRepository(DatabaseContext context) : base(context) { }
     }

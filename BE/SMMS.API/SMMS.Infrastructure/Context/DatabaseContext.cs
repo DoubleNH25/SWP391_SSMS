@@ -11,7 +11,7 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<ActivityConsent> ActivityConsent { get; set; }
         public virtual DbSet<Blog> Blog { get; set; }
-        public virtual DbSet<Class> Class { get; set; }
+        public virtual DbSet<SchoolClass> SchoolClass { get; set; }
         public virtual DbSet<ConselingSchedule> ConselingSchedule { get; set; }
         public virtual DbSet<Document> Document { get; set; }
         public virtual DbSet<HealthActivity> HealthActivity { get; set; }
@@ -26,8 +26,9 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<Student> Student { get; set; }
         public virtual DbSet<VaccinationCampaign> VaccinationCampaign { get; set; }
         public virtual DbSet<VaccinationRecord> VaccinationRecord { get; set; }
+		public virtual DbSet<Otp> Otps { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // User - Role (N-1)
             modelBuilder.Entity<User>()
@@ -57,7 +58,7 @@ namespace SMMS.Infrastructure.Context
                     .WithMany(u => u.Students)
                     .HasForeignKey(ur => ur.ParentId)
                     .OnDelete(DeleteBehavior.Restrict);
-                student.HasOne(ur => ur.Class)
+                student.HasOne(ur => ur.SchoolClass)
                     .WithMany(r => r.Students)
                     .HasForeignKey(ur => ur.ClassId)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -184,14 +185,29 @@ namespace SMMS.Infrastructure.Context
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+			modelBuilder.Entity<Otp>(entity =>
+			{
+				entity.HasKey(e => e.Id);
 
-            //===================================================Seed data================================================================
+				entity.HasOne(o => o.User)
+					.WithMany(u => u.Otps)
+					.HasForeignKey(o => o.UserId)
+					.OnDelete(DeleteBehavior.SetNull); // Changed from Cascade to SetNull
 
-            //role
-            var roleIdAdmin = Guid.NewGuid().ToString();
-            var roleIdUser = Guid.NewGuid().ToString();
+				entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(15);
+				entity.Property(e => e.OtpCode).IsRequired().HasMaxLength(6);
+				entity.Property(e => e.ExpirationTime).IsRequired();
+				entity.Property(e => e.IsUsed).IsRequired();
+				entity.Property(e => e.UserId).IsRequired(false); // Explicitly nullable
+			});
+			//===================================================Seed data================================================================
+
+			//role
+			var roleIdAdmin = Guid.NewGuid().ToString();
+            var roleIdNurse = Guid.NewGuid().ToString();
             var roleIdManager = Guid.NewGuid().ToString();
-            modelBuilder.Entity<Role>().HasData(
+			var roleIdParent = Guid.NewGuid().ToString();
+			modelBuilder.Entity<Role>().HasData(
                 new Role
                 {
                     Id = roleIdAdmin,
@@ -209,18 +225,27 @@ namespace SMMS.Infrastructure.Context
                 },
                 new Role
                 {
-                    Id = roleIdUser,
-                    RoleName = "User",
+                    Id = roleIdNurse,
+                    RoleName = "Nurse",
                     CreatedBy = "System",
                     CreatedTime = DateTimeOffset.UtcNow,
                     LastUpdatedTime = DateTimeOffset.UtcNow
-                });
+                },
+			    new Role
+			    {
+				    Id = roleIdParent,
+				    RoleName = "Parent",
+				    CreatedBy = "System",
+				    CreatedTime = DateTimeOffset.UtcNow,
+				    LastUpdatedTime = DateTimeOffset.UtcNow
+			    });
 
-            // user
-            var adminId = Guid.NewGuid().ToString();
-            var userId = Guid.NewGuid().ToString();
+			// user
+			var adminId = Guid.NewGuid().ToString();
+            var nurseId = Guid.NewGuid().ToString();
             var managerId = Guid.NewGuid().ToString();
-            modelBuilder.Entity<User>().HasData(
+			var parentId = Guid.NewGuid().ToString();
+			modelBuilder.Entity<User>().HasData(
                 new User
                 {
                     Id = adminId,
@@ -234,9 +259,9 @@ namespace SMMS.Infrastructure.Context
                 },
                 new User
                 {
-                    Id = userId,
-                    RoleId = roleIdUser,
-                    Email = "user@gmail.com",
+                    Id = nurseId,
+                    RoleId = roleIdNurse,
+                    Email = "nurse@gmail.com",
                     FullName = "Jack97",
                     Phone = "0912345678",
                     Password = BCrypt.Net.BCrypt.HashPassword("123"),
@@ -253,7 +278,18 @@ namespace SMMS.Infrastructure.Context
                     Password = BCrypt.Net.BCrypt.HashPassword("123"),
                     CreatedBy = "SeedData",
                     CreatedTime = DateTimeOffset.UtcNow,
-                });
-        }
+                },
+			    new User
+			    {
+				    Id = parentId,
+				    RoleId = roleIdParent,
+				    Email = "parent@gmail.com",
+				    FullName = "KietBap",
+				    Phone = "0987051234",
+				    Password = BCrypt.Net.BCrypt.HashPassword("123"),
+				    CreatedBy = "SeedData",
+				    CreatedTime = DateTimeOffset.UtcNow
+			    });
+		}
     }
 }

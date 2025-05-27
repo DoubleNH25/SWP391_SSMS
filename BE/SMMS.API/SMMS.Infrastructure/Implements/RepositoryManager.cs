@@ -25,6 +25,7 @@ namespace SMMS.Infrastructure.Implements
 		private IUserRepository _userRepository;
 		private IVaccinationCampaignRepository _vaccinationCampaignRepository;
 		private IVaccinationRecordRepository _vaccinationRecordRepository;
+		private IOtpRepository _otpRepository;
 
 
 		public RepositoryManager(DatabaseContext context)
@@ -49,6 +50,7 @@ namespace SMMS.Infrastructure.Implements
 			_studentRepository = new StudentRepository(context);
 			_vaccinationCampaignRepository = new VaccinationCampaignRepository(context);
 			_vaccinationRecordRepository = new VaccinationRecordRepository(context);
+			_otpRepository = new OtpRepository(_context);
 		}
 
 		public IUserRepository UserRepository { get { return _userRepository; } }
@@ -86,6 +88,8 @@ namespace SMMS.Infrastructure.Implements
 		public IVaccinationCampaignRepository VaccinationCampaignRepository { get { return _vaccinationCampaignRepository; } }
 
 		public IVaccinationRecordRepository VaccinationRecordRepository { get { return _vaccinationRecordRepository; } }
+
+		public IOtpRepository OtpRepository { get { return _otpRepository; } }
 
 		public Task SaveAsync() => _context.SaveChangesAsync();
 	}

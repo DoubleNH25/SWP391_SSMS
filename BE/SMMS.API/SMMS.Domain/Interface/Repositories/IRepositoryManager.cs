@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace SMMS.Domain.Interface.Repositories
 {
 	public interface IRepositoryManager
@@ -25,6 +20,7 @@ namespace SMMS.Domain.Interface.Repositories
 		IUserRepository UserRepository { get; }
 		IVaccinationCampaignRepository VaccinationCampaignRepository { get; }
 		IVaccinationRecordRepository VaccinationRecordRepository { get; }
+		IOtpRepository OtpRepository { get; }
 		Task SaveAsync();
 	}
 }
