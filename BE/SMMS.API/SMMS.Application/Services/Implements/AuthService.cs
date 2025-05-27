@@ -56,7 +56,7 @@ namespace SMMS.Application.Services.Implements
 				_repositoryManager.UserRepository.Create(user);
 				await _repositoryManager.SaveAsync();
 			}
-			else if (user.Role.RoleName != "User")
+			else if (user.Role.RoleName != "Parent")
 			{
 				throw new Exception("OTP login is only for parents");
 			}
