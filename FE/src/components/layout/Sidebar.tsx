@@ -7,20 +7,42 @@ import {
 
 export function Sidebar() {
   return (
-    <aside className="w-64 bg-white p-4 border-r h-full">
-      <NavigationMenu>
-        <NavigationMenuList className="flex flex-col gap-2">
-          <NavigationMenuItem>
+    <aside className="w-full h-40 bg-green-400">
+      {/* ================= */}
+      <NavigationMenu className="w-100 mt-5">
+        <NavigationMenuList className="px-5">
+          <NavigationMenuItem className="flex flex-nowrap px-5">
             <a href="/" className="text-sm font-medium">
-              Trang chủ
+              Logo
             </a>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <a href="/students" className="text-sm font-medium">
-              Quản lý học sinh
+        </NavigationMenuList>
+        <NavigationMenuList className="px-5">
+          <NavigationMenuItem className="p-2">
+            <a href="/" className="text-sm font-medium">
+              About Us
             </a>
           </NavigationMenuItem>
-          {/* Thêm mục khác */}
+          <NavigationMenuItem className="p-2">
+            <a href="/" className="text-sm font-medium">
+              Treatments
+            </a>
+          </NavigationMenuItem>
+          <NavigationMenuItem className="p-2">
+            <a href="/" className="text-sm font-medium">
+              Contact Us
+            </a>
+          </NavigationMenuItem>
+          <NavigationMenuItem className="p-2">
+            <a href="/" className="text-sm font-medium">
+              Blog
+            </a>
+          </NavigationMenuItem>
+          <NavigationMenuItem className="p-2 border-2 rounded-md">
+            <a href="/" className="text-sm font-medium">
+              Book Appointment
+            </a>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
     </aside>
