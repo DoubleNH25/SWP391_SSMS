@@ -103,5 +103,65 @@ namespace SMMS.API.Controllers
 
 			return Ok("Students and parents imported successfully.");
 		}
+
+		[HttpGet("parents/students")]
+		[Authorize(Roles = "Parent")]
+		public async Task<IActionResult> GetMyStudents()
+		{
+			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(parentId)) return Unauthorized();
+			var students = await _userService.GetMyStudentsAsync(parentId);
+			return Ok(students);
+		}
+
+		[HttpGet("students")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> GetAllStudents()
+		{
+			var students = await _userService.GetAllStudentsAsync();
+			return Ok(students);
+		}
+
+		[HttpPost("parents/students")]
+		[Authorize(Roles = "Parent")]
+		public async Task<IActionResult> CreateStudent([FromForm] StudentRequest request)
+		{
+			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(parentId)) return Unauthorized();
+			var result = await _userService.CreateStudentAsync(parentId, request);
+			if (!result) return BadRequest("Failed to create student.");
+			return Ok("Student created successfully.");
+		}
+
+		[HttpPost("students")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> CreateStudentForAdmin([FromForm] StudentRequest request, string parentId)
+		{
+			var result = await _userService.CreateStudentAsync(parentId, request);
+			if (!result) return BadRequest("Failed to create student.");
+			return Ok("Student created successfully.");
+		}
+
+		[HttpPut("students/{studentId}")]
+		[Authorize(Roles = "Parent,Admin")]
+		public async Task<IActionResult> UpdateStudent(string studentId, [FromForm] StudentRequest request)
+		{
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(userId)) return Unauthorized();
+			var result = await _userService.UpdateStudentAsync(studentId, userId, request);
+			if (!result) return BadRequest("Failed to update student.");
+			return NoContent();
+		}
+
+		[HttpDelete("students/{studentId}")]
+		[Authorize(Roles = "Parent,Admin")]
+		public async Task<IActionResult> DeleteStudent(string studentId)
+		{
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(userId)) return Unauthorized();
+			var result = await _userService.DeleteStudentAsync(studentId, userId);
+			if (!result) return BadRequest("Failed to delete student.");
+			return NoContent();
+		}
 	}
 }

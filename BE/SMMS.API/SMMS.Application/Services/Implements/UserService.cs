@@ -133,5 +133,125 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
+
+		public async Task<List<StudentResponse>> GetMyStudentsAsync(string parentId)
+		{
+			var students = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.ParentId == parentId, false)
+				.Select(s => new StudentResponse
+				{
+					Id = s.Id,
+					FullName = s.FullName,
+					Gender = s.Gender,
+					DateOfBirth = s.DateOfBirth,
+					ClassId = s.ClassId,
+					Image = s.Image
+				}).ToList();
+			return students;
+		}
+
+		public async Task<List<StudentResponse>> GetAllStudentsAsync()
+		{
+			var students = _repositoryManager.StudentRepository
+				.FindAll(false)
+				.Select(s => new StudentResponse
+				{
+					Id = s.Id,
+					FullName = s.FullName,
+					Gender = s.Gender,
+					DateOfBirth = s.DateOfBirth,
+					ClassId = s.ClassId,
+					Image = s.Image
+				}).ToList();
+			return students;
+		}
+
+		public async Task<bool> CreateStudentAsync(string parentId, StudentRequest request)
+		{
+			var parent = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == parentId && u.Role.RoleName == "Parent", false)
+				.FirstOrDefault();
+			if (parent == null) return false;
+
+			var student = new Student
+			{
+				ParentId = parentId,
+				ClassId = request.ClassId,
+				FullName = request.FullName,
+				Gender = request.Gender,
+				DateOfBirth = request.DateOfBirth,
+				CreatedBy = parentId,
+				CreatedTime = DateTimeOffset.UtcNow
+			};
+
+			if (request.Image != null)
+			{
+				var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
+				if (!string.IsNullOrEmpty(imageUrl))
+				{
+					student.Image = imageUrl;
+				}
+			}
+
+			_repositoryManager.StudentRepository.Create(student);
+			await _repositoryManager.SaveAsync();
+			return true;
+		}
+
+		public async Task<bool> UpdateStudentAsync(string studentId, string userId, StudentRequest request)
+		{
+			var student = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == studentId, true)
+				.FirstOrDefault();
+			if (student == null) return false;
+
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.FirstOrDefault();
+			if (user == null || (user.Role.RoleName != "Admin" && student.ParentId != userId))
+				return false;
+
+			if (request.FullName != null) student.FullName = request.FullName;
+			if (request.Gender != null) student.Gender = request.Gender;
+			if (request.DateOfBirth != default) student.DateOfBirth = request.DateOfBirth;
+			if (request.ClassId != null) student.ClassId = request.ClassId;
+
+			if (request.Image != null)
+			{
+				var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
+				if (!string.IsNullOrEmpty(imageUrl))
+				{
+					student.Image = imageUrl;
+				}
+			}
+
+			student.LastUpdatedBy = userId;
+			student.LastUpdatedTime = DateTimeOffset.UtcNow;
+
+			_repositoryManager.StudentRepository.Update(student);
+			await _repositoryManager.SaveAsync();
+			return true;
+		}
+
+		public async Task<bool> DeleteStudentAsync(string studentId, string userId)
+		{
+			var student = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == studentId, true)
+				.FirstOrDefault();
+			if (student == null) return false;
+
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.FirstOrDefault();
+			if (user == null || (user.Role.RoleName != "Admin" && student.ParentId != userId))
+				return false;
+
+			student.DeletedBy = userId;
+			student.DeletedTime = DateTimeOffset.UtcNow;
+
+			_repositoryManager.StudentRepository.Update(student);
+			await _repositoryManager.SaveAsync();
+			return true;
+		}
 	}
 }
