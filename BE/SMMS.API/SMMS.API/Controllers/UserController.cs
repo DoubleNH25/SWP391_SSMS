@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
-using SMMS.Application.Services.Implements;
+using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
 using System.Security.Claims;
 
@@ -85,6 +85,23 @@ namespace SMMS.API.Controllers
 			var result = await _userService.UpdateMyProfileAsync(userId, request);
 			if (!result) return BadRequest("Failed to update profile.");
 			return NoContent();
+		}
+
+		[HttpPost("import-students")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> ImportStudents(IFormFile file)
+		{
+			if (file == null || file.Length == 0)
+			{
+				return BadRequest("No file uploaded.");
+			}
+
+			using (var stream = file.OpenReadStream())
+			{
+				await _importService.ImportStudentsFromExcelAsync(stream);
+			}
+
+			return Ok("Students and parents imported successfully.");
 		}
 	}
 }
