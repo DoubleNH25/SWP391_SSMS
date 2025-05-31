@@ -9,10 +9,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="w-full bg-green-400">
+    <div className="w-full bg-green">
       <main className="h-40 ">
-        <Header />
-        <Hero />
+        <Sidebar/>
+        {/* <Header />
+        <Hero /> */}
       </main>
       
       <section className="p-6 bg-gray-50">

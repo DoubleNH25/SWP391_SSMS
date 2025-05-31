@@ -41,7 +41,7 @@ export default function Blog() {
 
                 {/*List blog */}
                 {[1, 2,4,43,324].map((_, index) => (
-                    <div className="lg:max-w-[651px] w-full flex flex-col sm:flex-row sm:items-center rounded-xl">
+                    <div key={index} className="lg:max-w-[651px] w-full flex flex-col sm:flex-row sm:items-center rounded-xl">
                         <div className="max-w-full mx-auto border-2 w-[1280px] flex flex-col justify-center lg:flex-row lg:items-start gap-6 lg:gap-8 bg-white shadow-lg rounded-xl p-2 lg:p-6 mt-5 mx-2 lg:mx-2">
 
                             <div className="lg:max-w-[536px] w-full">

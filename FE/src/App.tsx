@@ -1,11 +1,26 @@
-import { Outlet } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
+import AppLayout from "./components/layout/AppLayout";
+import StudentProfiles from "./pages/StudentProfiles";
+import Login from "./pages/Login";
+import ConfirmOTP from "./pages/ConfirmOTP";
+import Blog from "./pages/Blog";
+import { Calendar } from "lucide-react";
 
 function App() {
   return (
-    <Layout>
-      <Outlet />
-    </Layout>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route path="/student" element={<StudentProfiles />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/confirm-otp" element={<ConfirmOTP />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/calendar" element={<Calendar />} />
+          </Route>
+        </Routes>
+      </Router>
+    </>
   );
 }
 
