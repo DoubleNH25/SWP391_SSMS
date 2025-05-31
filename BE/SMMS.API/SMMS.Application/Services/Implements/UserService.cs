@@ -253,5 +253,83 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
+
+		public async Task<List<StudentHealthResponse>> GetMyStudentsHealthProfileAsync(string parentId)
+		{
+			var students = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
+				.Select(s => new StudentHealthResponse
+				{
+					Id = s.Id,
+					FullName = s.FullName,
+					Gender = s.Gender,
+					DateOfBirth = s.DateOfBirth,
+					ClassId = s.ClassId,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault()
+				}).ToList();
+			return students;
+		}
+
+		public async Task<bool> UpdateHealthProfileByParentAsync(string studentId, HealthProfileRequest request, string parentId)
+		{
+			// Kiểm tra xem học sinh có tồn tại và thuộc về phụ huynh này không
+			var student = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == studentId && s.ParentId == parentId && s.DeletedTime == null, false)
+				.FirstOrDefault();
+			if (student == null) return false;
+
+			// Lấy hồ sơ sức khỏe hiện tại của học sinh (chưa bị xóa mềm)
+			var healthProfile = _repositoryManager.HealthProfileRepository
+				.FindByCondition(hp => hp.StudentId == studentId && hp.DeletedTime == null, true)
+				.FirstOrDefault();
+
+			if (healthProfile == null)
+			{
+				// Nếu chưa có hồ sơ sức khỏe, tạo mới
+				healthProfile = new HealthProfile
+				{
+					StudentId = studentId,
+					Vision = request.Vision,
+					Hearing = request.Hearing,
+					Dental = request.Dental,
+					BMI = request.BMI,
+					AbnormalNote = request.AbnormalNote,
+					VaccinationHistory = request.VaccinationHistory,
+					CreatedBy = parentId,
+					CreatedTime = DateTimeOffset.UtcNow
+				};
+				_repositoryManager.HealthProfileRepository.Create(healthProfile);
+			}
+			else
+			{
+				// Nếu đã có, cập nhật thông tin
+				healthProfile.Vision = request.Vision;
+				healthProfile.Hearing = request.Hearing;
+				healthProfile.Dental = request.Dental;
+				healthProfile.BMI = request.BMI;
+				healthProfile.AbnormalNote = request.AbnormalNote;
+				healthProfile.VaccinationHistory = request.VaccinationHistory;
+				healthProfile.LastUpdatedBy = parentId;
+				healthProfile.LastUpdatedTime = DateTimeOffset.UtcNow;
+				_repositoryManager.HealthProfileRepository.Update(healthProfile);
+			}
+
+			await _repositoryManager.SaveAsync();
+			return true;
+		}
+
 	}
 }

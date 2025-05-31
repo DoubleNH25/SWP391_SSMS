@@ -42,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
 		Name = "Authorization",
 		In = ParameterLocation.Header,
 		Type = SecuritySchemeType.Http,
-		Scheme = "bearer", // chú ý chữ thường
+		Scheme = "bearer",
 		BearerFormat = "JWT"
 	});
 	c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -72,6 +72,13 @@ builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<INurseService, NurseService>();
+builder.Services.AddScoped<IHealthActivityService, HealthActivityService>();
+builder.Services.AddScoped<IVaccinationCampaignService, VaccinationCampaignService>();
+builder.Services.AddScoped<IActivityConsentService, ActivityConsentService>();
+builder.Services.AddScoped<IVaccinationRecordService, VaccinationRecordService>();
+builder.Services.AddScoped<IHealthCheckupService, HealthCheckupService>();
+builder.Services.AddScoped<IConselingService, ConselingService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 

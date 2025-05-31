@@ -15,7 +15,9 @@ namespace SMMS.Domain.Entity
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime ScheduledDate { get; set; }
-        public virtual ICollection<HealthCheckupRecord> HealthCheckupRecords { get; set; }
+
+        public bool IsAccepted { get; set; }
+		public virtual ICollection<HealthCheckupRecord> HealthCheckupRecords { get; set; }
         public virtual ICollection<ActivityConsent> ActivityConsents { get; set; }
     }
 }

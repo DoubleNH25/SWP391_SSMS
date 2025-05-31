@@ -104,16 +104,6 @@ namespace SMMS.API.Controllers
 			return Ok("Students and parents imported successfully.");
 		}
 
-		[HttpGet("parents/students")]
-		[Authorize(Roles = "Parent")]
-		public async Task<IActionResult> GetMyStudents()
-		{
-			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized();
-			var students = await _userService.GetMyStudentsAsync(parentId);
-			return Ok(students);
-		}
-
 		[HttpGet("students")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> GetAllStudents()

@@ -18,21 +18,18 @@ namespace SMMS.Domain.Entity
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
 
-        [Required]
-        public string VaccinationCampaignId { get; set; }
+        public string? VaccinationCampaignId { get; set; }
 
         [ForeignKey("VaccinationCampaignId")]
         public virtual VaccinationCampaign VaccinationCampaign { get; set; }
-
-        [Required]
-        public string HealthActivityId { get; set; }
+        public string? HealthActivityId { get; set; }
 
         [ForeignKey("HealthActivityId")]
         public virtual HealthActivity HealthActivity { get; set; }
 
-        public string Comments { get; set; }
+        public string? Comments { get; set; }
         public bool Status { get; set; } 
         public DateTime ScheduleTime { get; set; }
-        public string ActivityType { get; set; }
+        public string? ActivityType { get; set; }
     }
 }

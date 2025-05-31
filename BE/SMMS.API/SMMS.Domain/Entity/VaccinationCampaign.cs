@@ -10,7 +10,8 @@ namespace SMMS.Domain.Entity
         public DateTime MFG { get; set; }
         public string VaccineType { get; set; }
         public DateTime StartDate { get; set; }
-        public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; }
+		public bool IsAccepted { get; set; }
+		public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; }
         public virtual ICollection<ActivityConsent> ActivityConsents { get; set; }
     }
 }

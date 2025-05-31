@@ -94,16 +94,18 @@ namespace SMMS.Infrastructure.Context
                 AC.HasOne(ur => ur.VaccinationCampaign)
                     .WithMany(r => r.ActivityConsents)
                     .HasForeignKey(ur => ur.VaccinationCampaignId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                AC.HasOne(ur => ur.User)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false); // Explicitly nullable
+				AC.HasOne(ur => ur.User)
                     .WithMany(r => r.ActivityConsents)
                     .HasForeignKey(ur => ur.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
                 AC.HasOne(ur => ur.HealthActivity)
                     .WithMany(r => r.ActivityConsents)
                     .HasForeignKey(ur => ur.HealthActivityId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
+                    .OnDelete(DeleteBehavior.Restrict)
+					.IsRequired(false); // Explicitly nullable
+			});
 
             // HealthActivity - User (N-1)
             modelBuilder.Entity<HealthActivity>()
@@ -290,6 +292,138 @@ namespace SMMS.Infrastructure.Context
 				    CreatedBy = "SeedData",
 				    CreatedTime = DateTimeOffset.UtcNow
 			    });
+			// SchoolClass
+			var classId1 = Guid.NewGuid().ToString();
+			var classId2 = Guid.NewGuid().ToString();
+			modelBuilder.Entity<SchoolClass>().HasData(
+				new SchoolClass
+				{
+					Id = classId1,
+					ClassName = "Class 10A",
+					ClassRoom = "Room 101",
+					Quantity = 30,
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				},
+				new SchoolClass
+				{
+					Id = classId2,
+					ClassName = "Class 10B",
+					ClassRoom = "Room 102",
+					Quantity = 28,
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				});
+
+			// Student
+			var studentId1 = Guid.NewGuid().ToString();
+			var studentId2 = Guid.NewGuid().ToString();
+			modelBuilder.Entity<Student>().HasData(
+				new Student
+				{
+					Id = studentId1,
+					ParentId = parentId,
+					ClassId = classId1,
+					FullName = "Nguyen Van A",
+					Gender = "Male",
+					DateOfBirth = new DateTime(2010, 5, 15),
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				},
+				new Student
+				{
+					Id = studentId2,
+					ParentId = parentId,
+					ClassId = classId2,
+					FullName = "Tran Thi B",
+					Gender = "Female",
+					DateOfBirth = new DateTime(2010, 8, 20),
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				});
+			modelBuilder.Entity<HealthProfile>().HasData(
+				new HealthProfile
+				{
+					Id = Guid.NewGuid().ToString(),
+					StudentId = studentId1,
+					Vision = "20/20",
+					Hearing = "Normal",
+					Dental = "No cavities",
+					BMI = 20.5,
+					AbnormalNote = "None",
+					VaccinationHistory = "Fully vaccinated",
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				},
+				new HealthProfile
+				{
+					Id = Guid.NewGuid().ToString(),
+					StudentId = studentId2,
+					Vision = "20/25",
+					Hearing = "Normal",
+					Dental = "Minor cavities",
+					BMI = 19.8,
+					AbnormalNote = "Monitor dental health",
+					VaccinationHistory = "Fully vaccinated",
+					CreatedBy = "System",
+					CreatedTime = DateTimeOffset.UtcNow
+				});
+			var healthActivityId1 = Guid.NewGuid().ToString();
+			var healthActivityId2 = Guid.NewGuid().ToString();
+			modelBuilder.Entity<HealthActivity>().HasData(
+				new HealthActivity
+				{
+					Id = healthActivityId1,
+					UserId = nurseId,
+					Name = "Annual Health Checkup 2025",
+					Description = "Routine health checkup for all students",
+					ScheduledDate = new DateTime(2025, 6, 15),
+					IsAccepted = false,
+					CreatedBy = nurseId,
+					CreatedTime = DateTimeOffset.UtcNow
+				},
+				new HealthActivity
+				{
+					Id = healthActivityId2,
+					UserId = nurseId,
+					Name = "Vision Screening 2025",
+					Description = "Vision screening for students in grades 10",
+					ScheduledDate = new DateTime(2025, 7, 10),
+					IsAccepted = false,
+					CreatedBy = nurseId,
+					CreatedTime = DateTimeOffset.UtcNow
+				});
+
+			// VaccinationCampaign
+			var vaccinationCampaignId1 = Guid.NewGuid().ToString();
+			var vaccinationCampaignId2 = Guid.NewGuid().ToString();
+			modelBuilder.Entity<VaccinationCampaign>().HasData(
+				new VaccinationCampaign
+				{
+					Id = vaccinationCampaignId1,
+					Name = "Flu Vaccination 2025",
+					VaccineName = "Influenza Vaccine",
+					EXP = new DateTime(2026, 12, 31),
+					MFG = new DateTime(2025, 1, 1),
+					VaccineType = "Influenza",
+					StartDate = new DateTime(2025, 10, 1),
+					IsAccepted = false,
+					CreatedBy = nurseId,
+					CreatedTime = DateTimeOffset.UtcNow
+				},
+				new VaccinationCampaign
+				{
+					Id = vaccinationCampaignId2,
+					Name = "HPV Vaccination 2025",
+					VaccineName = "HPV Vaccine",
+					EXP = new DateTime(2027, 6, 30),
+					MFG = new DateTime(2025, 1, 1),
+					VaccineType = "HPV",
+					StartDate = new DateTime(2025, 11, 15),
+					IsAccepted = false,
+					CreatedBy = nurseId,
+					CreatedTime = DateTimeOffset.UtcNow
+				});
 		}
     }
 }
