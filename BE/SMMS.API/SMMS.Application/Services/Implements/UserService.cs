@@ -1,4 +1,5 @@
-﻿using SMMS.Application.DataObject.RequestObject;
+﻿using Microsoft.EntityFrameworkCore;
+using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
@@ -154,6 +155,7 @@ namespace SMMS.Application.Services.Implements
 		{
 			var students = _repositoryManager.StudentRepository
 				.FindAll(false)
+				.Include(s => s.SchoolClass)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
@@ -161,6 +163,7 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
+					SchoolClass = s.SchoolClass,
 					Image = s.Image
 				}).ToList();
 			return students;
