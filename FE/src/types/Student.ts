@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+export interface Student {
+  id: number;
+  fullName: string;
+  age: number;
+  className: string;
+=======
+>>>>>>> phucc
 export interface SchoolClass {
   className: string;
   classRoom: string;
@@ -36,4 +46,8 @@ export interface StudentUpdate {
   dateOfBirth: string;
   classId: string;
   image: File | null;
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
 }

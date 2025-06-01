@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+=======
+<<<<<<< HEAD
+<Project Sdk="Microsoft.NET.Sdk.Web">
+=======
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,12 +15,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> phucc
     <PackageReference Include="FirebaseAdmin" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 

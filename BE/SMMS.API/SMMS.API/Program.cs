@@ -1,3 +1,28 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+=======
+>>>>>>> phucc
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -118,8 +143,20 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthentication();
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
 app.UseAuthorization();
 
 app.MapControllers();
 
+<<<<<<< HEAD
 app.Run();
+=======
+<<<<<<< HEAD
+app.Run();
+=======
+app.Run();
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc

@@ -12,6 +12,11 @@ Phần mềm quản lý y tế học đường"	"Phần mềm quản lý y tế 
           << Gửi phiếu thông báo kiểm tra y tế các nội dung kiểm tra cho phụ huynh xác nhận --> Chuẩn bị danh sách học sinh kiểm tra --> Thực hiện kiểm tra và ghi nhận kết quả --> Gửi kết quả cho phụ huynh và lập lịch hẹn tư vấn riêng nếu có dấu hiệu bất thường >>
 - Quản lý hồ sơ người dùng, lịch sử kiểm tra y tế.
 - Dashboard & Report."
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> phucc
 
 📖 API Documentation
 
@@ -287,4 +292,9 @@ PUT /api/users/students/{studentId} - Cập nhật một học sinh. (Parent, Ad
 
 
 
+<<<<<<< HEAD
 DELETE /api/users/students/{studentId} - Xóa một học sinh. (Parent, Admin)
+=======
+DELETE /api/users/students/{studentId} - Xóa một học sinh. (Parent, Admin)
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc

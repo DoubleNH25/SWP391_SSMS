@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> phucc
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="CloudinaryDotNet" Version="1.27.5" />
     <PackageReference Include="EPPlus" Version="8.0.5" />
@@ -14,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
     <ProjectReference Include="..\SMMS.Domain\SMMS.Domain.csproj" />
     <ProjectReference Include="..\SMMS.Infrastructure\SMMS.Infrastructure.csproj" />
   </ItemGroup>

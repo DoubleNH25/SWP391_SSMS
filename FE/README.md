@@ -1,4 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> phucc
 "School Medical Management System
 
 Phần mềm quản lý y tế học đường"	"Phần mềm quản lý y tế học đường cho phòng y tế của 01 trường học.
@@ -14,6 +19,10 @@ Phần mềm quản lý y tế học đường"	"Phần mềm quản lý y tế 
 - Quản lý hồ sơ người dùng, lịch sử kiểm tra y tế.
 - Dashboard & Report."
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -68,4 +77,11 @@ export default tseslint.config({
   },
 })
 ```
+<<<<<<< HEAD
 >>>>>>> 3c4be67 (update-crud-user-student-healthprofile)
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 3c4be67 (update-crud-user-student-healthprofile)
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc

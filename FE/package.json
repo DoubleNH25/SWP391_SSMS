@@ -18,10 +18,21 @@
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-navigation-menu": "^1.2.13",
     "@radix-ui/react-slot": "^1.2.3",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+=======
+>>>>>>> phucc
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
     "framer-motion": "^12.15.0",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",

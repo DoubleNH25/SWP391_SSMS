@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+
+export default function Login() {
+    const [showPhoneLogin, setShowPhoneLogin] = useState(false);
+    const [showRegister, setShowRegister] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+=======
+>>>>>>> phucc
 import { FecthLogin } from "@/services/AuthService";
 import { LoginRequest, LoginResponse } from "@/types/User";
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
@@ -22,6 +34,10 @@ export default function Login() {
         const { name, value } = e.target;
         setUserLogin((prev) => ({ ...prev, [name]: value }));
     };
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
 
     const handleSubmit = async (e, formType) => {
         e.preventDefault();
@@ -31,20 +47,43 @@ export default function Login() {
             switch (formType) {
                 case "phone":
                     const phone = e.target.phone.value;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                    console.log("Gửi số điện thoại đến backend:", phone);
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                     navigate("/confirm-otp", { state: { phone } });
                     break;
 
                 case "login":
+<<<<<<< HEAD
                     await FecthLogin(userLogin);
                     navigate('/user');
+=======
+<<<<<<< HEAD
+=======
+                    await FecthLogin(userLogin);
+                    navigate('/user');
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                     break;
 
                 case "register":
                     break;
 
                 case "forgotPassword":
+<<<<<<< HEAD
                     const email = e.target.email.value;
                     navigate("/confirm-otp", { state: { email } });
+=======
+<<<<<<< HEAD
+=======
+                    const email = e.target.email.value;
+                    navigate("/confirm-otp", { state: { email } });
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                     break;
 
                 default:
@@ -106,6 +145,18 @@ export default function Login() {
                                         <h3 className="text-slate-900 text-3xl text-center font-semibold">Sign in</h3>
                                     </div>
                                     <div>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                                        <label htmlFor="username" className="text-slate-800 text-sm font-medium mb-2 block">
+                                            User name
+                                        </label>
+                                        <motion.input
+                                            name="username"
+                                            id="username"
+                                            type="text"
+=======
+>>>>>>> phucc
                                         <label htmlFor="email" className="text-slate-800 text-sm font-medium mb-2 block">
                                             Email
                                         </label>
@@ -115,6 +166,10 @@ export default function Login() {
                                             type="text"
                                             onChange={handleInputLoginChange}
                                             value={userLogin.email}
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                                             required
                                             className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600"
                                             placeholder="Enter your name"
@@ -125,6 +180,20 @@ export default function Login() {
                                         <label htmlFor="password" className="text-slate-800 text-sm font-medium mb-2 block">
                                             Password
                                         </label>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                                        <motion.input
+                                            name="password"
+                                            id="password"
+                                            type="password"
+                                            required
+                                            className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600"
+                                            placeholder="Enter password"
+                                            whileFocus={{ scale: 1.02 }}
+                                        />
+=======
+>>>>>>> phucc
                                         <div className="relative">
                                             <motion.input
                                                 name="password"
@@ -149,6 +218,10 @@ export default function Login() {
                                                 )}
                                             </button>
                                         </div>
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                                     </div>
                                     <div className="flex flex-wrap items-center justify-between gap-4">
                                         <div className="flex items-center">
@@ -393,6 +466,19 @@ export default function Login() {
                                     <label htmlFor="password" className="text-sm text-slate-800 font-medium mb-2 block">
                                         Password
                                     </label>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                                    <motion.input
+                                        name="password"
+                                        type="password"
+                                        required
+                                        className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
+                                        placeholder="Enter Password"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+=======
+>>>>>>> phucc
                                     <div className="relative">
                                         <motion.input
                                             name="password"
@@ -414,11 +500,28 @@ export default function Login() {
                                             )}
                                         </button>
                                     </div>
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                                 </div>
                                 <div>
                                     <label htmlFor="re-password" className="text-sm text-slate-800 font-medium mb-2 block">
                                         Confirm Password
                                     </label>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                                    <motion.input
+                                        name="re-password"
+                                        type="password"
+                                        required
+                                        className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
+                                        placeholder="Confirm Password"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+=======
+>>>>>>> phucc
                                     <div className="relative">
                                         <motion.input
                                             name="re-password"
@@ -440,6 +543,10 @@ export default function Login() {
                                             )}
                                         </button>
                                     </div>
+<<<<<<< HEAD
+=======
+>>>>>>> 396da2f (update-crud-user-student-healthprofile)
+>>>>>>> phucc
                                 </div>
                                 <div className="flex justify-end">
                                     <button
