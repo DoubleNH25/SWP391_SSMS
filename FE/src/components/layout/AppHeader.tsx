@@ -1,0 +1,165 @@
+import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { Link } from "react-router";
+import { useSidebar } from "../context/SidebarContext";
+import NotificationDropdown from "../header/NotificationDropdown";
+import UserDropdown from "../header/UserDropdown";
+
+const AppHeader: React.FC = () => {
+  const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleToggle = useCallback(() => {
+    window.innerWidth >= 1024 ? toggleSidebar() : toggleMobileSidebar();
+  }, [toggleSidebar, toggleMobileSidebar]);
+
+  const toggleApplicationMenu = useCallback(() => {
+    setApplicationMenuOpen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-50 flex w-full bg-white border-b border-gray-200">
+      <div className="flex w-full flex-col items-center justify-between lg:flex-row lg:px-6">
+        <div className="flex w-full items-center justify-between gap-4 border-b border-gray-200 px-3 py-3  lg:border-b-0 lg:px-0 lg:py-4">
+          <button
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 text-gray-500"
+            onClick={handleToggle}
+            aria-label="Toggle Sidebar"
+          >
+            {isMobileOpen ? (
+              <svg
+                width={24}
+                height={24}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M6.22 7.28a.75.75 0 011.06 0L12 12l-4.78 4.78a.75.75 0 01-1.06-1.06L10.94 12 6.22 7.28a.75.75 0 010-1.06zM17.78 7.28a.75.75 0 010 1.06L13.06 12l4.78 4.78a.75.75 0 11-1.06 1.06L12 13.06l-4.78 4.78a.75.75 0 01-1.06-1.06L10.94 12 6.22 7.28a.75.75 0 011.06-1.06L12 10.94l4.78-4.66a.75.75 0 011.06 0z"
+                  fill="currentColor"
+                />
+              </svg>
+            ) : (
+              <svg
+                width={16}
+                height={12}
+                viewBox="0 0 16 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M0.58 1c0-.414.34-.75.75-.75h13.33c.42 0 .75.336.75.75s-.33.75-.75.75H1.33c-.41 0-.75-.336-.75-.75zm0 10c0-.414.34-.75.75-.75h13.33c.42 0 .75.336.75.75s-.33.75-.75.75H1.33c-.41 0-.75-.336-.75-.75zm0-5c0-.414.34-.75.75-.75h6.67c.41 0 .75.336.75.75s-.34.75-.75.75H1.33c-.41 0-.75-.336-.75-.75z"
+                  fill="currentColor"
+                />
+              </svg>
+            )}
+          </button>
+
+          <Link to="/" className="lg:hidden">
+            <img
+              className="dark:hidden"
+              src="/images/logo/logo.svg"
+              alt="Logo"
+              width={150}
+              height={40}
+            />
+            <img
+              className="hidden dark:block"
+              src="/images/logo/logo-dark.svg"
+              alt="Logo"
+              width={150}
+              height={40}
+            />
+          </Link>
+
+          <button
+            onClick={toggleApplicationMenu}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 lg:hidden"
+            aria-label="Toggle Application Menu"
+          >
+            <svg
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M6 10.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm12 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+
+          <div className="hidden lg:block">
+            <form>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg
+                    className="fill-gray-500 dark:fill-gray-400"
+                    width={20}
+                    height={20}
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M9.38 3.04a6.33 6.33 0 100 12.67 6.33 6.33 0 000-12.67zm0-1.5a7.83 7.83 0 016.83 11.9l2.82 2.82a.75.75 0 11-1.06 1.06l-2.82-2.82A7.83 7.83 0 119.38 1.54z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search or type command..."
+                  className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 xl:w-[430px]"
+                />
+                <button
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500"
+                  aria-label="Command K shortcut"
+                >
+                  <span>⌘</span>
+                  <span>K</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div
+          className={`w-full px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:py-0 lg:shadow-none ${
+            isApplicationMenuOpen ? "flex" : "hidden"
+          } items-center justify-between gap-4 shadow-theme-md`}
+        >
+          <div className="flex items-center gap-3">
+            <NotificationDropdown />
+            <UserDropdown />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default memo(AppHeader);
