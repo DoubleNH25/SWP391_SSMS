@@ -1,0 +1,28 @@
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
+
+/* 🌈 Custom theme variables (nếu cần dùng cho theming/dark mode) */
+:root {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --background: #ffffff;
+  --foreground: #111827;
+
+  --card: #f9fafb;
+  --card-foreground: #1f2937;
+
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f97316;
+  --secondary-foreground: #ffffff;
+
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+}
+
