@@ -5,8 +5,8 @@ namespace SMMS.Application.Services.Interfaces
 	public interface IActivityConsentService
 	{
 		Task<bool> ConfirmActivityConsentAsync(string activityConsentId, bool status, string parentId);
-		Task<List<ActivityConsentResponse>> GetActivityConsentsByParentIdAsync(string parentId);
-		Task<List<ActivityConsentResponse>> GetActivityConsentsByHealthActivityIdAsync(string healthActivityId);
-		Task<List<ActivityConsentResponse>> GetActivityConsentsByVaccinationCampaignIdAsync(string vaccinationCampaignId);
+		Task<List<ActivityConsentResponse>> GetConsentsByParentIdAsync(string parentId);
+		Task<List<ActivityConsentResponse>> GetConsentsByHAIdAsync(string healthActivityId); //Health Activity
+		Task<List<ActivityConsentResponse>> GetConsentsByVCIdAsync(string vaccinationCampaignId); //Vaccination Campaign
 	}
 }

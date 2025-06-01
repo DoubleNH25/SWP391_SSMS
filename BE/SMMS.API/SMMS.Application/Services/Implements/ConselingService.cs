@@ -66,7 +66,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-		public async Task<List<ConselingResponse>> GetConselingSchedulesByNurseIdAsync(string nurseId)
+		public async Task<List<ConselingResponse>> GetSchedulesByNIdAsync(string nurseId)
 		{
 			var schedules = _repositoryManager.ConselingRepository
 				.FindByCondition(cs => cs.MedicalStaffId == nurseId, false)
@@ -101,7 +101,7 @@ namespace SMMS.Application.Services.Implements
 			return responses;
 
 		}
-		public async Task<List<ConselingResponse>> GetConselingSchedulesByParentIdAsync(string parentId)
+		public async Task<List<ConselingResponse>> GetSchedulesByPIdAsync(string parentId)
 		{
 			var schedules = _repositoryManager.ConselingRepository
 				.FindByCondition(cs => cs.ParentId == parentId, false)

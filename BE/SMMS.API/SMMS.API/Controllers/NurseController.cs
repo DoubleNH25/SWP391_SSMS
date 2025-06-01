@@ -32,6 +32,7 @@ namespace SMMS.API.Controllers
 			return Ok("Health profile created successfully.");
 		}
 
+
 		[HttpGet("health-profiles/{studentId}")]
 		public async Task<IActionResult> GetHealthProfile(string studentId)
 		{
@@ -39,6 +40,7 @@ namespace SMMS.API.Controllers
 			if (healthProfile == null) return NotFound("Health profile not found.");
 			return Ok(healthProfile);
 		}
+
 
 		[HttpPut("health-profiles/{studentId}")]
 		public async Task<IActionResult> UpdateHealthProfile(string studentId, [FromBody] HealthProfileRequest request)
@@ -48,6 +50,7 @@ namespace SMMS.API.Controllers
 			return NoContent();
 		}
 
+
 		[HttpDelete("health-profiles/{studentId}")]
 		public async Task<IActionResult> DeleteHealthProfile(string studentId)
 		{
@@ -55,6 +58,7 @@ namespace SMMS.API.Controllers
 			if (!result) return NotFound("Health profile not found.");
 			return NoContent();
 		}
+
 
 		[HttpPost("health-profiles/import")]
 		public async Task<IActionResult> ImportHealthProfiles(IFormFile file)
@@ -71,54 +75,81 @@ namespace SMMS.API.Controllers
 
 			return Ok("Health profiles imported successfully.");
 		}
+
 		[HttpPut("vaccination-records/{id}")]
 		public async Task<IActionResult> UpdateVaccinationRecord(string id, [FromBody] VaccinationRecordRequest req)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(nurseId))
+			{
+				return Unauthorized("Nurse ID not found in claims.");
+			}
 			var result = await _vaccinationRecordService.UpdateVaccinationRecordAsync(id,req, nurseId);
 			if (!result) return NotFound();
 			return NoContent();
 		}
+
 		[HttpGet("get-all-checkup")]
 		public async Task<IActionResult> GetNurseCheckup()
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(nurseId))
+			{
+				return Unauthorized("Nurse ID not found in claims.");
+			}
 			var schedules = await _healthCheckupService.GetCheckingByNurse(nurseId);
 			if (schedules == null || !schedules.Any()) return NotFound("No checkup found.");
 			return Ok(schedules);
 		}
 
+
 		[HttpPut("health-checkup-records/{id}")]
 		public async Task<IActionResult> UpdateHealthCheckupRecord(string id, [FromBody] HealthCheckupUpdateRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			var result = await _healthCheckupService.UpdateHealthCheckupRecordAsync(id, request, nurseId);
+			if (string.IsNullOrEmpty(nurseId))
+			{
+				return Unauthorized("Nurse ID not found in claims.");
+			}
+			var result = await _healthCheckupService.UpdateCheckupRecordAsync(id, request, nurseId);
 			if (!result) return NotFound();
 			return NoContent();
 		}
+
 		[HttpPut("accept-conseling-schedules")]
 		public async Task<IActionResult> AcceptConselingSchedule([FromBody] AcceptConselingScheduleRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(nurseId))
+			{
+				return Unauthorized("Nurse ID not found in claims.");
+			}
 			var result = await _conselingService.AcceptConselingScheduleAsync(request.ConselingScheduleId, request.ScheduledTime, nurseId);
 			if (!result) return BadRequest("Failed to accept counseling schedule. Schedule not found or nurse ID mismatch.");
 			return Ok(true);
 		}
+
 		[HttpGet("get-all-conseling-schedules")]
 		public async Task<IActionResult> GetAllConselingSchedules()
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			var schedules = await _conselingService.GetConselingSchedulesByNurseIdAsync(nurseId);
+			if (string.IsNullOrEmpty(nurseId))
+			{
+				return Unauthorized("Nurse ID not found in claims.");
+			}
+			var schedules = await _conselingService.GetSchedulesByNIdAsync(nurseId);
 			if (schedules == null || !schedules.Any()) return NotFound("No counseling schedules found.");
 			return Ok(schedules);
 		}
+
 		[HttpGet("health-checkup-records")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetAllHealthCheckupRecords()
 		{
-			var records = await _healthCheckupService.GetAllHealthCheckupRecordsAsync();
+			var records = await _healthCheckupService.GetAllCheckupRecordsAsync();
 			return Ok(records);
 		}
+
 
 		[HttpGet("vaccination-records")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
@@ -127,5 +158,6 @@ namespace SMMS.API.Controllers
 			var records = await _vaccinationRecordService.GetAllVaccinationRecordsAsync();
 			return Ok(records);
 		}
+
 	}
 }

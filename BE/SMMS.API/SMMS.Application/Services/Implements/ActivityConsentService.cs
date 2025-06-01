@@ -63,7 +63,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-		public async Task<List<ActivityConsentResponse>> GetActivityConsentsByParentIdAsync(string parentId)
+		public async Task<List<ActivityConsentResponse>> GetConsentsByParentIdAsync(string parentId)
 		{
 			var consents = _repositoryManager.ConsentRepository
 				.FindByCondition(ac => ac.UserId == parentId, false)
@@ -84,7 +84,7 @@ namespace SMMS.Application.Services.Implements
 			return consents;
 		}
 
-		public async Task<List<ActivityConsentResponse>> GetActivityConsentsByHealthActivityIdAsync(string healthActivityId)
+		public async Task<List<ActivityConsentResponse>> GetConsentsByHAIdAsync(string healthActivityId) //Health Activity
 		{
 			var consents = _repositoryManager.ConsentRepository
 				.FindByCondition(ac => ac.HealthActivityId == healthActivityId, false)
@@ -104,7 +104,7 @@ namespace SMMS.Application.Services.Implements
 			return consents;
 		}
 
-		public async Task<List<ActivityConsentResponse>> GetActivityConsentsByVaccinationCampaignIdAsync(string vaccinationCampaignId)
+		public async Task<List<ActivityConsentResponse>> GetConsentsByVCIdAsync(string vaccinationCampaignId) //Vaccination Campaign
 		{
 			var consents = _repositoryManager.ConsentRepository
 				.FindByCondition(ac => ac.VaccinationCampaignId == vaccinationCampaignId, false)

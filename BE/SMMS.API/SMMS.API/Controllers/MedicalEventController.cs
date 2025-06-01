@@ -26,6 +26,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> CreateHealthActivity([FromBody] HealthActivityRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (nurseId == null) return Unauthorized("Nurse ID not found in claims.");
 			var response = await _healthActivityService.CreateHealthActivityAsync(request, nurseId);
 			return Ok(response);
 		}
@@ -35,6 +36,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> ApproveHealthActivity(string id)
 		{
 			var approverId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (approverId == null) return Unauthorized("Approver ID not found in claims.");
 			var result = await _healthActivityService.ApproveHealthActivityAsync(id, approverId);
 			if (!result) return NotFound();
 			return NoContent();
@@ -59,6 +61,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> UpdateHealthActivity(string id, [FromBody] HealthActivityRequest request)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
 			var result = await _healthActivityService.UpdateHealthActivityAsync(id, request, userId);
 			if (!result) return BadRequest("Cannot update health activity.");
 			return NoContent();
@@ -68,6 +71,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> DeleteHealthActivity(string id)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
 			var result = await _healthActivityService.DeleteHealthActivityAsync(id, userId);
 			if (!result) return BadRequest("Cannot delete health activity.");
 			return NoContent();
@@ -78,6 +82,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> CreateVaccinationCampaign([FromBody] VaccinationCampaignRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (nurseId == null) return Unauthorized("Nurse ID not found in claims.");
 			var response = await _vaccinationCampaignService.CreateVaccinationCampaignAsync(request, nurseId);
 			return Ok(response);
 		}
@@ -87,6 +92,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> ApproveVaccinationCampaign(string id)
 		{
 			var approverId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (approverId == null) return Unauthorized("Approver ID not found in claims.");
 			var result = await _vaccinationCampaignService.ApproveVaccinationCampaignAsync(id, approverId);
 			if (!result) return NotFound();
 			return NoContent();
@@ -112,6 +118,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> UpdateVaccinationCampaign(string id, [FromBody] VaccinationCampaignRequest request)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
 			var result = await _vaccinationCampaignService.UpdateVaccinationCampaignAsync(id, request, userId);
 			if (!result) return BadRequest("Cannot update vaccination campaign.");
 			return NoContent();
@@ -122,6 +129,7 @@ namespace SMMS.API.Controllers
 		public async Task<IActionResult> DeleteVaccinationCampaign(string id)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
 			var result = await _vaccinationCampaignService.DeleteVaccinationCampaignAsync(id, userId);
 			if (!result) return BadRequest("Cannot delete vaccination campaign.");
 			return NoContent();
@@ -131,7 +139,7 @@ namespace SMMS.API.Controllers
 		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetActivityConsentsForHealthActivity(string healthActivityId)
 		{
-			var consents = await _consentService.GetActivityConsentsByHealthActivityIdAsync(healthActivityId);
+			var consents = await _consentService.GetConsentsByHAIdAsync(healthActivityId);
 			return Ok(consents);
 		}
 
@@ -139,8 +147,9 @@ namespace SMMS.API.Controllers
 		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetActivityConsentsForVaccinationCampaign(string vaccinationCampaignId)
 		{
-			var consents = await _consentService.GetActivityConsentsByVaccinationCampaignIdAsync(vaccinationCampaignId);
+			var consents = await _consentService.GetConsentsByVCIdAsync(vaccinationCampaignId);
 			return Ok(consents);
 		}
+
 	}
 }

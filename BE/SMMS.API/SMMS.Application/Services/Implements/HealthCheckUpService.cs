@@ -67,7 +67,7 @@ namespace SMMS.Application.Services.Implements
 
 			return healthCheckups;
 		}
-		public async Task<bool> UpdateHealthCheckupRecordAsync(string healthCheckupRecordId, HealthCheckupUpdateRequest request, string nurseId)
+		public async Task<bool> UpdateCheckupRecordAsync(string healthCheckupRecordId, HealthCheckupUpdateRequest request, string nurseId)
 		{
 			var record = _repositoryManager.HealthCheckRepository
 				.FindByCondition(hcr => hcr.Id == healthCheckupRecordId, true)
@@ -114,7 +114,7 @@ namespace SMMS.Application.Services.Implements
 			};
 			_repositoryManager.HealthProfileRepository.Create(newProfile);
 		}
-		public async Task<List<HealthCheckUpResponse>> GetHealthCheckupRecordsByStudentIdAsync(string studentId)
+		public async Task<List<HealthCheckUpResponse>> GetCheckupRecordsBySIdAsync(string studentId)
 		{
 			return await _repositoryManager.HealthCheckRepository
 				.FindByCondition(hcr => hcr.StudentId == studentId && hcr.DeletedTime == null, false)
@@ -141,7 +141,7 @@ namespace SMMS.Application.Services.Implements
 				.ToListAsync();
 		}
 
-		public async Task<List<HealthCheckUpResponse>> GetAllHealthCheckupRecordsAsync()
+		public async Task<List<HealthCheckUpResponse>> GetAllCheckupRecordsAsync()
 		{
 			return await _repositoryManager.HealthCheckRepository
 				.FindAll(false)
