@@ -21,6 +21,14 @@ namespace SMMS.API.Controllers
 			_consentService = consentService;
 		}
 
+		[HttpGet("health-activities/all")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetAllHealthActivities()
+		{
+			var activities = await _healthActivityService.GetAllHealthActivityAsync();
+			return Ok(activities);
+		}
+
 		[HttpPost("health-activities")]
 		[Authorize(Roles = "Nurse")]
 		public async Task<IActionResult> CreateHealthActivity([FromBody] HealthActivityRequest request)
@@ -56,6 +64,7 @@ namespace SMMS.API.Controllers
 			var activities = await _healthActivityService.GetApprovedHealthActivitiesAsync();
 			return Ok(activities);
 		}
+		
 		[HttpPut("health-activities/{id}")]
 		[Authorize(Roles = "Nurse,Admin,Manager")]
 		public async Task<IActionResult> UpdateHealthActivity(string id, [FromBody] HealthActivityRequest request)

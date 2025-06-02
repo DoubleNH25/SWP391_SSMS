@@ -105,6 +105,19 @@ namespace SMMS.Application.Services.Implements
 				}).ToList();
 		}
 
+		public async Task<List<HealthActivityResponse>> GetAllHealthActivityAsync()
+		{
+			return _repositoryManager.HealthActivityRepository
+				.FindAll(false)
+				.Select(ha => new HealthActivityResponse
+				{
+					Id = ha.Id,
+					Name = ha.Name,
+					Description = ha.Description,
+					ScheduledDate = ha.ScheduledDate,
+					IsAccepted = ha.IsAccepted
+				}).ToList();
+		}
 		public async Task<bool> UpdateHealthActivityAsync(string healthActivityId, HealthActivityRequest request, string userId)
 		{
 			var activity = _repositoryManager.HealthActivityRepository
