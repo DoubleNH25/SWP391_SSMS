@@ -1,5 +1,7 @@
 ﻿
 
+using SMMS.Domain.Entity;
+
 namespace SMMS.Application.DataObject.ResponseObject
 {
 	public class StudentHealthResponse
@@ -9,6 +11,7 @@ namespace SMMS.Application.DataObject.ResponseObject
 		public string? Gender { get; set; }
 		public DateTime DateOfBirth { get; set; }
 		public string? ClassId { get; set; }
+		public SchoolClass? StudentClass { get; set; }
 		public string? Image { get; set; }
 		public HealthProfileResponse? HealthProfile { get; set; }
 	}

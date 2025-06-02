@@ -25,7 +25,7 @@ namespace SMMS.API.Controllers
 			_consentService = consentService;
 		}
 
-		[HttpGet("parents/students")]
+		[HttpGet("students")]
 		[Authorize(Roles = "Parent")]
 		public async Task<IActionResult> GetMyStudents()
 		{
@@ -85,17 +85,6 @@ namespace SMMS.API.Controllers
 			if (!result) return BadRequest("Không thể cập nhật hồ sơ sức khỏe. Học sinh không tồn tại hoặc không thuộc về phụ huynh này.");
 			return NoContent();
 		}
-
-		[HttpGet("parents/students-with-healthprofile")]
-		[Authorize(Roles = "Parent")]
-		public async Task<IActionResult> GetMyStudentsWithHealthProfile()
-		{
-			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized();
-			var students = await _userService.GetMyStudentsHealthProfileAsync(parentId);
-			return Ok(students);
-		}
-
 
 		[HttpGet("activity-consents/my-children")]
 		public async Task<IActionResult> GetActivityConsentsForMyChildren()

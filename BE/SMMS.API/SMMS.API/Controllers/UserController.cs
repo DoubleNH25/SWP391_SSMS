@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
+using SMMS.Domain.Entity;
 using System.Security.Claims;
 
 namespace SMMS.API.Controllers
@@ -112,20 +113,19 @@ namespace SMMS.API.Controllers
 			return Ok(students);
 		}
 
-		[HttpPost("parents/students")]
-		[Authorize(Roles = "Parent")]
-		public async Task<IActionResult> CreateStudent([FromForm] StudentRequest request)
+		[HttpGet("students/{studentId}")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> GetStudentsById(string studentId)
 		{
-			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized();
-			var result = await _userService.CreateStudentAsync(parentId, request);
-			if (!result) return BadRequest("Failed to create student.");
-			return Ok("Student created successfully.");
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(userId)) return Unauthorized();
+			var students = await _userService.GetStudentByIdAsync(studentId);
+			return Ok(students);
 		}
 
 		[HttpPost("students")]
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> CreateStudentForAdmin([FromForm] StudentRequest request, string parentId)
+		public async Task<IActionResult> CreateStudent([FromForm] StudentRequest request, string parentId)
 		{
 			var result = await _userService.CreateStudentAsync(parentId, request);
 			if (!result) return BadRequest("Failed to create student.");
@@ -144,7 +144,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpDelete("students/{studentId}")]
-		[Authorize(Roles = "Parent,Admin")]
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> DeleteStudent(string studentId)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -139,6 +139,7 @@ namespace SMMS.Application.Services.Implements
 		{
 			var students = _repositoryManager.StudentRepository
 				.FindByCondition(s => s.ParentId == parentId, false)
+				.Include(s => s.SchoolClass)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
@@ -146,6 +147,7 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
+					SchoolClass = s.SchoolClass,
 					Image = s.Image
 				}).ToList();
 			return students;
@@ -167,6 +169,22 @@ namespace SMMS.Application.Services.Implements
 					Image = s.Image
 				}).ToList();
 			return students;
+		}
+		public async Task<StudentResponse> GetStudentByIdAsync(string id)
+		{
+			var student = _repositoryManager.StudentRepository.FindByCondition(s => s.Id == id, false)
+				.Include(s => s.SchoolClass)
+				.Select(s => new StudentResponse
+				{
+					Id = s.Id,
+					FullName = s.FullName,
+					Gender = s.Gender,
+					DateOfBirth = s.DateOfBirth,
+					ClassId = s.ClassId,
+					SchoolClass = s.SchoolClass,
+					Image = s.Image
+				}).FirstOrDefault();
+			return student;
 		}
 
 		public async Task<bool> CreateStudentAsync(string parentId, StudentRequest request)
@@ -235,7 +253,6 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-
 		public async Task<bool> DeleteStudentAsync(string studentId, string userId)
 		{
 			var student = _repositoryManager.StudentRepository
@@ -245,6 +262,7 @@ namespace SMMS.Application.Services.Implements
 
 			var user = _repositoryManager.UserRepository
 				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
 				.FirstOrDefault();
 			if (user == null || (user.Role.RoleName != "Admin" && student.ParentId != userId))
 				return false;
@@ -261,6 +279,7 @@ namespace SMMS.Application.Services.Implements
 		{
 			var students = _repositoryManager.StudentRepository
 				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
+				.Include(s => s.SchoolClass)
 				.Select(s => new StudentHealthResponse
 				{
 					Id = s.Id,
@@ -268,6 +287,7 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
+					StudentClass = s.SchoolClass,
 					Image = s.Image,
 					HealthProfile = s.HealthProfiles
 						.Where(hp => hp.DeletedTime == null)
