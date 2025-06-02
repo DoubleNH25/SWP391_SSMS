@@ -134,6 +134,11 @@ namespace SMMS.API.Controllers
 			if (!result) return BadRequest("Cannot delete vaccination campaign.");
 			return NoContent();
 		}
+		/// <summary>
+		/// Thông báo Và chờ phụ huynh duyệt 
+		/// </summary>
+		/// <param name="healthActivityId"></param>
+		/// <returns></returns>
 
 		[HttpGet("activity-consents/health-activities/{healthActivityId}")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
