@@ -7,14 +7,94 @@ This project is a **School Medical Management System** designed for managing stu
 
 ## 🌐 Swagger UI
 API documentation is available at:
-
-```
 https://localhost:7172/swagger/index.html
 ```
 
 Most endpoints require JWT authentication via the `Authorization` header.
 
 ---
+
+### 🧾 Xử lý Kiểm Tra Sức Khỏe
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| POST | `/api/medical-events/health-activities` | Tạo một hoạt động sức khỏe. | Nurse |
+| PUT | `/api/medical-events/health-activities/{id}/approve` | Phê duyệt hoạt động sức khỏe. | Admin, Manager |
+| GET | `/api/medical-events/health-activities/pending` | Danh sách đang chờ xử lý. | Admin, Manager |
+| GET | `/api/medical-events/health-activities/approved` | Danh sách đã được phê duyệt. | Admin, Manager, Nurse |
+| PUT | `/api/medical-events/health-activities/{id}` | Cập nhật hoạt động. | Nurse, Admin, Manager |
+| DELETE | `/api/medical-events/health-activities/{id}` | Xóa hoạt động. | Nurse, Admin, Manager |
+
+```
+## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
+
+### ✅ Activity Consents
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
+| PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
+
+---
+## Note: Sau khi Parent chấp nhận thì những Health Check Record sẽ tự động tạo ra để khi kiểm tra sức khỏe nhân viên y tế điền vào
+
+### 👀 Health Checkups (Health Check Record nhân viên y tế điền vào)
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/nurse/get-all-checkup` | Lấy tất cả đợt kiểm tra. | Nurse |
+| PUT | `/api/nurse/health-checkup-records/{id}` | Cập nhật kết quả kiểm tra. | Nurse |
+| GET | `/api/nurse/health-checkup-records` | Lấy hồ sơ kiểm tra. | Admin, Manager, Nurse |
+---
+## Note: Sau khi nhân viên y tế kiểm tra sức khỏe và điền vào /api/nurse/health-checkup-records/{id} thì hệ thống sẽ tự cập nhật health profile cho student
+
+
+### 🎓 Students
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/parents/students` | Danh sách học sinh. | Parent |
+| GET | `/api/parents/students-with-healthprofile` | Học sinh có hồ sơ. | Parent |
+| GET | `/api/parents/students/health` | Hồ sơ học sinh. | Parent |
+| PUT | `/api/parents/students/{id}/health-profile` | Cập nhật hồ sơ. | Parent |
+---
+## Note: Sau khi có kết quả nếu phụ huynh cần tư vấn thì có thể tạo schedule để nurse tư vấn
+
+### 👁️‍🗨️ Health Checkups & Counseling
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/parents/get-all-student-health-checkup` | Đợt kiểm tra của học sinh. | Parent |
+| GET | `/api/parents/get-all-conseling-schedules` | Lịch tư vấn học sinh. | Parent |
+| POST | `/api/parents/conseling-schedules` | Yêu cầu tư vấn. | Parent |
+| PUT | `/api/nurse/accept-conseling-schedules` | Chấp nhận tư vấn. | Nurse |
+| GET | `/api/nurse/get-all-conseling-schedules` | Lịch tư vấn. | Nurse |
+---
+
+### 💉 Vaccination Campaigns (Xử lý tiêm vaccine)
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| POST | `/api/medical-events/vaccination-campaigns` | Tạo chiến dịch tiêm chủng. | Nurse |
+| PUT | `/api/medical-events/vaccination-campaigns/{id}/approve` | Phê duyệt chiến dịch. | Admin, Manager |
+| GET | `/api/medical-events/vaccination-campaigns/pending` | Danh sách chờ xử lý. | Admin, Manager |
+| GET | `/api/medical-events/vaccination-campaigns/approved` | Danh sách đã phê duyệt. | Admin, Manager, Nurse, Parent |
+| PUT | `/api/medical-events/vaccination-campaigns/{id}` | Cập nhật chiến dịch. | Nurse, Admin, Manager |
+| DELETE | `/api/medical-events/vaccination-campaigns/{id}` | Xóa chiến dịch. | Nurse, Admin, Manager |
+```
+## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
+
+### ✅ Activity Consents
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
+| PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
+
+---
+## Note: Sau khi Parent chấp nhận thì những Vaccination Record sẽ tự động tạo ra để khi kiểm tra sức khỏe nhân viên y tế điền vào
+
+### 💉 Vaccination Records
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm. | Nurse |
+| GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ. | Admin, Manager, Nurse ||
+---
+## Note: Sau khi nhân viên y tế kiểm tra sức khỏe và điền vào /api/nurse/vaccination-records/{id}
+
 
 ## 🔐 Authentication APIs
 | Method | Endpoint | Description | Roles |
@@ -92,8 +172,8 @@ Most endpoints require JWT authentication via the `Authorization` header.
 ### 🎓 Students
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/parents/parents/students` | Danh sách học sinh. | Parent |
-| GET | `/api/parents/parents/students-with-healthprofile` | Học sinh có hồ sơ. | Parent |
+| GET | `/api/parents/students` | Danh sách học sinh. | Parent |
+| GET | `/api/parents/students-with-healthprofile` | Học sinh có hồ sơ. | Parent |
 | GET | `/api/parents/students/health` | Hồ sơ học sinh. | Parent |
 | PUT | `/api/parents/students/{id}/health-profile` | Cập nhật hồ sơ. | Parent |
 
