@@ -15,11 +15,13 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [
-      { name: "User", path: "/student", pro: false },
+      { name: "User", path: "/user", pro: false },
       { name: "Login", path: "/login", pro: false },
+      { name: "Student", path: "/student", pro: false },
     ],
   },
   { icon: <BoltIcon />, name: "Blog", path: "/blog" },
+  { icon: <BoltIcon />, name: "Health Profile", path: "/parent/health-profiles" },
   {
     icon: <CalenderIcon />,
     name: "Calendar",
@@ -125,23 +127,27 @@ const AppSidebar: React.FC = () => {
                 >
                   <ul className="mt-2 space-y-1 ml-9">
                     {nav.subItems.map((subItem) => (
-                      <li key={subItem.name} className={`p-2 rounded-md ${isActive(subItem.path) ? "bg-blue-200 text-blue-600" : ""}`}>
+                      <li key={subItem.name} className="p-0 rounded-md">
                         <Link
                           to={subItem.path}
-                          className={`menu-dropdown-item ${isActive(subItem.path) ? "menu-dropdown-item-active bg-brand-400" : "menu-dropdown-item-inactive"}`}
+                          className={`p-2 rounded-md w-full flex items-center justify-between cursor-pointer
+                                        ${isActive(subItem.path) ? "bg-blue-200 text-blue-600" : ""}
+                                        ${isActive(subItem.path) ? "menu-dropdown-item-active bg-brand-400" : "menu-dropdown-item-inactive"} menu-dropdown-item`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
                             {subItem.new && (
                               <span
-                                className={`ml-auto bg-yellow ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"} menu-dropdown-badge`}
+                                className={`ml-auto bg-yellow ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
+                                  } menu-dropdown-badge`}
                               >
                                 new
                               </span>
                             )}
                             {subItem.pro && (
                               <span
-                                className={`ml-auto ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"} menu-dropdown-badge`}
+                                className={`ml-auto ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
+                                  } menu-dropdown-badge`}
                               >
                                 pro
                               </span>
