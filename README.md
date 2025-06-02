@@ -8,11 +8,10 @@ This project is a **School Medical Management System** designed for managing stu
 ## 🌐 Swagger UI
 API documentation is available at:
 https://localhost:7172/swagger/index.html
-```
+
 
 Most endpoints require JWT authentication via the `Authorization` header.
 
----
 
 ### 🧾 Xử lý Kiểm Tra Sức Khỏe
 | Method | Endpoint | Description | Roles |
@@ -24,7 +23,6 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | PUT | `/api/medical-events/health-activities/{id}` | Cập nhật hoạt động. | Nurse, Admin, Manager |
 | DELETE | `/api/medical-events/health-activities/{id}` | Xóa hoạt động. | Nurse, Admin, Manager |
 
-```
 ## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
 
 ### ✅ Activity Consents
