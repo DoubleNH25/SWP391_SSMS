@@ -75,7 +75,7 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | GET | `/api/medical-events/vaccination-campaigns/approved` | Danh sách đã phê duyệt. | Admin, Manager, Nurse, Parent |
 | PUT | `/api/medical-events/vaccination-campaigns/{id}` | Cập nhật chiến dịch. | Nurse, Admin, Manager |
 | DELETE | `/api/medical-events/vaccination-campaigns/{id}` | Xóa chiến dịch. | Nurse, Admin, Manager |
-```
+
 ## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
 
 ### ✅ Activity Consents
@@ -84,7 +84,7 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
 | PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
 
----
+
 ## Note: Sau khi Parent chấp nhận thì những Vaccination Record sẽ tự động tạo ra để khi kiểm tra sức khỏe nhân viên y tế điền vào
 
 ### 💉 Vaccination Records
@@ -92,7 +92,7 @@ Most endpoints require JWT authentication via the `Authorization` header.
 |--------|----------|-------------|-------|
 | PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm. | Nurse |
 | GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ. | Admin, Manager, Nurse ||
----
+
 ## Note: Sau khi nhân viên y tế kiểm tra sức khỏe và điền vào /api/nurse/vaccination-records/{id}
 
 
