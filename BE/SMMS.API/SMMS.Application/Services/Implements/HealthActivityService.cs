@@ -70,6 +70,7 @@ namespace SMMS.Application.Services.Implements
 					VaccinationCampaignId = null,
 					Status = false,
 					Comments = "none",
+					ScheduleTime = healthActivity.ScheduledDate,
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow,
 					ActivityType = "HealthActivity"
