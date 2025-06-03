@@ -21,9 +21,6 @@ async function ApiClient<T, D = any>({
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     };
-
-    console.log('API Request:', defaultHeaders);
-
     const response: AxiosResponse<T> = await axios({
       method,
       url: endpoint,

@@ -13,6 +13,8 @@ type PropsType = {
   defaultDate?: DateOption;
   label?: string;
   placeholder?: string;
+  minDate?: string;
+  maxDate?: string;
 };
 
 export default function DatePicker({
@@ -22,6 +24,8 @@ export default function DatePicker({
   label,
   defaultDate,
   placeholder,
+  minDate,
+  maxDate,
 }: PropsType) {
   useEffect(() => {
     const flatPickr = flatpickr(`#${id}`, {
@@ -29,8 +33,8 @@ export default function DatePicker({
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
-      minDate:"1900-01-01",
-      maxDate: "today",
+      minDate: minDate ?? "1900-01-01",
+      maxDate: maxDate ?? "today",
       defaultDate,
       onChange,
     });

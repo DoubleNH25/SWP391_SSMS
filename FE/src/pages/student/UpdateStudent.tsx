@@ -65,7 +65,6 @@ export default function UpdateStudents() {
       if (!formData.fullName || !formData.gender || !formData.classId) {
         throw new Error('Please fill in all required fields');
       }
-      console.log("formData", formData);
       await FecthUpdateStudents("", formData);
       navigate('/student');
     } catch (err) {

@@ -11,7 +11,7 @@ export async function FecthLogin(users: LoginRequest): Promise<void> {
         });
         localStorage.setItem('token', response.data.token);
     } catch (err) {
-        throw new Error(`Failed to update user: ${err}`);
+        throw new Error(`Failed to login: ${err}`);
     }
 }
 

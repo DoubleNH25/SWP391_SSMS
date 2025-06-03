@@ -46,7 +46,6 @@ export default function UserManager() {
       setIsDeleteModalOpen(false);
       setSelectedUserId(null);
       setError(null);
-      console.log("User deleted successfully");
     } catch (error) {
       setError(`Failed to delete user: ${error.message}`);
     }
@@ -108,7 +107,16 @@ export default function UserManager() {
         </div>
       </Modal>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">User Manager</h1>
+        <nav className="text-base text-gray-500 mb-4 mt-4">
+          <ol className="list-reset flex">
+            <li><span className="mx-2">›</span></li>
+            <li>
+              Dashboard
+            </li>
+            <li><span className="mx-2">›</span></li>
+            <li className="text-gray-700">User</li>
+          </ol>
+        </nav>
         <div className="flex items-center">
           <button className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
             onClick={handleAddUser}

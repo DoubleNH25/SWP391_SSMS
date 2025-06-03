@@ -36,7 +36,7 @@ export default function Login() {
 
                 case "login":
                     await FecthLogin(userLogin);
-                    navigate('/user');
+                    navigate('/');
                     break;
 
                 case "register":

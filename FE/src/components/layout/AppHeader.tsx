@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, memo } from "react";
-import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import NotificationDropdown from "../header/NotificationDropdown";
 import UserDropdown from "../header/UserDropdown";
@@ -17,6 +16,8 @@ const AppHeader: React.FC = () => {
     setApplicationMenuOpen((prev) => !prev);
   }, []);
 
+
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -24,7 +25,6 @@ const AppHeader: React.FC = () => {
         inputRef.current?.focus();
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
@@ -70,24 +70,6 @@ const AppHeader: React.FC = () => {
               </svg>
             )}
           </button>
-
-          <Link to="/" className="lg:hidden">
-            <img
-              className="dark:hidden"
-              src="/images/logo/logo.svg"
-              alt="Logo"
-              width={150}
-              height={40}
-            />
-            <img
-              className="hidden dark:block"
-              src="/images/logo/logo-dark.svg"
-              alt="Logo"
-              width={150}
-              height={40}
-            />
-          </Link>
-
           <button
             onClick={toggleApplicationMenu}
             className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 lg:hidden"
@@ -114,7 +96,7 @@ const AppHeader: React.FC = () => {
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                   <svg
-                    className="fill-gray-500 dark:fill-gray-400"
+                    className="fill-gray-500"
                     width={20}
                     height={20}
                     viewBox="0 0 20 20"
@@ -148,11 +130,10 @@ const AppHeader: React.FC = () => {
         </div>
 
         <div
-          className={`w-full px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:py-0 lg:shadow-none ${
-            isApplicationMenuOpen ? "flex" : "hidden"
-          } items-center justify-between gap-4 shadow-theme-md`}
+          className={`w-full px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:py-0 lg:shadow-none ${isApplicationMenuOpen ? "flex" : "hidden"
+            } items-center justify-between gap-4 shadow-theme-md`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-10">
             <NotificationDropdown />
             <UserDropdown />
           </div>
