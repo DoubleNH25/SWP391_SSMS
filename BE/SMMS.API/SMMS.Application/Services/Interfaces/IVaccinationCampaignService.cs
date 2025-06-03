@@ -7,6 +7,7 @@ namespace SMMS.Application.Services.Interfaces
 {
 	public interface IVaccinationCampaignService
 	{
+		Task<List<VaccinationCampaignResponse>> GetAllVaccineCampaignAsync();
 		Task<VaccinationCampaignResponse> CreateVaccinationCampaignAsync(VaccinationCampaignRequest request, string nurseId);
 		Task<bool> ApproveVaccinationCampaignAsync(string vaccinationCampaignId, string approverId);
 		Task<List<VaccinationCampaignResponse>> GetPendingVaccinationCampaignsAsync();

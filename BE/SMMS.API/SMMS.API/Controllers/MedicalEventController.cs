@@ -29,6 +29,21 @@ namespace SMMS.API.Controllers
 			return Ok(activities);
 		}
 
+		[HttpGet("health-activities/pending")]
+		[Authorize(Roles = "Admin,Manager")]
+		public async Task<IActionResult> GetPendingHealthActivities()
+		{
+			var pending = await _healthActivityService.GetPendingHealthActivitiesAsync();
+			return Ok(pending);
+		}
+		[HttpGet("health-activities/approved")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetApprovedHealthActivities()
+		{
+			var activities = await _healthActivityService.GetApprovedHealthActivitiesAsync();
+			return Ok(activities);
+		}
+
 		[HttpPost("health-activities")]
 		[Authorize(Roles = "Nurse")]
 		public async Task<IActionResult> CreateHealthActivity([FromBody] HealthActivityRequest request)
@@ -48,21 +63,6 @@ namespace SMMS.API.Controllers
 			var result = await _healthActivityService.ApproveHealthActivityAsync(id, approverId);
 			if (!result) return NotFound();
 			return NoContent();
-		}
-
-		[HttpGet("health-activities/pending")]
-		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> GetPendingHealthActivities()
-		{
-			var pending = await _healthActivityService.GetPendingHealthActivitiesAsync();
-			return Ok(pending);
-		}
-		[HttpGet("health-activities/approved")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetApprovedHealthActivities()
-		{
-			var activities = await _healthActivityService.GetApprovedHealthActivitiesAsync();
-			return Ok(activities);
 		}
 		
 		[HttpPut("health-activities/{id}")]
@@ -86,6 +86,29 @@ namespace SMMS.API.Controllers
 			return NoContent();
 		}
 
+		[HttpGet("vaccination-campaigns/all")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetAllVaccineCampaign()
+		{
+			var activities = await _vaccinationCampaignService.GetAllVaccineCampaignAsync();
+			return Ok(activities);
+		}
+
+		[HttpGet("vaccination-campaigns/pending")]
+		[Authorize(Roles = "Admin,Manager")]
+		public async Task<IActionResult> GetPendingVaccinationCampaigns()
+		{
+			var pending = await _vaccinationCampaignService.GetPendingVaccinationCampaignsAsync();
+			return Ok(pending);
+		}
+		[HttpGet("vaccination-campaigns/approved")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
+		public async Task<IActionResult> GetApprovedVaccinationCampaigns()
+		{
+			var campaigns = await _vaccinationCampaignService.GetApprovedVaccinationCampaignsAsync();
+			return Ok(campaigns);
+		}
+
 		[HttpPost("vaccination-campaigns")]
 		[Authorize(Roles = "Nurse")]
 		public async Task<IActionResult> CreateVaccinationCampaign([FromBody] VaccinationCampaignRequest request)
@@ -105,21 +128,6 @@ namespace SMMS.API.Controllers
 			var result = await _vaccinationCampaignService.ApproveVaccinationCampaignAsync(id, approverId);
 			if (!result) return NotFound();
 			return NoContent();
-		}
-
-		[HttpGet("vaccination-campaigns/pending")]
-		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> GetPendingVaccinationCampaigns()
-		{
-			var pending = await _vaccinationCampaignService.GetPendingVaccinationCampaignsAsync();
-			return Ok(pending);
-		}
-		[HttpGet("vaccination-campaigns/approved")]
-		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
-		public async Task<IActionResult> GetApprovedVaccinationCampaigns()
-		{
-			var campaigns = await _vaccinationCampaignService.GetApprovedVaccinationCampaignsAsync();
-			return Ok(campaigns);
 		}
 
 		[HttpPut("vaccination-campaigns/{id}")]

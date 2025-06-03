@@ -5,6 +5,7 @@ using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Interface.Repositories;
+using System.Linq.Expressions;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -138,8 +139,11 @@ namespace SMMS.Application.Services.Implements
 		public async Task<List<StudentResponse>> GetMyStudentsAsync(string parentId)
 		{
 			var students = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.ParentId == parentId, false)
+				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
+				.ToList() // <-- chuyển sang client-side từ đây
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
@@ -147,17 +151,60 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							NurseName = _repositoryManager.UserRepository
+								.FindByCondition(u => u.Id == hcr.LastUpdatedBy, false)
+								.Select(u => u.FullName)
+								.FirstOrDefault(), // --> giờ EF không cần dịch đoạn này nữa
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
 				}).ToList();
+
 			return students;
 		}
 
 		public async Task<List<StudentResponse>> GetAllStudentsAsync()
 		{
 			var students = _repositoryManager.StudentRepository
-				.FindAll(false)
+				.FindByCondition(s => s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
@@ -165,15 +212,56 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
 				}).ToList();
+
 			return students;
 		}
+
 		public async Task<StudentResponse> GetStudentByIdAsync(string id)
 		{
-			var student = _repositoryManager.StudentRepository.FindByCondition(s => s.Id == id, false)
+			var students = _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == id && s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
@@ -181,10 +269,47 @@ namespace SMMS.Application.Services.Implements
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
 				}).FirstOrDefault();
-			return student;
+
+			return students;
 		}
 
 		public async Task<bool> CreateStudentAsync(string parentId, StudentRequest request)
@@ -253,6 +378,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
+
 		public async Task<bool> DeleteStudentAsync(string studentId, string userId)
 		{
 			var student = _repositoryManager.StudentRepository
@@ -273,37 +399,6 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager.StudentRepository.Update(student);
 			await _repositoryManager.SaveAsync();
 			return true;
-		}
-
-		public async Task<List<StudentHealthResponse>> GetMyStudentsHealthProfileAsync(string parentId)
-		{
-			var students = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
-				.Include(s => s.SchoolClass)
-				.Select(s => new StudentHealthResponse
-				{
-					Id = s.Id,
-					FullName = s.FullName,
-					Gender = s.Gender,
-					DateOfBirth = s.DateOfBirth,
-					ClassId = s.ClassId,
-					StudentClass = s.SchoolClass,
-					Image = s.Image,
-					HealthProfile = s.HealthProfiles
-						.Where(hp => hp.DeletedTime == null)
-						.Select(hp => new HealthProfileResponse
-						{
-							Id = hp.Id,
-							StudentId = hp.StudentId,
-							Vision = hp.Vision,
-							Hearing = hp.Hearing,
-							Dental = hp.Dental,
-							BMI = hp.BMI,
-							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
-						}).FirstOrDefault()
-				}).ToList();
-			return students;
 		}
 
 		public async Task<bool> UpdateHealthProfileByParentAsync(string studentId, HealthProfileRequest request, string parentId)
@@ -353,6 +448,5 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-
 	}
 }

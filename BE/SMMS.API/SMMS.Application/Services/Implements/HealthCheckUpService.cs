@@ -24,7 +24,7 @@ namespace SMMS.Application.Services.Implements
 					user => user.Id,
 					(hcr, user) => new HealthCheckUpResponse
 					{
-						HealthActivityId = hcr.HealthActivityId, // Sử dụng HealthActivityId thay vì hcr.Id
+						HealthActivityId = hcr.HealthActivityId, 
 						StudentId = hcr.StudentId,
 						StudentName = hcr.Student.FullName,
 						NurseId = hcr.LastUpdatedBy,

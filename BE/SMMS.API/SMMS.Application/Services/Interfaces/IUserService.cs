@@ -25,7 +25,6 @@ namespace SMMS.Application.Services.Interfaces
 		Task<bool> CreateStudentAsync(string parentId, StudentRequest request);
 		Task<bool> UpdateStudentAsync(string studentId, string userId, StudentRequest request);
 		Task<bool> DeleteStudentAsync(string studentId, string userId);
-		Task<List<StudentHealthResponse>> GetMyStudentsHealthProfileAsync(string parentId);
 		Task<bool> UpdateHealthProfileByParentAsync(string studentId, HealthProfileRequest request, string parentId);
 	}
 }

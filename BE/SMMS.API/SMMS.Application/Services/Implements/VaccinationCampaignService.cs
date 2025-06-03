@@ -17,6 +17,23 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager = repositoryManager;
 		}
 
+		public async Task<List<VaccinationCampaignResponse>> GetAllVaccineCampaignAsync()
+		{
+			return _repositoryManager.VaccinationCampaignRepository
+				.FindAll(false)
+				.Select(vc => new VaccinationCampaignResponse
+				{
+					Id = vc.Id,
+					Name = vc.Name,
+					VaccineName = vc.VaccineName,
+					EXP = vc.EXP,
+					MFG = vc.MFG,
+					VaccineType = vc.VaccineType,
+					StartDate = vc.StartDate,
+					IsAccepted = vc.IsAccepted
+				}).ToList();
+		}
+
 		public async Task<VaccinationCampaignResponse> CreateVaccinationCampaignAsync(VaccinationCampaignRequest request, string nurseId)
 		{
 			var campaign = new VaccinationCampaign

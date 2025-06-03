@@ -66,16 +66,6 @@ namespace SMMS.API.Controllers
 			return Ok("Schedule requested.");
 		}
 
-
-		[HttpGet("students/health")]
-		public async Task<IActionResult> GetStudentsHealthProfile()
-		{
-			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized("Parent ID not found.");
-			var students = await _userService.GetMyStudentsHealthProfileAsync(parentId);
-			return Ok(students);
-		}
-
 		[HttpPut("students/{studentId}/health-profile")]
 		public async Task<IActionResult> UpdateStudentHealthProfile(string studentId, [FromBody] HealthProfileRequest request)
 		{
