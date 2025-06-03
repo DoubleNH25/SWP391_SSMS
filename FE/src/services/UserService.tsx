@@ -1,6 +1,7 @@
 import { Student, StudentCreate, StudentUpdate } from "@/types/Student";
 import { User, UserCreate, UserUpdate } from "@/types/User";
 import ApiClient from "@/utils/ApiBase";
+import { co } from "@fullcalendar/core/internal-common";
 
 
 export async function FecthUsers(): Promise<User[]> {
@@ -11,7 +12,7 @@ export async function FecthUsers(): Promise<User[]> {
     });
     return response.data;
   } catch (err) {
-    throw new Error(`Failed to create user: ${err}`);
+    throw new Error(`Failed to get user: ${err}`);
   }
 }
 
@@ -48,7 +49,7 @@ export async function FecthUserById(users: string): Promise<UserUpdate> {
     });
     return response.data;
   } catch (err) {
-    throw new Error(`Failed to update user: ${err}`);
+    throw new Error(`Failed to get by user id: ${err}`);
   }
 }
 
@@ -77,7 +78,7 @@ export async function FecthImportUserByExcel(file: File): Promise<void> {
       contentType: 'multipart/form-data',
     });
   } catch (err) {
-    throw new Error(`Failed to update user: ${err}`);
+    throw new Error(`Failed to import user: ${err}`);
   }
 }
 
@@ -91,7 +92,7 @@ export async function FecthStudents(): Promise<Student[]> {
     });
     return response.data;
   } catch (err) {
-    throw new Error(`Failed to delete user: ${err}`);
+    throw new Error(`Failed to get student: ${err}`);
   }
 }
 
@@ -104,7 +105,7 @@ export async function FecthCreateStudents(parentId: string, students: StudentCre
       contentType: 'multipart/form-data',
     });
   } catch (err) {
-    throw new Error(`Failed to delete user: ${err}`);
+    throw new Error(`Failed to create student: ${err}`);
   }
 }
 
@@ -116,7 +117,7 @@ export async function FecthUpdateStudents(studentId: String, students: StudentUp
       data: students,
     });
   } catch (err) {
-    throw new Error(`Failed to update user: ${err}`);
+    throw new Error(`Failed to update student: ${err}`);
   }
 }
 
@@ -127,6 +128,6 @@ export async function FecthDeleteStudents(studentId: string): Promise<void> {
       endpoint: `/users/students/${studentId}`,
     });
   } catch (err) {
-    throw new Error(`Failed to delete user: ${err}`);
+    throw new Error(`Failed to delete student: ${err}`);
   }
 }

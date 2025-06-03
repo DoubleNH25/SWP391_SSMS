@@ -5,11 +5,11 @@ export async function FecthHealthProfile(): Promise<Student[]> {
   try {
     const response = await ApiClient<Student[]>({
       method: 'GET',
-      endpoint: '/parents/parents/students-with-healthprofile',
+      endpoint: '/parents/students',
     });
     return response.data;
   } catch (err) {
-    throw new Error(`Failed to create user: ${err}`);
+    throw new Error(`Failed to get health profile: ${err}`);
   }
 }
 
@@ -21,6 +21,9 @@ export async function FecthUpdateHealthProfile(studentId: string, profile: Healt
       data: profile
     });
   } catch (err) {
-    throw new Error(`Failed to create user: ${err}`);
+    throw new Error(`Failed to update health profile: ${err}`);
   }
 }
+
+
+

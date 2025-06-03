@@ -206,7 +206,16 @@ export default function StudentManager() {
         </div>
       </Modal>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Student Manager</h1>
+        <nav className="text-base text-gray-500 mb-4 mt-4">
+          <ol className="list-reset flex">
+            <li><span className="mx-2">›</span></li>
+            <li>
+              Dashboard
+            </li>
+            <li><span className="mx-2">›</span></li>
+            <li className="text-gray-700">Student</li>
+          </ol>
+        </nav>
         <div className="flex items-center">
           <button className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
             onClick={handleAddStudent}
@@ -239,8 +248,8 @@ export default function StudentManager() {
               <td className="p-2 flex flex-nowrap truncate"><img src={student.image} alt="..." />{student.fullName}</td>
               <td className="p-2 truncate">{student.gender}</td>
               <td className="p-2 truncate">{student.dateOfBirth}</td>
-              <td className="p-2">{student.schoolClass.className}</td>
-              <td className="p-2">{student.schoolClass.classRoom}</td>
+              <td className="p-2">{student.studentClass.className}</td>
+              <td className="p-2">{student.studentClass.classRoom}</td>
               <td className="p-2 space-x-2">
                 <Button
                   variant="outline"

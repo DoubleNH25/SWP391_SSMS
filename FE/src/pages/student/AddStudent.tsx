@@ -41,12 +41,10 @@ export default function AddStudent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("sdsdsd", formData);
     if (!formData.fullName || !formData.gender || !formData.classId || !formData.dateOfBirth) {
       setError("All fields are required.");
       return;
     }
-    console.log("sdsdsd", formData);
     await FecthCreateStudents("",formData);
     navigate("/student");
   }
@@ -122,14 +120,14 @@ export default function AddStudent() {
             <div className="text-right mt-2">
               <button
                 type="submit"
-                className="mt-4 bg-blue-500 w-[10%] hover:bg-blue-600 text-white py-2 rounded"
+                className="mt-4 bg-blue-600 w-[10%] hover:bg-blue-700 text-white py-2 rounded"
               >
                 Save
               </button>
               <button
                 onClick={handleCancel}
                 type="button"
-                className="mt-4 w-[10%] ml-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
+                className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
               >
                 Cancel
               </button>

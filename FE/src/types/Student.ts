@@ -1,26 +1,24 @@
+import { HealthProfile } from "./HealthProfile";
+
 export interface SchoolClass {
+  id: string;
   className: string;
   classRoom: string;
   quantity: number;
-  students: any[] | null; 
-  id: string;
-  createdBy: string;
-  lastUpdatedBy: string | null;
-  deletedBy: string | null;
-  createdTime: string; 
-  lastUpdatedTime: string; 
-  deletedTime: string | null;
 }
 
 export interface Student {
   id: string;
   fullName: string;
-  gender: string; 
-  dateOfBirth: string; 
+  gender: string;
+  dateOfBirth: string;
   classId: string;
-  schoolClass: SchoolClass;
+  studentClass: SchoolClass;
   image: string | null;
+  healthProfile: HealthProfile
 }
+
+
 
 export interface StudentCreate {
   fullName: string;

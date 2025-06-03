@@ -31,6 +31,17 @@ export default function HealthProfiles() {
     };
 
     const handleOpenUpdateModal = (studentId: string) => {
+        const selectedStudent = healthProfiles.find((student) => student.id === studentId);
+        if (selectedStudent) {
+            setFormData({
+                vision: selectedStudent.healthProfile.vision,
+                hearing: selectedStudent.healthProfile.hearing,
+                dental: selectedStudent.healthProfile.dental,
+                bmi: selectedStudent.healthProfile.bmi,
+                abnormalNote: selectedStudent.healthProfile.abnormalNote,
+                vaccinationHistory: selectedStudent.healthProfile.vaccinationHistory
+            });
+        }
         setSelectedProfileId(studentId);
         setisUpdateModalOpen(true);
     };
@@ -83,7 +94,6 @@ export default function HealthProfiles() {
             setError(null);
         } catch (err) {
             setError('Failed to fetch health profiles');
-            setLoading(false);
         } finally {
             setLoading(false);
         }
@@ -97,7 +107,7 @@ export default function HealthProfiles() {
         return <div className="text-center text-gray-500">Loading...</div>;
     }
     if (error) {
-        return <div className="text-center text-red-500">Lỗi {error}</div>;
+        return <div className="text-center text-red-500">Error {error}</div>;
     }
 
     return (
@@ -136,7 +146,7 @@ export default function HealthProfiles() {
                                                     </div>
                                                     <span>{student.gender}</span>
                                                     <span className="bg-blue-500 px-3 py-1 rounded-full text-sm font-medium">
-                                                        Class {student.classId}
+                                                        Class {student.studentClass.className}
                                                     </span>
                                                 </div>
                                             </div>
@@ -165,29 +175,29 @@ export default function HealthProfiles() {
                                         <PenBox className="mr-2" />
                                         Edit
                                     </div>
-                                    <div className="col-span-2  bg-white p-4">
+                                    <div className="col-span-2  bg-white p-4 border-b-2">
                                         Full Name: {student.fullName}
                                     </div>
-                                    <div className="bg-white py-4">
+                                    <div className="bg-white py-4 border-b-2">
                                         Date Of Birth: {new Date(student.dateOfBirth).toLocaleDateString('vi-VN')}
                                     </div>
-                                    <div className="bg-white p-4">
+                                    <div className="bg-white p-4 border-b-2">
                                         Gender: {student.gender}
                                     </div>
-                                    <div className="bg-white py-4">
-                                        Class Name: {student.classId}
+                                    <div className="bg-white py-4 border-b-2">
+                                        Class Name: {student.studentClass.className}
                                     </div>
-                                    <div className="bg-white py-4">
-                                        Class Room: {student.classId}
+                                    <div className="bg-white py-4 border-b-2">
+                                        Class Room: {student.studentClass.classRoom}
                                     </div>
-                                    <div className={`bg-white p-4`}>
+                                    <div className={`bg-white p-4 border-b-2`}>
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Eye className="w-5 h-5 text-blue-500 mr-2" />
                                             Vision: {student.healthProfile.vision}
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">{student.healthProfile.vision}</p>
                                     </div>
-                                    <div className="bg-white py-4">
+                                    <div className="bg-white py-4 border-b-2">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Ear className="w-5 h-5 text-purple-500 mr-2" />
                                             Hearing: {student.healthProfile.hearing}
@@ -196,7 +206,7 @@ export default function HealthProfiles() {
                                             {student.healthProfile.hearing === 'Normal' ? 'Normal' : student.healthProfile.hearing}
                                         </p>
                                     </div>
-                                    <div className="bg-white py-4">
+                                    <div className="bg-white py-4 border-b-2">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
@@ -204,8 +214,8 @@ export default function HealthProfiles() {
                                             Dental: {student.healthProfile.dental}
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile.dental === 'No cavities' ? 'Không sâu răng' :
-                                                student.healthProfile.dental === 'Minor cavities' ? 'Sâu răng nhẹ' :
+                                            {student.healthProfile.dental === 'No cavities' ? 'No cavities' :
+                                                student.healthProfile.dental === 'Minor cavities' ? 'Mild tooth decay' :
                                                     student.healthProfile.dental}
                                         </p>
                                     </div>
@@ -222,7 +232,7 @@ export default function HealthProfiles() {
                                             Vaccination: {student.healthProfile.vaccinationHistory}
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile.vaccinationHistory === 'Fully vaccinated' ? 'Đầy đủ' : student.healthProfile.vaccinationHistory}
+                                            {student.healthProfile.vaccinationHistory === 'Fully vaccinated' ? 'Full' : student.healthProfile.vaccinationHistory}
                                         </p>
                                     </div>
                                     <div className="bg-white py-4">
@@ -231,7 +241,7 @@ export default function HealthProfiles() {
                                             Abnormal: {student.healthProfile.abnormalNote}
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile.abnormalNote === 'None' ? 'Không có' : student.healthProfile.abnormalNote}
+                                            {student.healthProfile.abnormalNote === 'None' ? 'Nothing' : student.healthProfile.abnormalNote}
                                         </p>
                                     </div>
                                 </div>
@@ -293,6 +303,7 @@ export default function HealthProfiles() {
                                                 min="0"
                                                 max="100"
                                                 type="number"
+                                                step={0.1}
                                                 name="bmi"
                                                 value={formData.bmi}
                                                 onChange={handleInputChange}

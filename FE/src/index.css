@@ -1,11 +1,14 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
+
 /* 🌈 Custom theme variables (nếu cần dùng cho theming/dark mode) */
 :root {
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+
+  --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
 
   --background: #ffffff;
   --foreground: #111827;

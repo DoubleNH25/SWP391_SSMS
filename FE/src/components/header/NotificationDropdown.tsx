@@ -1,60 +1,46 @@
-import { useCallback, useState, memo } from "react";
+import { useCallback, useState, memo, useEffect } from "react";
 import { Link } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { FecthNotification } from "@/services/NotificationService";
+import { NotificationViewModel } from "@/types/Notification";
 
-// Sample notification data
-const notifications = [
-  // {
-  //   id: 1,
-  //   user: "Terry Franci",
-  //   image: "/images/user/user-02.jpg",
-  //   action: "requests permission to change",
-  //   project: "Project - Nganter App",
-  //   type: "Project",
-  //   time: "5 min ago",
-  //   status: "success",
-  // },
-  // {
-  //   id: 2,
-  //   user: "Alena Franci",
-  //   image: "/images/user/user-03.jpg",
-  //   action: "requests permission to change",
-  //   project: "Project - Nganter App",
-  //   type: "Project",
-  //   time: "8 min ago",
-  //   status: "success",
-  // },
-  // {
-  //   id: 3,
-  //   user: "Jocelyn Kenter",
-  //   image: "/images/user/user-04.jpg",
-  //   action: "requests permission to change",
-  //   project: "Project - Nganter App",
-  //   type: "Project",
-  //   time: "15 min ago",
-  //   status: "success",
-  // },
-  // {
-  //   id: 4,
-  //   user: "Brandon Philips",
-  //   image: "/images/user/user-05.jpg",
-  //   action: "requests permission to change",
-  //   project: "Project - Nganter App",
-  //   type: "Project",
-  //   time: "1 hr ago",
-  //   status: "error",
-  // },
-];
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
+  const [notificationData, setNotificationData] = useState<NotificationViewModel[]>([]);
+
+  const FectchData = async () => {
+    try {
+      const response = await FecthNotification();
+      setNotificationData(response);
+    } catch (err) {
+      throw new Error(`Failed to get notification: ${err}`);
+    }
+  }
 
   const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
     setNotifying(false);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        !document.getElementById("notification-dropdown")?.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    FectchData();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
 
   const closeDropdown = useCallback(() => setIsOpen(false), []);
 
@@ -119,41 +105,32 @@ const NotificationDropdown: React.FC = () => {
                         [&::-webkit-scrollbar-track]:bg-gray-100
                         [&::-webkit-scrollbar-thumb]:rounded-full
                         [&::-webkit-scrollbar-thumb]:bg-gray-300">
-          {notifications.map((notification) => (
-            <li key={notification.id}>
+          {notificationData.map((notification, index) => (
+            <li key={index}>
               <DropdownItem
                 onItemClick={closeDropdown}
                 className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100"
-                to={notification.id === 4 ? "/" : undefined}
+                to={index === 4 ? "/" : undefined}
               >
                 <span className="relative h-10 w-10">
-                  <img
-                    src={notification.image}
-                    alt={notification.user}
-                    className="h-full w-full rounded-full object-cover"
-                    width={40}
-                    height={40}
-                  />
                   <span
-                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-[1.5px] border-white ${
-                      notification.status === "success" ? "bg-success-500" : "bg-error-500"
-                    }`}
+                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-[1.5px] border-white ${notification.status === "success" ? "bg-success-500" : "bg-error-500"
+                      }`}
                   />
                 </span>
                 <span className="flex-1">
                   <span className="mb-1.5 flex gap-1 text-sm text-gray-500">
                     <span className="font-medium text-gray-800 ">
-                      {notification.user}
+                      {notification.studentName}
                     </span>
-                    <span>{notification.action}</span>
                     <span className="font-medium text-gray-800 ">
-                      {notification.project}
+                      {notification.activityName}
                     </span>
                   </span>
                   <span className="flex items-center gap-2 text-xs text-gray-500">
-                    <span>{notification.type}</span>
+                    <span>{notification.activityType}</span>
                     <span className="h-1 w-1 rounded-full bg-gray-400" />
-                    <span>{notification.time}</span>
+                    <span>{new Date(notification.scheduleTime).toLocaleDateString('vi-VN')}</span>
                   </span>
                 </span>
               </DropdownItem>
