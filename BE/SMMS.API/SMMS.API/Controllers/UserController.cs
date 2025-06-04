@@ -153,5 +153,13 @@ namespace SMMS.API.Controllers
 			if (!result) return BadRequest("Failed to delete student.");
 			return NoContent();
 		}
+
+		[HttpGet("parents/get-all-parent")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> GetAllParents()
+		{
+			var parents = await _userService.GetAllParentsAsync();
+			return Ok(parents);
+		}
 	}
 }

@@ -79,6 +79,8 @@ builder.Services.AddScoped<IActivityConsentService, ActivityConsentService>();
 builder.Services.AddScoped<IVaccinationRecordService, VaccinationRecordService>();
 builder.Services.AddScoped<IHealthCheckupService, HealthCheckupService>();
 builder.Services.AddScoped<IConselingService, ConselingService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 

@@ -348,11 +348,13 @@ namespace SMMS.Application.Services.Implements
 		{
 			var student = _repositoryManager.StudentRepository
 				.FindByCondition(s => s.Id == studentId, true)
+
 				.FirstOrDefault();
 			if (student == null) return false;
 
 			var user = _repositoryManager.UserRepository
 				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
 				.FirstOrDefault();
 			if (user == null || (user.Role.RoleName != "Admin" && student.ParentId != userId))
 				return false;
@@ -447,6 +449,40 @@ namespace SMMS.Application.Services.Implements
 
 			await _repositoryManager.SaveAsync();
 			return true;
+		}
+
+		public async Task<List<ParentResponse>> GetAllParentsAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Parent" && u.DeletedTime == null, false)
+				.Include(u => u.Role)
+				.Include(u => u.Students.Where(s => s.DeletedTime == null))
+				.Select(u => new ParentResponse
+				{
+					Id = u.Id,
+					Email = u.Email,
+					Phone = u.Phone,
+					FullName = u.FullName,
+					RoleName = u.Role.RoleName,
+					ImageUrl = u.Image,
+					Students = u.Students.Select(s => new StudentResponse
+					{
+						Id = s.Id,
+						FullName = s.FullName,
+						Gender = s.Gender,
+						DateOfBirth = s.DateOfBirth,
+						ClassId = s.ClassId,
+						StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+						{
+							Id = s.SchoolClass.Id,
+							ClassName = s.SchoolClass.ClassName,
+							ClassRoom = s.SchoolClass.ClassRoom,
+							Quantity = s.SchoolClass.Quantity
+						} : null,
+						Image = s.Image
+					}).ToList()
+				})
+				.ToListAsync();
 		}
 	}
 }
