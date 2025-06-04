@@ -1,10 +1,10 @@
 export interface VaccinationCampaignsUpdateCreateViewModel{
     name : string;
     vaccineName: string;
-    exp: Date;
-    mfg: Date;
+    exp: string;
+    mfg: string;
     vaccineType: string;
-    startDate: Date;
+    startDate: string;
 }
 
 export interface VaccinationCampaignsViewModel{

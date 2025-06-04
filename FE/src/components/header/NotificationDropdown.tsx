@@ -1,149 +1,279 @@
 import { useCallback, useState, memo, useEffect } from "react";
-import { Link } from "react-router";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { Link } from "react-router-dom";
 import { FecthNotification } from "@/services/NotificationService";
 import { NotificationViewModel } from "@/types/Notification";
+import NotificationAnimation from "@/components/icons/notification.gif";
+import NotificationIcon from "@/components/icons/notification.svg";
+import { Bell, CheckCircle, AlertTriangle, Clock, Heart, Syringe } from 'lucide-react';
 
+type ActivityType = 'Pending' | 'Approve' | 'HealthActivity' | 'VaccinationCampaign';
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifying, setNotifying] = useState(true);
+  const [, setNotifying] = useState(false);
   const [notificationData, setNotificationData] = useState<NotificationViewModel[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const FectchData = async () => {
+  const fetchData = async () => {
     try {
       const response = await FecthNotification();
-      setNotificationData(response);
+      if (response) {
+        setNotificationData(response);
+        if (response.some(item => !item.status)) {
+          setNotifying(true);
+        }
+      } else {
+        setError("Invalid data.");
+        setNotificationData([]);
+      }
+      setError(null);
     } catch (err) {
-      throw new Error(`Failed to get notification: ${err}`);
+      setError("Failed to load notifications. Please try again.");
     }
-  }
+  };
 
-  const toggleDropdown = useCallback(() => {
-    setIsOpen((prev) => !prev);
+  const getActivityIcon = (activityType: ActivityType, status: boolean) => {
+    if (!status) {
+      return <AlertTriangle className="w-5 h-5" />;
+    }
+    switch (activityType) {
+      case 'HealthActivity':
+        return <Heart className="w-5 h-5" />;
+      case 'VaccinationCampaign':
+        return <Syringe className="w-5 h-5" />;
+      case 'Approve':
+        return <CheckCircle className="w-5 h-5" />;
+      default:
+        return <Bell className="w-5 h-5" />;
+    }
+  };
+
+  const getActivityConfig = (activityType: ActivityType, status: boolean, scheduleTime: string) => {
+    if (!isToday(scheduleTime) && !isYesterday(scheduleTime)) {
+      return {
+        bgColor: 'bg-gradient-to-r from-gray-50 to-gray-100',
+        borderColor: 'border-l-gray-400',
+        iconColor: 'text-gray-600',
+        textColor: 'text-gray-800',
+        actionColor: 'text-gray-600 hover:text-gray-800',
+      };
+    }
+    if (!status) {
+      return {
+        bgColor: 'bg-gradient-to-r from-red-50 to-red-100',
+        borderColor: 'border-l-red-400',
+        iconColor: 'text-red-600',
+        textColor: 'text-red-800',
+        actionColor: 'text-red-600 hover:text-red-800',
+      };
+    } else if (status) {
+      return {
+        bgColor: 'bg-gradient-to-r from-green-50 to-green-100',
+        borderColor: 'border-l-green-400',
+        iconColor: 'text-green-600',
+        textColor: 'text-green-800',
+        actionColor: 'text-green-600 hover:text-green-800',
+      };
+    }
+    return {
+      bgColor: 'bg-gradient-to-r from-gray-50 to-gray-100',
+      borderColor: 'border-l-gray-400',
+      iconColor: 'text-gray-600',
+      textColor: 'text-gray-800',
+      actionColor: 'text-gray-600 hover:text-gray-800',
+    };
+  };
+
+  const isToday = (date: string) => {
+    const today = new Date();
+    const notifDate = new Date(date);
+    return notifDate.toDateString() === today.toDateString();
+  };
+
+  const isYesterday = (date: string) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const notifDate = new Date(date);
+    return notifDate.toDateString() === yesterday.toDateString();
+  };
+
+  const groupedNotifications = notificationData.reduce((acc, notification) => {
+    const date = new Date(notification.scheduleTime);
+    let groupKey: string;
+
+    if (isToday(notification.scheduleTime)) {
+      groupKey = 'Today';
+    } else if (isYesterday(notification.scheduleTime)) {
+      groupKey = 'Yesterday';
+    } else {
+      groupKey = date.toLocaleDateString();
+    }
+
+    if (!acc[groupKey]) {
+      acc[groupKey] = [];
+    }
+    acc[groupKey].push(notification);
+    return acc;
+  }, {} as Record<string, NotificationViewModel[]>);
+
+  const unApproveCount = notificationData.filter(n => !n.status).length;
+
+  const toggle = useCallback(() => {
+    setIsOpen(prev => !prev);
     setNotifying(false);
   }, []);
 
   useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isOpen &&
-        !document.getElementById("notification-dropdown")?.contains(event.target as Node)
-      ) {
+      const panel = document.getElementById("notification-panel");
+      if (panel && !panel.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    FectchData();
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
-
-
-  const closeDropdown = useCallback(() => setIsOpen(false), []);
+  }, []);
 
   return (
-    <div className="relative">
+    <div className="py-8">
       <button
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-        onClick={toggleDropdown}
+        onClick={toggle}
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-500 transition-colors"
         aria-label="Toggle Notifications"
       >
-        {notifying && (
-          <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+        {unApproveCount > 0 && (
+          <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white ring-2 ring-white">
+            {unApproveCount > 9 ? '9+' : unApproveCount}
           </span>
         )}
-        <svg
-          className="fill-current"
-          width={20}
-          height={20}
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M10 1.54a.75.75 0 00-.75.75v.55c-3.58.39-6.25 3.37-6.25 6.87v5.29H2.33a.75.75 0 000 1.5h1.67h11.25h1.67a.75.75 0 000-1.5H16.5v-5.29c0-3.5-2.67-6.48-6.25-6.87v-.55a.75.75 0 00-.75-.75zm4.5 12.91v-5.29a5.25 5.25 0 10-10.5 0v5.29h10.5zm-6 3.25a.75.75 0 000 1.5h2.5a.75.75 0 000-1.5h-2.5z"
-            fill="currentColor"
-          />
-        </svg>
+        <img
+          src={unApproveCount > 0 ? NotificationAnimation : NotificationIcon}
+          className="w-5 h-5"
+          alt="Notification icon"
+        />
       </button>
-      <Dropdown
-        isOpen={isOpen}
-        onClose={closeDropdown}
-        className="absolute mt-4 flex w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg lg:right-0"
+      <div
+        className={`fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto overflow-x-hidden transition-opacity duration-700 ${isOpen ? "opacity-100 z-50" : "opacity-0 pointer-events-none"}`}
+        id="notification-dropdown"
       >
-        <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3">
-          <h5 className="text-lg font-semibold text-gray-800 ">Notifications</h5>
-          <button
-            onClick={toggleDropdown}
-            className="text-gray-500 transition-colors hover:text-gray-700 "
-            aria-label="Close Notifications"
-          >
-            <svg
-              className="fill-current"
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M6.22 6.22a.75.75 0 011.06 0L12 10.94l4.78-4.78a.75.75 0 111.06 1.06L13.06 12l4.78 4.78a.75.75 0 01-1.06 1.06L12 13.06l-4.78 4.78a.75.75 0 01-1.06-1.06L10.94 12 6.22 7.22a.75.75 0 010-1.06z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-        </div>
-        <ul className="flex max-h-[400px] flex-col overflow-y-auto custom-scrollbar
-                        [&::-webkit-scrollbar]:w-2
-                        [&::-webkit-scrollbar-track]:rounded-full
-                        [&::-webkit-scrollbar-track]:bg-gray-100
-                        [&::-webkit-scrollbar-thumb]:rounded-full
-                        [&::-webkit-scrollbar-thumb]:bg-gray-300">
-          {notificationData.map((notification, index) => (
-            <li key={index}>
-              <DropdownItem
-                onItemClick={closeDropdown}
-                className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100"
-                to={index === 4 ? "/" : undefined}
-              >
-                <span className="relative h-10 w-10">
-                  <span
-                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-[1.5px] border-white ${notification.status === "success" ? "bg-success-500" : "bg-error-500"
-                      }`}
-                  />
-                </span>
-                <span className="flex-1">
-                  <span className="mb-1.5 flex gap-1 text-sm text-gray-500">
-                    <span className="font-medium text-gray-800 ">
-                      {notification.studentName}
-                    </span>
-                    <span className="font-medium text-gray-800 ">
-                      {notification.activityName}
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-2 text-xs text-gray-500">
-                    <span>{notification.activityType}</span>
-                    <span className="h-1 w-1 rounded-full bg-gray-400" />
-                    <span>{new Date(notification.scheduleTime).toLocaleDateString('vi-VN')}</span>
-                  </span>
-                </span>
-              </DropdownItem>
-            </li>
-          ))}
-        </ul>
-        <Link
-          to="/"
-          className="mt-3 block rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-100 "
+        <div
+          id="notification-panel"
+          className={`w-full lg:w-1/3 bg-gray-50 h-screen overflow-y-auto py-8 px-3 absolute right-0 transform transition-transform duration-700 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
         >
-          View All Notifications
-        </Link>
-      </Dropdown>
+          <div className="flex items-center justify-between">
+            <div>
+              <h5 className="text-2xl font-semibold text-gray-800">Notifications</h5>
+              <p className="text-blue-500 text-sm">{notificationData.length} new updates</p>
+            </div>
+            <button
+              onClick={toggle}
+              className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-full"
+              aria-label="Close Notifications"
+            >
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="#4B5563" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M6 6L18 18" stroke="#4B5563" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div className="mt-8">
+            {error && (
+              <div className="p-4 bg-red-100 text-red-500 text-sm mb-4">
+                {error}
+              </div>
+            )}
+            <div className="bg-gray-50">
+              <div className="divide-y divide-gray-100">
+                {Object.entries(groupedNotifications).map(([dateGroup, groupNotifications]) => (
+                  <div key={dateGroup}>
+                    <div className="flex items-center mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                          {dateGroup}
+                        </h2>
+                      </div>
+                      <div className="flex-1 h-px bg-gray-200 ml-4"></div>
+                    </div>
+                    <div className="space-y-3">
+                      {groupNotifications.map(notification => {
+                        const config = getActivityConfig(notification.activityType as ActivityType, notification.status, notification.scheduleTime);
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`relative group ${config.bgColor} ${config.borderColor} border-l-4 rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:scale-[1.02]`}
+                          >
+                            <div className="flex items-start space-x-4">
+                              <div className={`flex-shrink-0 p-2 rounded-lg bg-white/70 ${config.iconColor}`}>
+                                {getActivityIcon(notification.activityType as ActivityType, notification.status)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex justify-between">
+                                      <p className={`text-sm font-medium ${config.textColor} leading-relaxed`}>
+                                        {notification.studentName && (
+                                          <span className="font-semibold text-indigo-700 mr-1">
+                                            {notification.studentName}
+                                          </span>
+                                        )}
+                                      </p>
+                                      <p className={`text-sm font-medium ${config.textColor} leading-relaxed`}>
+                                        {notification.activityName}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center mt-2 space-x-3">
+                                      <p className="text-xs text-gray-500 flex items-center">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        {new Date(notification.scheduleTime).toLocaleString('vi-VN')}
+                                      </p>
+                                      {notification.status === false ? (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                          Pending
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                          Approve
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {notificationData.length === 0 && (
+                <div className="p-12 text-center">
+                  <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <Bell className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">All caught up!</h3>
+                  <p className="text-gray-400">No new notifications at the moment.</p>
+                </div>
+              )}
+            </div>
+            {notificationData.length !== 0 && (
+              <Link
+                to="/notifications"
+                className="mt-3 block rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                View All Notifications
+              </Link>)}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

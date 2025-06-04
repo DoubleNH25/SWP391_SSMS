@@ -11,7 +11,7 @@ export interface UserCreate {
   email: string;
   phone: string;
   fullName: string;
-  roleName: string;
+  roleId: string;
   password: string;
 }
 

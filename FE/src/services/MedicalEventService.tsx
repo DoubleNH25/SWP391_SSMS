@@ -2,6 +2,10 @@ import { MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/type
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateMedicalEvent(medicalEvent: MedicalEventUpdateCreateViewModel): Promise<MedicalEventViewModel> {
+    if (!medicalEvent || !medicalEvent.scheduledDate || !medicalEvent.description) {
+        console.error("Invalid medical event data: title and description are required.");
+        return null;
+    }
     try {
         var response = await ApiClient<MedicalEventViewModel>({
             method: 'POST',
@@ -10,19 +14,26 @@ export async function FecthCreateMedicalEvent(medicalEvent: MedicalEventUpdateCr
         });
         return response.data;
     } catch (err) {
-        throw new Error(`Failed to create medical event: ${err}`);
+        console.error("Failed to create medical event:", err);
+        return null;
     }
 }
 
-export async function FecthUpdateMedicalEvent(id: string, medicalEvent: MedicalEventUpdateCreateViewModel): Promise<void> {
+export async function FecthUpdateMedicalEvent(id: string, medicalEvent: MedicalEventUpdateCreateViewModel): Promise<boolean> {
+    if (!id || !medicalEvent) {
+        console.error("Invalid update request: missing id or data.");
+        return false;
+    }
     try {
-        await ApiClient<void>({
+        await ApiClient<MedicalEventUpdateCreateViewModel>({
             method: 'PUT',
             endpoint: `/medical-events/health-activities/${id}`,
             data: medicalEvent,
         });
+        return true;
     } catch (err) {
-        throw new Error(`Failed to update medical event: ${err}`);
+        console.error(`Failed to update medical event: ${err}`);
+        return false;
     }
 }
 
@@ -32,9 +43,10 @@ export async function FecthMedicalEvent(): Promise<MedicalEventViewModel[]> {
             method: 'GET',
             endpoint: `/medical-events/health-activities/all`,
         });
-        return response.data;
+        return response?.data || [];
     } catch (err) {
-        throw new Error(`Failed to get medical event: ${err}`);
+        console.error(`Failed to get medical event: ${err}`);
+        return [];
     }
 }
 
@@ -44,20 +56,27 @@ export async function FecthPendingMedicalEvent(): Promise<MedicalEventViewModel[
             method: 'GET',
             endpoint: `/medical-events/health-activities/pending`,
         });
-        return response.data;
+        return response?.data || [];
     } catch (err) {
-        throw new Error(`Failed to pending medical event: ${err}`);
+        console.error(`Failed to pending medical event: ${err}`);
+        return [];
     }
 }
 
-export async function FecthApproveMedicalEvent(id: string): Promise<void> {
+export async function FecthApproveMedicalEvent(id: string): Promise<boolean> {
+    if (!id) {
+        console.error("Invalid ID provided for approving medical event.");
+        return false;
+    }
     try {
         await ApiClient<void>({
             method: 'PUT',
             endpoint: `/medical-events/health-activities/${id}/approve`,
         });
+        return true;
     } catch (err) {
-        throw new Error(`Failed to approved medical event: ${err}`);
+        console.error(`Failed to approved medical event: ${err}`);
+        return false;
     }
 }
 
@@ -67,20 +86,27 @@ export async function FecthApproveMedicalEvents(): Promise<MedicalEventViewModel
             method: 'GET',
             endpoint: `/medical-events/health-activities/approved`,
         });
-        return response.data;
+        return response?.data || [];
     } catch (err) {
-        throw new Error(`Failed to get approve medical event: ${err}`);
+        console.error(`Failed to get approve medical event: ${err}`);
+        return [];
     }
 }
 
 
-export async function FecthDeleteMedicalEvents(id: string,): Promise<void> {
-  try {
-    await ApiClient<void>({
-      method: 'DELETE',
-      endpoint: `/medical-events/health-activities/${id}`
-    });
-  } catch (err) {
-    throw new Error(`Failed to delete medical event: ${err}`);
-  }
+export async function FecthDeleteMedicalEvents(id: string,): Promise<boolean> {
+    if (!id) {
+        console.error("Invalid ID for deletion.");
+        return false;
+    }
+    try {
+        await ApiClient<void>({
+            method: 'DELETE',
+            endpoint: `/medical-events/health-activities/${id}`
+        });
+        return true;
+    } catch (err) {
+        console.error("Failed to delete medical event:", err);
+        return false;
+    }
 }

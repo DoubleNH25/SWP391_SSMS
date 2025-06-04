@@ -5,6 +5,6 @@ export interface NotificationViewModel {
     activityType: string;
     activityId: string;
     activityName: string;
-    status: string;
-    scheduleTime: Date;
+    status: boolean;
+    scheduleTime: string;
 }
