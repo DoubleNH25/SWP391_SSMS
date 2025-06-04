@@ -1,7 +1,7 @@
 export interface MedicalEventUpdateCreateViewModel{
     name : string;
     description: string;
-    scheduledDate: Date;
+    scheduledDate: string;
 }
 
 export interface MedicalEventViewModel{

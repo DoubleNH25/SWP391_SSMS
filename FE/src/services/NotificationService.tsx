@@ -7,8 +7,9 @@ export async function FecthNotification(): Promise<NotificationViewModel[]> {
       method: 'GET',
       endpoint: '/parents/activity-consents/my-children',
     });
-    return response.data;
+    return response?.data || [];
   } catch (err) {
-    throw new Error(`Failed to get notification: ${err}`);
+    console.error('Failed to get notifications:', err);
+    return [];
   }
 }

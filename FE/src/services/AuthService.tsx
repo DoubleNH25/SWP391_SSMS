@@ -2,6 +2,9 @@ import { LoginRequest, LoginResponse } from "@/types/User";
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthLogin(users: LoginRequest): Promise<void> {
+    if (!users || !users.email || !users.password) {
+        console.error("Invalid login request data:", users);
+    }
     try {
         const response = await ApiClient<LoginResponse>({
             method: 'POST',
@@ -9,9 +12,13 @@ export async function FecthLogin(users: LoginRequest): Promise<void> {
             data: users,
             requiresToken: false,
         });
+        if (!response || !response.data || !response.data.token) {
+            console.error("Invalid response from login API:", response);
+            return;
+        }
         localStorage.setItem('token', response.data.token);
     } catch (err) {
-        throw new Error(`Failed to login: ${err}`);
+        console.error("Failed to login:", err);
     }
 }
 
@@ -22,8 +29,9 @@ export async function FecthLogout(): Promise<void> {
             endpoint: '/auth/logout',
             requiresToken: true,
         });
-        localStorage.removeItem('token');
     } catch (err) {
-        throw new Error(`Failed to logout: ${err}`);
+        console.error("Logout API call failed:", err);
+    } finally {
+        localStorage.removeItem('token');
     }
 }
