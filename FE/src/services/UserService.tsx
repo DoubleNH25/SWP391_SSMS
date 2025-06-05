@@ -1,5 +1,5 @@
-import { Student, StudentCreate, StudentUpdate } from "@/types/Student";
-import { User, UserCreate, UserUpdate } from "@/types/User";
+import { SchoolClass, Student, StudentCreate, StudentUpdate } from "@/types/Student";
+import { ParentViewModel, User, UserCreate, UserUpdate } from "@/types/User";
 import ApiClient from "@/utils/ApiBase";
 
 
@@ -193,5 +193,31 @@ export async function FecthDeleteStudents(studentId: string): Promise<boolean> {
   } catch (err) {
     console.error("Failed to delete student:", err);
     return false;
+  }
+}
+
+export async function FecthParents(): Promise<ParentViewModel[]> {
+  try {
+    const response = await ApiClient<ParentViewModel[]>({
+      method: 'GET',
+      endpoint: `/users/parents/get-all-parent`,
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error("Failed to get all parent:", err);
+    return [];
+  }
+}
+
+export async function FecthClass(): Promise<SchoolClass[]> {
+  try {
+    const response = await ApiClient<SchoolClass[]>({
+      method: 'GET',
+      endpoint: `/school-classes`,
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error("Failed to get all parent:", err);
+    return [];
   }
 }

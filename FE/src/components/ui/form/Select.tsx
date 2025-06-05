@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface Option {
   value: string;
@@ -24,6 +24,13 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   // Manage the selected value
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
+
+  useEffect(() => {
+    if (defaultValue) {
+      setSelectedValue(defaultValue);
+    }
+  }, [defaultValue]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;

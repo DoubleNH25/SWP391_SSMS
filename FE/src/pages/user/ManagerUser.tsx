@@ -5,7 +5,7 @@ import { PencilIcon, TrashBinIcon } from "../../components/icons/index"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
 import { PlusIcon } from "lucide-react";
-import { FecthUsers, FecthDeleteUsers } from "@/services/UserService";
+import { FecthUsers, FecthDeleteUsers, FecthClass } from "@/services/UserService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

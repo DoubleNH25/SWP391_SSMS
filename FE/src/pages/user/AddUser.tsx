@@ -2,15 +2,17 @@ import Input from "@/components/ui/form/InputField";
 import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
 import { EyeIcon, EyeCloseIcon } from "../../components/icons/index"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserCreate } from "@/types/User";
 import { FecthCreateUsers } from "@/services/UserService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FecthRoles } from "@/services/RoleService";
 
 export default function AddUser() {
   const [showPassword, setShowPassword] = useState(false);
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<UserCreate>(
@@ -24,6 +26,10 @@ export default function AddUser() {
   );
   const navigate = useNavigate();
 
+  useEffect(() => {
+    handleGetRole();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -33,13 +39,25 @@ export default function AddUser() {
     setFormData((prev) => ({ ...prev, roleId: value }));
   };
 
-  const options = [
-    { value: "306386d5-4764-4f90-aaf2-f619c31a4092", label: "Admin" },
-    { value: "6d23e1eb-c450-4e32-9da2-ce538d19abc8", label: "Manager" },
-    { value: "97c594c8-3d7d-4b1b-ba3a-f0901dcfbb60", label: "Nurse" },
-    { value: "c08fb23a-63f3-42bd-a5e4-fac1ba03488e", label: "Parent" },
-  ];
-
+  const handleGetRole = async () => {
+    setLoading(true);
+    try {
+      const roles = await FecthRoles();
+      const options = roles.map(role => ({
+        value: role.id,
+        label: role.roleName
+      }));
+      setRoleOptions(options);
+      setError(null);
+    } catch (err) {
+      setError(err.message.includes('authenticated')
+        ? 'Please log in to fetch parent data.'
+        : 'Failed to fetch parent data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(formData);
@@ -121,7 +139,7 @@ export default function AddUser() {
               <div>
                 <Label>Role</Label>
                 <Select
-                  options={options}
+                  options={roleOptions}
                   placeholder="Select an option"
                   onChange={handleSelectChange}
                   defaultValue={formData.roleId}
