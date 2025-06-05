@@ -32,6 +32,16 @@ const NotificationDropdown: React.FC = () => {
     }
   };
 
+  const handleConfirmActivity = () => {
+    try{
+
+    }catch(err){
+
+    }finally{
+
+    }
+  }
+
   const getActivityIcon = (activityType: ActivityType, status: boolean) => {
     if (!status) {
       return <AlertTriangle className="w-5 h-5" />;

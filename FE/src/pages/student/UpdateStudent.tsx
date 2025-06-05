@@ -1,8 +1,9 @@
 import DatePicker from "@/components/ui/form/DateField";
 import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
+import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import Select from "@/components/ui/form/Select";
-import { FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
+import { FecthClass, FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
 import { StudentUpdate } from "@/types/Student";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function UpdateStudents() {
   const { studentId } = useParams<{ studentId: string }>();
   const [error, setError] = useState<string | null>(null);
+  const [classOptions, setClassOptions] = useState<{ value: string; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [formData, setFormData] = useState<StudentUpdate>(
@@ -29,9 +31,32 @@ export default function UpdateStudents() {
     { value: "Female", label: "Female" },
   ];
 
+  const handleGetClass = async () => {
+    setLoading(true);
+    try {
+      const classRooms = await FecthClass();
+      const options = classRooms.map(classRoom => ({
+        value: classRoom.id,
+        label: classRoom.className
+      }));
+      setClassOptions(options);
+      setError(null);
+    } catch (err) {
+      setError(err.message.includes('authenticated')
+        ? 'Please log in to fetch parent data.'
+        : 'Failed to fetch parent data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFormData((prev) => ({ ...prev, image: file }));
+  };
+
+  const handleClassChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, id: value }));
   };
 
   const handleSelectChange = (value: string) => {
@@ -55,6 +80,14 @@ export default function UpdateStudents() {
           classId: user.classId,
           image: null
         });
+        const selectedGender = options.find(option => option.value == user.gender);
+        if (selectedGender) {
+          handleSelectChange(selectedGender.value);
+        }
+        const selectedClass = classOptions.find(option => option.value === user.classId);
+        if (selectedClass) {
+          handleClassChange(user.classId);
+        }
         setError(null);
       } else {
         throw new Error('Student not found');
@@ -71,6 +104,7 @@ export default function UpdateStudents() {
   useEffect(() => {
     if (studentId) {
       loadUser();
+      handleGetClass();
     }
   }, [studentId]);
 
@@ -158,6 +192,7 @@ export default function UpdateStudents() {
                       options={options}
                       placeholder="Select an option"
                       onChange={handleSelectChange}
+                      defaultValue={formData.gender}
                       className="dark:bg-dark-900"
                     />
                   </div>
@@ -166,6 +201,7 @@ export default function UpdateStudents() {
                       id="date-picker"
                       label="Date Picker Input"
                       placeholder="Select a date"
+                      defaultDate={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
                       onChange={(dates, currentDateString) => {
                         setFormData((prev) => ({ ...prev, dateOfBirth: currentDateString }));
                       }}
@@ -173,13 +209,13 @@ export default function UpdateStudents() {
                   </div>
                   <div>
                     <Label htmlFor="input-class">Class</Label>
-                    <Input
-                      name="classId"
-                      type="text"
-                      id="input-class"
-                      onChange={handleInputChange}
-                      value={formData.classId}
-                      placeholder="Please enter class" />
+                    <SearchableSelect
+                      options={classOptions}
+                      defaultValue={formData.classId}
+                      placeholder="Select a parent"
+                      onChange={handleClassChange}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <Label>Upload image</Label>
@@ -201,7 +237,7 @@ export default function UpdateStudents() {
                   onClick={handleCancel}
                   type="button"
                   disabled={loading}
-                  className="mt-4 w-[10%] ml-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
+                  className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                 >
                   Cancel
                 </button>

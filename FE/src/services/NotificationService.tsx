@@ -13,3 +13,24 @@ export async function FecthNotification(): Promise<NotificationViewModel[]> {
     return [];
   }
 }
+
+export async function FecthConfirmNotification(activityId: string): Promise<boolean> {
+  if (!activityId) {
+    console.error('Failed to found notifications:');
+    return false;
+  }
+  else if (!localStorage.getItem('token')) {
+    console.error('User is not authenticated');
+    return false;
+  }
+  try {
+    await ApiClient<boolean>({
+      method: 'PUT',
+      endpoint: `/parents/activity-consents/${activityId}/confirm`,
+    });
+    return true;
+  } catch (err) {
+    console.error('Failed to comfirm notifications:', err);
+    return false;
+  }
+}

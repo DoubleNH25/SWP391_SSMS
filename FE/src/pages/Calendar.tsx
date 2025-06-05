@@ -432,29 +432,31 @@ const Calendar: React.FC = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div>
-          <DatePicker
-            id="date-picker-medical"
-            label="Scheduled Date"
-            defaultDate={medicalData.scheduledDate || new Date()}
-            onChange={(date) => handleMedicalInputChange("scheduledDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
-            minDate="today"
-            maxDate="9000-12-31"
-          />
-        </div>
-        <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-1">Scheduled Time</Label>
-          <Input
-            type="time"
-            value={customFormatTime(medicalData.scheduledDate)}
-            onChange={(e) => {
-              const [hours, minutes] = e.target.value.split(':').map(Number);
-              const newDate = new Date(medicalData.scheduledDate);
-              newDate.setHours(hours, minutes);
-              handleMedicalInputChange("scheduledDate", newDate);
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex justify-between">
+          <div>
+            <DatePicker
+              id="date-picker-medical"
+              label="Scheduled Date"
+              defaultDate={medicalData.scheduledDate || new Date()}
+              onChange={(date) => handleMedicalInputChange("scheduledDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
+              minDate="today"
+              maxDate="9000-12-31"
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-semibold text-gray-700 mb-1">Scheduled Time</Label>
+            <Input
+              type="time"
+              value={customFormatTime(medicalData.scheduledDate)}
+              onChange={(e) => {
+                const [hours, minutes] = e.target.value.split(':').map(Number);
+                const newDate = new Date(medicalData.scheduledDate);
+                newDate.setHours(hours, minutes);
+                handleMedicalInputChange("scheduledDate", newDate);
+              }}
+              className="w-full mt-[1px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
       </div>
     );
@@ -465,80 +467,90 @@ const Calendar: React.FC = () => {
     if (!vaccinationData) return null;
 
     return (
-      <div className="space-y-4">
-        <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-1">Campaign Name *</Label>
-          <Input
-            type="text"
-            value={vaccinationData.name || ""}
-            onChange={(e) => handleVaccinationInputChange("name", e.target.value)}
-            placeholder="Enter campaign name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-1">Vaccine Name *</Label>
-          <Input
-            type="text"
-            value={vaccinationData.vaccineName || ""}
-            onChange={(e) => handleVaccinationInputChange("vaccineName", e.target.value)}
-            placeholder="Enter vaccine name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-1">Vaccine Type *</Label>
-          <Input
-            type="text"
-            value={vaccinationData.vaccineType || ""}
-            onChange={(e) => handleVaccinationInputChange("vaccineType", e.target.value)}
-            placeholder="Enter vaccine type"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <DatePicker
-            id="date-picker-mfg"
-            label="Manufacturing Date"
-            defaultDate={vaccinationData.mfg || new Date()}
-            onChange={(date) => handleVaccinationInputChange("mfg", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
-            minDate="1900-01-01"
-            maxDate="today"
-          />
-        </div>
-        <div>
-          <DatePicker
-            id="date-picker-exp"
-            label="Expiration Date"
-            defaultDate={vaccinationData.exp || new Date()}
-            onChange={(date) => handleVaccinationInputChange("exp", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
-            minDate="today"
-            maxDate="9000-12-31"
-          />
-        </div>
-        <div>
-          <DatePicker
-            id="date-picker-start"
-            label="Start Date"
-            defaultDate={vaccinationData.startDate || new Date()}
-            onChange={(date) => handleVaccinationInputChange("startDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
-            minDate="today"
-            maxDate="9000-12-31"
-          />
-        </div>
-        <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-1">Start Time</Label>
-          <Input
-            type="time"
-            value={customFormatTime(vaccinationData.startDate)}
-            onChange={(e) => {
-              const [hours, minutes] = e.target.value.split(':').map(Number);
-              const newDate = new Date(vaccinationData.startDate);
-              newDate.setHours(hours, minutes);
-              handleVaccinationInputChange("startDate", newDate);
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
+      <div className="space-y-4 w-full">
+        <div className="flex  gap-10 w-full mt-5">
+          <div className="w-1/2">
+            <div className="w-full mt-[1px]">
+              <Label className="block text-sm font-semibold text-gray-700 mb-1">Campaign Name *</Label>
+              <Input
+                type="text"
+                value={vaccinationData.name || ""}
+                onChange={(e) => handleVaccinationInputChange("name", e.target.value)}
+                placeholder="Enter campaign name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-full mt-3">
+              <Label className="block text-sm font-semibold text-gray-700 mb-1">Vaccine Name *</Label>
+              <Input
+                type="text"
+                value={vaccinationData.vaccineName || ""}
+                onChange={(e) => handleVaccinationInputChange("vaccineName", e.target.value)}
+                placeholder="Enter vaccine name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-full mt-3">
+              <Label className="block text-sm font-semibold text-gray-700 mb-1">Vaccine Type *</Label>
+              <Input
+                type="text"
+                value={vaccinationData.vaccineType || ""}
+                onChange={(e) => handleVaccinationInputChange("vaccineType", e.target.value)}
+                placeholder="Enter vaccine type"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex gap-4">
+              <div className="w-1/2">
+                <DatePicker
+                  id="date-picker-mfg"
+                  label="Manufacturing Date"
+                  defaultDate={vaccinationData.mfg || new Date()}
+                  onChange={(date) => handleVaccinationInputChange("mfg", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
+                  minDate="1900-01-01"
+                  maxDate="today"
+                />
+              </div>
+              <div className="w-1/2">
+                <DatePicker
+                  id="date-picker-exp"
+                  label="Expiration Date"
+                  defaultDate={vaccinationData.exp || new Date()}
+                  onChange={(date) => handleVaccinationInputChange("exp", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
+                  minDate="today"
+                  maxDate="9000-12-31"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4 mt-2">
+              <div className="w-full">
+                <DatePicker
+                  id="date-picker-start"
+                  label="Start Date"
+                  defaultDate={vaccinationData.startDate || new Date()}
+                  onChange={(date) => handleVaccinationInputChange("startDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
+                  minDate="today"
+                  maxDate="9000-12-31"
+                />
+              </div>
+              <div className="w-full mt-[1px]">
+                <Label className="block text-sm font-semibold text-gray-700 mb-1">Start Time</Label>
+                <Input
+                  type="time"
+                  value={customFormatTime(vaccinationData.startDate)}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(':').map(Number);
+                    const newDate = new Date(vaccinationData.startDate);
+                    newDate.setHours(hours, minutes);
+                    handleVaccinationInputChange("startDate", newDate);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -714,7 +726,7 @@ const Calendar: React.FC = () => {
                       <span className="text-xs">Type: {event.extendedProps.eventType}</span>
                     </div>
                   </div>
-                  
+
                   <div className="text-sm mt-1 ml-2">
                     {event.extendedProps.eventType === "medical"
                       ? event.extendedProps.description || "No description"
@@ -950,7 +962,9 @@ const Calendar: React.FC = () => {
             <div className="lg:w-1/3">{DailySchedule}</div>
           </div>
 
-          <Modal isOpen={isOpen} onClose={closeModal} className={`${formData.type === "medical" ? "" : "mt-[12rem]"} max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}>
+          <Modal isOpen={isOpen} onClose={closeModal}
+            className={`${formData.type === "medical" ? "" : "max-w-3xl"} 
+          max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}>
             {viewEventsDate ? (
               ViewEventsModal
             ) : (

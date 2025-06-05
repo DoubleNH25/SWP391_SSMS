@@ -111,10 +111,30 @@ export default function HealthProfiles() {
     };
 
     const fetchData = async () => {
+        console.log('fetchData called');
         setLoading(true);
         try {
             const fetchedProfile = await FecthHealthProfile();
             setHealthProfiles(fetchedProfile);
+            const studentsWithMissingData = fetchedProfile.filter(student => {
+                const healthProfile = student.healthProfile;
+                return !healthProfile ||
+                    !healthProfile.vision ||
+                    !healthProfile.hearing ||
+                    !healthProfile.dental ||
+                    !healthProfile.bmi ||
+                    !healthProfile.abnormalNote ||
+                    !healthProfile.vaccinationHistory;
+            });
+            console.log(studentsWithMissingData);
+            if (studentsWithMissingData.length > 0) {
+                const studentNames = studentsWithMissingData.map(s => s.fullName).join(", ");
+                toast.warning(
+                    `Please complete health information for: ${studentNames}`,
+                    { autoClose: 5000 }
+                );
+            }
+
             setError(null);
         } catch (err) {
             console.error('Fetch error:', err);
@@ -129,15 +149,9 @@ export default function HealthProfiles() {
     };
 
     useEffect(() => {
+        console.log('useEffect triggered');
         fetchData();
     }, []);
-
-    if (loading) {
-        return <div className="text-center text-gray-500">Loading...</div>;
-    }
-    if (error) {
-        return <div className="text-center text-red-500">Error {error}</div>;
-    }
 
     return (
         <div className="p-6">
@@ -184,11 +198,11 @@ export default function HealthProfiles() {
                         const healthIssues = getHealthStatus(student.healthProfile ?? null);
                         const bmiStatus = getBMIStatus(student.healthProfile ? student.healthProfile.bmi ?? null : null);
                         return (
-                            <div key={index} className="mt-10">
+                            <div key={index} className="mt-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <div>
-                                            <img src={student.image} className="w-5 h-5" alt="..." />
+                                        <div className="">
+                                            <img src={student.image} className="w-20 h-20 border-2 rounded-full" alt="..." />
                                         </div>
                                         <div className="ml-4">
                                             <div className="text-lg font-semibold text-gray-800">{student.fullName}</div>
@@ -303,7 +317,7 @@ export default function HealthProfiles() {
                                     isOpen={isUpdateModalOpen}
                                     onClose={handleCloseUpdateModal}
                                     showCloseButton={true}
-                                    className="w-2/5 mx-auto mt-[6rem]"
+                                    className="w-2/5 mx-auto"
                                 >
                                     {errorModal && (
                                         <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
@@ -312,56 +326,58 @@ export default function HealthProfiles() {
                                     )}
                                     <h2 className="text-2xl font-bold mb-4 ml-5">Update Health Profile</h2>
                                     <form onSubmit={handleSubmit} className="space-y-4 m-5">
-                                        <div>
-                                            <Label htmlFor="vision" className="block text-sm font-medium text-gray-700">
-                                                Vision
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                name="vision"
-                                                value={formData.vision}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="hearing" className="block text-sm font-medium text-gray-700">
-                                                Hearing
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                name="hearing"
-                                                value={formData.hearing}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="dental" className="block text-sm font-medium text-gray-700">
-                                                Dental
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                name="dental"
-                                                value={formData.dental}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="bmi" className="block text-sm font-medium text-gray-700">
-                                                BMI
-                                            </Label>
-                                            <Input
-                                                min="0"
-                                                max="100"
-                                                type="number"
-                                                step={0.1}
-                                                name="bmi"
-                                                value={formData.bmi ?? ''}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
+                                        <div className="flex gap-5">
+                                            <div>
+                                                <Label htmlFor="vision" className="block text-sm font-medium text-gray-700">
+                                                    Vision
+                                                </Label>
+                                                <Input
+                                                    type="text"
+                                                    name="vision"
+                                                    value={formData.vision}
+                                                    onChange={handleInputChange}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="hearing" className="block text-sm font-medium text-gray-700">
+                                                    Hearing
+                                                </Label>
+                                                <Input
+                                                    type="text"
+                                                    name="hearing"
+                                                    value={formData.hearing}
+                                                    onChange={handleInputChange}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="dental" className="block text-sm font-medium text-gray-700">
+                                                    Dental
+                                                </Label>
+                                                <Input
+                                                    type="text"
+                                                    name="dental"
+                                                    value={formData.dental}
+                                                    onChange={handleInputChange}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="bmi" className="block text-sm font-medium text-gray-700">
+                                                    BMI
+                                                </Label>
+                                                <Input
+                                                    min="0"
+                                                    max="100"
+                                                    type="number"
+                                                    step={0.1}
+                                                    name="bmi"
+                                                    value={formData.bmi ?? ''}
+                                                    onChange={handleInputChange}
+                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                />
+                                            </div>
                                         </div>
                                         <div>
                                             <Label htmlFor="vaccinationHistory" className="block text-sm font-medium text-gray-700">
@@ -372,7 +388,7 @@ export default function HealthProfiles() {
                                                 rows={3}
                                                 value={formData.vaccinationHistory}
                                                 onChange={handleInputChange}
-                                                className="mt-1 block border-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                className="mt-1 block p-2 border-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                                             />
                                         </div>
                                         <div>
@@ -384,7 +400,7 @@ export default function HealthProfiles() {
                                                 rows={4}
                                                 value={formData.abnormalNote}
                                                 onChange={handleInputChange}
-                                                className="mt-1 border-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                                className="mt-1 p-2 border-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                                             />
                                         </div>
                                         <div className="flex justify-end space-x-2">

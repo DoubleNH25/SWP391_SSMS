@@ -18,8 +18,6 @@ export interface Student {
   healthProfile: HealthProfile
 }
 
-
-
 export interface StudentCreate {
   fullName: string;
   gender: string;
@@ -35,3 +33,5 @@ export interface StudentUpdate {
   classId: string;
   image: File | null;
 }
+
+

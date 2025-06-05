@@ -186,7 +186,7 @@ export default function PendingEventManager() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-white-700"
+                  className="text-red-800 bg-red-400 py-5"
                 >
                   <span className="absolute right-[-9px] top-[-0.775rem] z-10 h-5 w-5 rounded-full bg-orange-400">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />

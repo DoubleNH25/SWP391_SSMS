@@ -7,6 +7,7 @@ interface SearchableSelectProps {
   onChange?: (value: string) => void;
   className?: string;
   value?: string;
+  defaultValue?: string;
 }
 
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -15,18 +16,28 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   onChange,
   className = '',
   value,
+  defaultValue = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [selectedValue, setSelectedValue] = useState<string | undefined>(value);
+  const [selectedValue, setSelectedValue] = useState<string | undefined>(value || defaultValue);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Update component initialization to use defaultValue
+  useEffect(() => {
+    if (defaultValue && !selectedValue) {
+      setSelectedValue(defaultValue);
+    }
+  }, [defaultValue]);
+
   // Sync controlled value
   useEffect(() => {
-    setSelectedValue(value);
+    if (value !== undefined) {
+      setSelectedValue(value);
+    }
   }, [value]);
 
   const filteredOptions = options.filter(option =>

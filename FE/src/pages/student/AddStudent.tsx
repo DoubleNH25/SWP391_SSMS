@@ -3,7 +3,7 @@ import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FecthCreateStudents, FecthUsers } from "@/services/UserService";
+import { FecthCreateStudents, FecthParents } from "@/services/UserService";
 import { StudentCreate } from "@/types/Student";
 import DatePicker from "@/components/ui/form/DateField";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
@@ -33,9 +33,8 @@ export default function AddStudent() {
   const handleGetParent = async () => {
     setLoading(true);
     try {
-      const users = await FecthUsers();
-      const parentUsers = users.filter(user => user.roleName.includes("Parent"));
-      const options = parentUsers.map(parent => ({
+      const parents = await FecthParents();
+      const options = parents.map(parent => ({
         value: parent.id,
         label: parent.fullName
       }));
