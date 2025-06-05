@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-	options.MultipartBodyLengthLimit = 104857600; // 100 MB
+	options.MultipartBodyLengthLimit = 104857600; // 100 MB //Ok
 });
 
 
@@ -83,6 +83,8 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
+builder.Services.AddScoped<IMedicalService, MedicalService>();
+
 
 // Infrastructure Services
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
