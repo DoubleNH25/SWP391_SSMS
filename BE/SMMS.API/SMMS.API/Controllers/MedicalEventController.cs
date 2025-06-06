@@ -29,6 +29,14 @@ namespace SMMS.API.Controllers
 			return Ok(activities);
 		}
 
+		[HttpGet("health-activities/rejected")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetRejectedHealthActivities()
+		{
+			var activities = await _healthActivityService.GetRejectHealthActivitiesAsync();
+			return Ok(activities);
+		}
+
 		[HttpGet("health-activities/pending")]
 		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> GetPendingHealthActivities()
@@ -64,7 +72,17 @@ namespace SMMS.API.Controllers
 			if (!result) return NotFound();
 			return NoContent();
 		}
-		
+		[HttpPut("health-activities/{id}/reject")]
+		[Authorize(Roles = "Admin,Manager")]
+		public async Task<IActionResult> RejectHealthActivity(string id)
+		{
+			var rejecterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (rejecterId == null) return Unauthorized("Rejecter ID not found in claims.");
+			var result = await _healthActivityService.RejectHealthActivityAsync(id, rejecterId);
+			if (!result) return NotFound();
+			return NoContent();
+		}
+
 		[HttpPut("health-activities/{id}")]
 		[Authorize(Roles = "Nurse,Admin,Manager")]
 		public async Task<IActionResult> UpdateHealthActivity(string id, [FromBody] HealthActivityRequest request)
@@ -92,6 +110,14 @@ namespace SMMS.API.Controllers
 		{
 			var activities = await _vaccinationCampaignService.GetAllVaccineCampaignAsync();
 			return Ok(activities);
+		}
+
+		[HttpGet("vaccination-campaigns/reject")]
+		[Authorize(Roles = "Admin,Manager")]
+		public async Task<IActionResult> GetRejectVaccinationCampaigns()
+		{
+			var pending = await _vaccinationCampaignService.GetRejectVaccinationCampaignsAsync();
+			return Ok(pending);
 		}
 
 		[HttpGet("vaccination-campaigns/pending")]
@@ -126,6 +152,17 @@ namespace SMMS.API.Controllers
 			var approverId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 			if (approverId == null) return Unauthorized("Approver ID not found in claims.");
 			var result = await _vaccinationCampaignService.ApproveVaccinationCampaignAsync(id, approverId);
+			if (!result) return NotFound();
+			return NoContent();
+		}
+
+		[HttpPut("vaccination-campaigns/{id}/reject")]
+		[Authorize(Roles = "Admin,Manager")]
+		public async Task<IActionResult> RejectVaccinationCampaign(string id)
+		{
+			var rejecterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (rejecterId == null) return Unauthorized("Approver ID not found in claims.");
+			var result = await _vaccinationCampaignService.RejectVaccinationCampaignAsync(id, rejecterId);
 			if (!result) return NotFound();
 			return NoContent();
 		}

@@ -1,6 +1,7 @@
 ﻿using SMMS.Domain.Base;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using SMMS.Domain.Enum;
 
 namespace SMMS.Domain.Entity
 {
@@ -28,8 +29,8 @@ namespace SMMS.Domain.Entity
         public virtual HealthActivity HealthActivity { get; set; }
 
         public string? Comments { get; set; }
-        public bool Status { get; set; } 
-        public DateTime ScheduleTime { get; set; }
+		public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
+		public DateTime ScheduleTime { get; set; }
         public string? ActivityType { get; set; }
     }
 }

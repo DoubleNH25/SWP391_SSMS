@@ -147,6 +147,7 @@ namespace SMMS.Application.Services.Implements
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
@@ -208,6 +209,7 @@ namespace SMMS.Application.Services.Implements
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
@@ -217,7 +219,7 @@ namespace SMMS.Application.Services.Implements
 						Id = s.SchoolClass.Id,
 						ClassName = s.SchoolClass.ClassName,
 						ClassRoom = s.SchoolClass.ClassRoom,
-						Quantity = s.SchoolClass.Quantity
+						Quantity = s.SchoolClass.Quantity,
 					} : null,
 					Image = s.Image,
 					HealthProfile = s.HealthProfiles
@@ -265,6 +267,7 @@ namespace SMMS.Application.Services.Implements
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,

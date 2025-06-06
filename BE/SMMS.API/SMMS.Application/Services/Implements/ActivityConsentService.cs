@@ -2,6 +2,7 @@
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
+using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
 
 namespace SMMS.Application.Services.Implements
@@ -22,7 +23,7 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (consent == null) return false;
 
-			consent.Status = status;
+			consent.Status = ApprovalStatus.Approved;
 			consent.LastUpdatedBy = parentId;
 			consent.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConsentRepository.Update(consent);
@@ -68,8 +69,8 @@ namespace SMMS.Application.Services.Implements
 			var consents = _repositoryManager.ConsentRepository
 				.FindByCondition(ac => ac.UserId == parentId, false)
 				.Include(ac => ac.Student)
-				.Include(ac => ac.HealthActivity)
-				.Include(ac => ac.VaccinationCampaign)
+				.Include(ac => ac.HealthActivity).ThenInclude(ha => ha.User) // Lấy thông tin User của HealthActivity
+				.Include(ac => ac.VaccinationCampaign).ThenInclude(vc => vc.User)
 				.Select(ac => new ActivityConsentResponse
 				{
 					Id = ac.Id,
@@ -79,7 +80,9 @@ namespace SMMS.Application.Services.Implements
 					ActivityId = ac.HealthActivityId ?? ac.VaccinationCampaignId,
 					ActivityName = ac.HealthActivity != null ? ac.HealthActivity.Name : ac.VaccinationCampaign.Name,
 					Status = ac.Status,
-					ScheduleTime = ac.ScheduleTime
+					ScheduleTime = ac.ScheduleTime,
+					ResponsibleUserId = ac.ActivityType == "HealthActivity" ? ac.HealthActivity.UserId : ac.VaccinationCampaign.UserId,
+					ResponsibleUserName = ac.ActivityType == "HealthActivity" ? ac.HealthActivity.User.FullName : ac.VaccinationCampaign.User.FullName,
 				}).ToList();
 			return consents;
 		}
@@ -99,7 +102,9 @@ namespace SMMS.Application.Services.Implements
 					ActivityId = ac.HealthActivityId,
 					ActivityName = ac.HealthActivity.Name,
 					Status = ac.Status,
-					ScheduleTime = ac.ScheduleTime
+					ScheduleTime = ac.ScheduleTime,
+					ResponsibleUserId = ac.HealthActivity.UserId,
+					ResponsibleUserName = ac.HealthActivity.User.FullName,
 				}).ToList();
 			return consents;
 		}
@@ -119,7 +124,9 @@ namespace SMMS.Application.Services.Implements
 					ActivityId = ac.VaccinationCampaignId,
 					ActivityName = ac.VaccinationCampaign.Name,
 					Status = ac.Status,
-					ScheduleTime = ac.ScheduleTime
+					ScheduleTime = ac.ScheduleTime,
+					ResponsibleUserId = ac.VaccinationCampaign.UserId,
+					ResponsibleUserName = ac.VaccinationCampaign.User.FullName,
 				}).ToList();
 			return consents;
 		}

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SMMS.Domain.Entity;
-using BCrypt.Net;
+using SMMS.Domain.Enum;
 
 namespace SMMS.Infrastructure.Context
 {
@@ -27,6 +27,8 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<VaccinationCampaign> VaccinationCampaign { get; set; }
         public virtual DbSet<VaccinationRecord> VaccinationRecord { get; set; }
 		public virtual DbSet<Otp> Otps { get; set; }
+		public virtual DbSet<HealthActivityClass> HealthActivityClasses { get; set; }
+		public virtual DbSet<VaccinationCampaignClass> VaccinationCampaignClasses { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,9 +65,17 @@ namespace SMMS.Infrastructure.Context
                     .HasForeignKey(ur => ur.ClassId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+			modelBuilder.Entity<Student>()
+				.Property(s => s.StudentNumber)
+                .UseIdentityColumn() // Sử dụng UseIdentityColumn để tạo cột tự tăng
+				.ValueGeneratedOnAdd(); // Đặt StudentNumber là cột tự tăng (identity)
 
-            // HealthProfile - Student (N-1)
-            modelBuilder.Entity<HealthProfile>()
+			modelBuilder.Entity<Student>()
+				.Property(s => s.StudentCode)
+				.HasComputedColumnSql("'STD' + CAST([StudentNumber] AS VARCHAR(10))");
+
+			// HealthProfile - Student (N-1)
+			modelBuilder.Entity<HealthProfile>()
                 .HasOne(w => w.Student)
                 .WithMany(u => u.HealthProfiles)
                 .HasForeignKey(w => w.StudentId)
@@ -202,6 +212,30 @@ namespace SMMS.Infrastructure.Context
 				entity.Property(e => e.IsUsed).IsRequired();
 				entity.Property(e => e.UserId).IsRequired(false); // Explicitly nullable
 			});
+
+			modelBuilder.Entity<HealthActivityClass>()
+			.HasOne(hac => hac.HealthActivity)
+			.WithMany(ha => ha.HealthActivityClasses)
+			.HasForeignKey(hac => hac.HealthActivityId)
+			.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<HealthActivityClass>()
+				.HasOne(hac => hac.SchoolClass)
+				.WithMany()
+				.HasForeignKey(hac => hac.SchoolClassId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<VaccinationCampaignClass>()
+				.HasOne(vcc => vcc.VaccinationCampaign)
+				.WithMany(vc => vc.VaccinationCampaignClasses)
+				.HasForeignKey(vcc => vcc.VaccinationCampaignId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<VaccinationCampaignClass>()
+				.HasOne(vcc => vcc.SchoolClass)
+				.WithMany()
+				.HasForeignKey(vcc => vcc.SchoolClassId)
+				.OnDelete(DeleteBehavior.Restrict);
 			//===================================================Seed data================================================================
 
 			//role
@@ -368,62 +402,61 @@ namespace SMMS.Infrastructure.Context
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow
 				});
-			var healthActivityId1 = Guid.NewGuid().ToString();
-			var healthActivityId2 = Guid.NewGuid().ToString();
+			var healthActivityId = Guid.NewGuid().ToString();
 			modelBuilder.Entity<HealthActivity>().HasData(
 				new HealthActivity
 				{
-					Id = healthActivityId1,
+					Id = healthActivityId,
 					UserId = nurseId,
-					Name = "Annual Health Checkup 2025",
-					Description = "Routine health checkup for all students",
-					ScheduledDate = new DateTime(2025, 6, 15),
-					IsAccepted = false,
+					Name = "Annual Health Check",
+					Description = "Yearly health check for students",
+					ScheduledDate = new DateTime(2024, 12, 1),
+					Status = ApprovalStatus.Pending,
 					CreatedBy = nurseId,
 					CreatedTime = DateTimeOffset.UtcNow
-				},
-				new HealthActivity
+				}
+			);
+
+			modelBuilder.Entity<HealthActivityClass>().HasData(
+				new HealthActivityClass
 				{
-					Id = healthActivityId2,
-					UserId = nurseId,
-					Name = "Vision Screening 2025",
-					Description = "Vision screening for students in grades 10",
-					ScheduledDate = new DateTime(2025, 7, 10),
-					IsAccepted = false,
-					CreatedBy = nurseId,
+					Id = Guid.NewGuid().ToString(),
+					HealthActivityId = healthActivityId,
+					SchoolClassId = classId1,
+					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow
-				});
+				}
+			);
 
 			// VaccinationCampaign
-			var vaccinationCampaignId1 = Guid.NewGuid().ToString();
-			var vaccinationCampaignId2 = Guid.NewGuid().ToString();
+			var vaccinationCampaignId = Guid.NewGuid().ToString();
 			modelBuilder.Entity<VaccinationCampaign>().HasData(
 				new VaccinationCampaign
 				{
-					Id = vaccinationCampaignId1,
-					Name = "Flu Vaccination 2025",
-					VaccineName = "Influenza Vaccine",
-					EXP = new DateTime(2026, 12, 31),
-					MFG = new DateTime(2025, 1, 1),
-					VaccineType = "Influenza",
-					StartDate = new DateTime(2025, 10, 1),
-					IsAccepted = false,
+					Id = vaccinationCampaignId,
+					UserId = nurseId,
+					Name = "Flu Vaccination",
+					VaccineName = "Flu Vaccine",
+					EXP = new DateTime(2025, 12, 1),
+					MFG = new DateTime(2024, 1, 1),
+					VaccineType = "Flu",
+					StartDate = new DateTime(2024, 11, 15),
+					Status = ApprovalStatus.Pending,
 					CreatedBy = nurseId,
 					CreatedTime = DateTimeOffset.UtcNow
-				},
-				new VaccinationCampaign
+				}
+			);
+
+			modelBuilder.Entity<VaccinationCampaignClass>().HasData(
+				new VaccinationCampaignClass
 				{
-					Id = vaccinationCampaignId2,
-					Name = "HPV Vaccination 2025",
-					VaccineName = "HPV Vaccine",
-					EXP = new DateTime(2027, 6, 30),
-					MFG = new DateTime(2025, 1, 1),
-					VaccineType = "HPV",
-					StartDate = new DateTime(2025, 11, 15),
-					IsAccepted = false,
-					CreatedBy = nurseId,
+					Id = Guid.NewGuid().ToString(),
+					VaccinationCampaignId = vaccinationCampaignId,
+					SchoolClassId = classId2,
+					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow
-				});
+				}
+			);
 		}
     }
 }

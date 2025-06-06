@@ -1,6 +1,7 @@
 ﻿using SMMS.Domain.Base;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using SMMS.Domain.Enum;
 
 namespace SMMS.Domain.Entity
 {
@@ -16,7 +17,9 @@ namespace SMMS.Domain.Entity
         public string Description { get; set; }
         public DateTime ScheduledDate { get; set; }
 
-        public bool IsAccepted { get; set; }
+		public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
+
+		public virtual ICollection<HealthActivityClass> HealthActivityClasses { get; set; }
 		public virtual ICollection<HealthCheckupRecord> HealthCheckupRecords { get; set; }
         public virtual ICollection<ActivityConsent> ActivityConsents { get; set; }
     }

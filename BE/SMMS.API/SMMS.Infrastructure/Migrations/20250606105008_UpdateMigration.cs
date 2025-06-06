@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SMMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class NewInit : Migration
+    public partial class UpdateMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -94,29 +94,6 @@ namespace SMMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccinationCampaign",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    VaccineName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EXP = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    MFG = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    VaccineType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    LastUpdatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    DeletedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VaccinationCampaign", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "User",
                 columns: table => new
                 {
@@ -183,6 +160,7 @@ namespace SMMS.Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ScheduledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -263,6 +241,9 @@ namespace SMMS.Infrastructure.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ParentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ClassId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StudentNumber = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentCode = table.Column<string>(type: "nvarchar(max)", nullable: false, computedColumnSql: "'STD' + CAST([StudentNumber] AS VARCHAR(10))"),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -292,18 +273,18 @@ namespace SMMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ActivityConsent",
+                name: "VaccinationCampaign",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    StudentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    VaccinationCampaignId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    HealthActivityId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<bool>(type: "bit", nullable: false),
-                    ScheduleTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ActivityType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VaccineName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EXP = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    MFG = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    VaccineType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -313,29 +294,42 @@ namespace SMMS.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityConsent", x => x.Id);
+                    table.PrimaryKey("PK_VaccinationCampaign", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ActivityConsent_HealthActivity_HealthActivityId",
+                        name: "FK_VaccinationCampaign_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HealthActivityClasses",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    HealthActivityId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SchoolClassId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LastUpdatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DeletedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HealthActivityClasses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HealthActivityClasses_HealthActivity_HealthActivityId",
                         column: x => x.HealthActivityId,
                         principalTable: "HealthActivity",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ActivityConsent_Student_StudentId",
-                        column: x => x.StudentId,
-                        principalTable: "Student",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ActivityConsent_User_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ActivityConsent_VaccinationCampaign_VaccinationCampaignId",
-                        column: x => x.VaccinationCampaignId,
-                        principalTable: "VaccinationCampaign",
+                        name: "FK_HealthActivityClasses_SchoolClass_SchoolClassId",
+                        column: x => x.SchoolClassId,
+                        principalTable: "SchoolClass",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -352,6 +346,7 @@ namespace SMMS.Infrastructure.Migrations
                     Dental = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BMI = table.Column<double>(type: "float", nullable: false),
                     AbnormalNote = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Time = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RecordDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsLatest = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -488,6 +483,86 @@ namespace SMMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ActivityConsent",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StudentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    VaccinationCampaignId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    HealthActivityId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    ScheduleTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActivityType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LastUpdatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DeletedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ActivityConsent", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ActivityConsent_HealthActivity_HealthActivityId",
+                        column: x => x.HealthActivityId,
+                        principalTable: "HealthActivity",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ActivityConsent_Student_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Student",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ActivityConsent_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ActivityConsent_VaccinationCampaign_VaccinationCampaignId",
+                        column: x => x.VaccinationCampaignId,
+                        principalTable: "VaccinationCampaign",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VaccinationCampaignClasses",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    VaccinationCampaignId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SchoolClassId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LastUpdatedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DeletedTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VaccinationCampaignClasses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VaccinationCampaignClasses_SchoolClass_SchoolClassId",
+                        column: x => x.SchoolClassId,
+                        principalTable: "SchoolClass",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VaccinationCampaignClasses_VaccinationCampaign_VaccinationCampaignId",
+                        column: x => x.VaccinationCampaignId,
+                        principalTable: "VaccinationCampaign",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "VaccinationRecord",
                 columns: table => new
                 {
@@ -495,6 +570,7 @@ namespace SMMS.Infrastructure.Migrations
                     StudentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     VaccinationCampaignId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ResultNote = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Time = table.Column<DateTime>(type: "datetime2", nullable: false),
                     VaccinatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -608,10 +684,19 @@ namespace SMMS.Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "RoleName" },
                 values: new object[,]
                 {
-                    { "349fb78c-744c-47b5-8463-aed1426b4f9d", "System", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3943), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Admin" },
-                    { "6779ebc6-0ce2-45bb-a561-fd913aad7c79", "System", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3947), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3947), new TimeSpan(0, 0, 0, 0, 0)), "Manager" },
-                    { "c5298ccd-12eb-454d-8325-28250a9d1385", "System", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3954), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3954), new TimeSpan(0, 0, 0, 0, 0)), "Nurse" },
-                    { "d84b1e4b-bf61-4672-a1d2-552245ee6af8", "System", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3957), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 37, 902, DateTimeKind.Unspecified).AddTicks(3957), new TimeSpan(0, 0, 0, 0, 0)), "Parent" }
+                    { "4d07fa7f-4d9a-4f85-a301-cab23e66ca8a", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5896), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5897), new TimeSpan(0, 0, 0, 0, 0)), "Nurse" },
+                    { "a2e1f677-b7e7-4e11-b414-1512af9def4b", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5845), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5846), new TimeSpan(0, 0, 0, 0, 0)), "Manager" },
+                    { "de99dad4-8b7a-44b8-b4b9-f8e54fb91e6c", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5829), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Admin" },
+                    { "eca3116c-dbd1-4e91-a03a-044a1d0de7c9", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5950), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5951), new TimeSpan(0, 0, 0, 0, 0)), "Parent" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "SchoolClass",
+                columns: new[] { "Id", "ClassName", "ClassRoom", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "Quantity" },
+                values: new object[,]
+                {
+                    { "56ed3a71-79ec-4156-b6a3-2403f3e4b603", "Class 10A", "Room 101", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(212), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 30 },
+                    { "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "Class 10B", "Room 102", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(218), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 28 }
                 });
 
             migrationBuilder.InsertData(
@@ -619,11 +704,49 @@ namespace SMMS.Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Email", "FullName", "Image", "LastUpdatedBy", "LastUpdatedTime", "Password", "Phone", "RoleId" },
                 values: new object[,]
                 {
-                    { "32a3346f-bb46-4bcb-a397-f458f574e722", "SeedData", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 38, 134, DateTimeKind.Unspecified).AddTicks(9274), new TimeSpan(0, 0, 0, 0, 0)), null, null, "nurse@gmail.com", "Jack97", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$/7D1fguexmWEL9sgIp/CSeWvayTNVkbDLoyR3PoWhumVoeZN51Byu", "0912345678", "c5298ccd-12eb-454d-8325-28250a9d1385" },
-                    { "697f1d8b-9cdc-4358-8650-1d773a40af85", "SeedData", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 38, 17, DateTimeKind.Unspecified).AddTicks(5514), new TimeSpan(0, 0, 0, 0, 0)), null, null, "admin@gmail.com", "KICM vippro", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$Y2XzYj7Kr6yVy.ZAc/DGLeDfAAmkSois/H0t1jgrSG2wzWh3FYDKu", "0987654321", "349fb78c-744c-47b5-8463-aed1426b4f9d" },
-                    { "a3ca1283-a371-403d-b1b3-4929f53678f3", "SeedData", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 38, 366, DateTimeKind.Unspecified).AddTicks(6243), new TimeSpan(0, 0, 0, 0, 0)), null, null, "parent@gmail.com", "KietBap", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$sGKqTKGG4rjZ5LSRTW/YZeQ/qB1kjaJYp2e.dppiPbNFuGg5xRzKy", "0987051234", "d84b1e4b-bf61-4672-a1d2-552245ee6af8" },
-                    { "f4a37e95-e94f-47c5-8f69-35d537c3f088", "SeedData", new DateTimeOffset(new DateTime(2025, 5, 27, 4, 37, 38, 252, DateTimeKind.Unspecified).AddTicks(3464), new TimeSpan(0, 0, 0, 0, 0)), null, null, "manager@gmail.com", "FireFly", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$LNpTtZBTczddc8ymNO/pIu1muKdd2KLya1023vls6IKMuMDs7Cw2G", "0987651234", "6779ebc6-0ce2-45bb-a561-fd913aad7c79" }
+                    { "53e4564c-0e72-4772-addf-c7642db2a5f3", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 677, DateTimeKind.Unspecified).AddTicks(7300), new TimeSpan(0, 0, 0, 0, 0)), null, null, "manager@gmail.com", "FireFly", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$co/Ct3wcpcKEHRo1smFfvuCwWyCHni312Rm0q6YIdHYKVFoaJQ1lu", "0987651234", "a2e1f677-b7e7-4e11-b414-1512af9def4b" },
+                    { "94389e8e-a398-4e89-8962-897ac3d03609", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 873, DateTimeKind.Unspecified).AddTicks(9344), new TimeSpan(0, 0, 0, 0, 0)), null, null, "parent@gmail.com", "KietBap", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$8Nob.GbYaPikot72dM2O6u8UG9GuCVgZhr3zVbbdPCIrt5I4IWcra", "0987051234", "eca3116c-dbd1-4e91-a03a-044a1d0de7c9" },
+                    { "b5c344e4-029e-4227-beea-0a8b7bfacd95", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 479, DateTimeKind.Unspecified).AddTicks(6933), new TimeSpan(0, 0, 0, 0, 0)), null, null, "nurse@gmail.com", "Jack97", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$jlL.cG7zVHC7HJAJU1zVxeIhoII4YmJAw735jFyxDLZ.gsd6ovfWm", "0912345678", "4d07fa7f-4d9a-4f85-a301-cab23e66ca8a" },
+                    { "f593f5b2-8234-416c-8cdd-a486be2f743a", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 291, DateTimeKind.Unspecified).AddTicks(6517), new TimeSpan(0, 0, 0, 0, 0)), null, null, "admin@gmail.com", "KICM vippro", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$.KMgDX4IfULg5H/kqSNF6.ZFIPpahbPHLG/D7KRAiHkIEPeZyi6TC", "0987654321", "de99dad4-8b7a-44b8-b4b9-f8e54fb91e6c" }
                 });
+
+            migrationBuilder.InsertData(
+                table: "HealthActivity",
+                columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Description", "LastUpdatedBy", "LastUpdatedTime", "Name", "ScheduledDate", "Status", "UserId" },
+                values: new object[] { "7aab09da-b367-4d59-ac41-73453808efc6", "b5c344e4-029e-4227-beea-0a8b7bfacd95", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(482), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Yearly health check for students", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Annual Health Check", new DateTime(2024, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "b5c344e4-029e-4227-beea-0a8b7bfacd95" });
+
+            migrationBuilder.InsertData(
+                table: "Student",
+                columns: new[] { "Id", "ClassId", "CreatedBy", "CreatedTime", "DateOfBirth", "DeletedBy", "DeletedTime", "FullName", "Gender", "Image", "LastUpdatedBy", "LastUpdatedTime", "ParentId" },
+                values: new object[,]
+                {
+                    { "357e080e-8ffa-4f54-8fb7-807e29c573f5", "56ed3a71-79ec-4156-b6a3-2403f3e4b603", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(311), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Nguyen Van A", "Male", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "94389e8e-a398-4e89-8962-897ac3d03609" },
+                    { "6b524770-a631-4f19-b68f-3269977fd64a", "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(315), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Tran Thi B", "Female", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "94389e8e-a398-4e89-8962-897ac3d03609" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "VaccinationCampaign",
+                columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "EXP", "LastUpdatedBy", "LastUpdatedTime", "MFG", "Name", "StartDate", "Status", "UserId", "VaccineName", "VaccineType" },
+                values: new object[] { "0484b4d6-44c0-4fe8-979e-af03d3c5433f", "b5c344e4-029e-4227-beea-0a8b7bfacd95", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(798), new TimeSpan(0, 0, 0, 0, 0)), null, null, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Flu Vaccination", new DateTime(2024, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "b5c344e4-029e-4227-beea-0a8b7bfacd95", "Flu Vaccine", "Flu" });
+
+            migrationBuilder.InsertData(
+                table: "HealthActivityClasses",
+                columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "HealthActivityId", "LastUpdatedBy", "LastUpdatedTime", "SchoolClassId" },
+                values: new object[] { "159a0cf8-662d-4efb-9218-bcd9cc1d7cf5", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(622), new TimeSpan(0, 0, 0, 0, 0)), null, null, "7aab09da-b367-4d59-ac41-73453808efc6", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "56ed3a71-79ec-4156-b6a3-2403f3e4b603" });
+
+            migrationBuilder.InsertData(
+                table: "HealthProfile",
+                columns: new[] { "Id", "AbnormalNote", "BMI", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Dental", "Hearing", "LastUpdatedBy", "LastUpdatedTime", "StudentId", "VaccinationHistory", "Vision" },
+                values: new object[,]
+                {
+                    { "0db6e4d5-f85a-42f5-a4a9-28693325bcf8", "None", 20.5, "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(366), new TimeSpan(0, 0, 0, 0, 0)), null, null, "No cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "357e080e-8ffa-4f54-8fb7-807e29c573f5", "Fully vaccinated", "20/20" },
+                    { "eb41da02-3801-4e1f-b44e-dbef4408e9e9", "Monitor dental health", 19.800000000000001, "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(372), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Minor cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "6b524770-a631-4f19-b68f-3269977fd64a", "Fully vaccinated", "20/25" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "VaccinationCampaignClasses",
+                columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "SchoolClassId", "VaccinationCampaignId" },
+                values: new object[] { "7579f8ed-c028-4e59-b7a9-517cfaad9622", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(839), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "0484b4d6-44c0-4fe8-979e-af03d3c5433f" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityConsent_HealthActivityId",
@@ -674,6 +797,16 @@ namespace SMMS.Infrastructure.Migrations
                 name: "IX_HealthActivity_UserId",
                 table: "HealthActivity",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HealthActivityClasses_HealthActivityId",
+                table: "HealthActivityClasses",
+                column: "HealthActivityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HealthActivityClasses_SchoolClassId",
+                table: "HealthActivityClasses",
+                column: "SchoolClassId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HealthCheckupRecord_HealthActivityId",
@@ -751,6 +884,21 @@ namespace SMMS.Infrastructure.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_VaccinationCampaign_UserId",
+                table: "VaccinationCampaign",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccinationCampaignClasses_SchoolClassId",
+                table: "VaccinationCampaignClasses",
+                column: "SchoolClassId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccinationCampaignClasses_VaccinationCampaignId",
+                table: "VaccinationCampaignClasses",
+                column: "VaccinationCampaignId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_VaccinationRecord_StudentId",
                 table: "VaccinationRecord",
                 column: "StudentId");
@@ -777,6 +925,9 @@ namespace SMMS.Infrastructure.Migrations
                 name: "Document");
 
             migrationBuilder.DropTable(
+                name: "HealthActivityClasses");
+
+            migrationBuilder.DropTable(
                 name: "HealthProfile");
 
             migrationBuilder.DropTable(
@@ -790,6 +941,9 @@ namespace SMMS.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Otps");
+
+            migrationBuilder.DropTable(
+                name: "VaccinationCampaignClasses");
 
             migrationBuilder.DropTable(
                 name: "VaccinationRecord");
