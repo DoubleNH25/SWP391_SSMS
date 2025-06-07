@@ -132,6 +132,28 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | GET | `/api/medical-events/activity-consents/vaccination-campaigns/{id}` | Danh sách đồng thuận tiêm chủng. | Admin, Manager, Nurse |
 
 ---
+## 👩‍⚕️ Medical Request APIs
+
+### 🩺 Medical Request
+| Method | Endpoint                                        | Description                               | Roles                 |
+| ------ | ----------------------------------------------- | ----------------------------------------- | --------------------- |
+| POST   | `/api/medical/request`                          | Tạo lịch uống thuốc.                         | Nurse                 |
+| GET    | `/api/medical/request`                          | Lấy tất cả lịch.                       | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/{id}`                     | Lấy yêu cầu theo ID.                      | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}`                     | Cập nhật yêu cầu.                         | Nurse                 |
+| DELETE | `/api/medical/request/{id}`                     | Xóa yêu cầu.                              | Nurse                 |
+| GET    | `/api/medical/request/daily/{date}`             | Lấy yêu cầu theo ngày.                    | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/daily/today`              | Lấy yêu cầu hôm nay.                      | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}/complete`            | Đánh dấu hoàn thành.                      | Nurse                 |
+| PUT    | `/api/medical/request/{id}/status`              | Cập nhật trạng thái.                      | Nurse                 |
+| GET    | `/api/medical/request/student/{studentId}`      | Lấy yêu cầu theo học sinh.                | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/status/{status}`          | Lấy yêu cầu theo trạng thái.              | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/search`                   | Tìm kiếm yêu cầu.                         | Admin, Manager, Nurse |
+| POST   | `/api/medical/request/reset-daily-completion`   | Đặt lại trạng thái hoàn thành trong ngày. | Nurse                 |
+| GET    | `/api/medical/request/completion-status/{date}` | Trạng thái hoàn thành theo ngày.          | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/completion-status/today`  | Trạng thái hoàn thành hôm nay.            | Admin, Manager, Nurse |
+
+---
 
 ## 👩‍⚕️ Nurse APIs
 
