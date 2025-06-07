@@ -1,29 +1,15 @@
-﻿using SMMS.Domain.Base;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-
-namespace SMMS.Domain.Entity
+namespace SMMS.Application.DataObject.ResponseObject
 {
-    public class MedicalRequest : BaseEntity
+    public class MedicalRequestResponse
     {
-        [Required]
+        public string Id { get; set; }
         public string StudentId { get; set; }
-
-        [ForeignKey("StudentId")]
-        public virtual Student Student { get; set; }
-
-        [Required]
+        public string StudentName { get; set; }
+        public string Class { get; set; }
         public string ParentId { get; set; }
-
-        [ForeignKey("ParentId")]
-        public virtual User Parent { get; set; }
-
-        [Required]
+        public string ParentName { get; set; }
         public string UserId { get; set; }
-
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
-
+        public string NurseName { get; set; }
         public string MedicalName { get; set; }
         public string Status { get; set; }
         public DateTime StartTime { get; set; }
@@ -31,6 +17,7 @@ namespace SMMS.Domain.Entity
         public int Quantity { get; set; }
         public string Dosage { get; set; }
         public string? Notes { get; set; }
+        public DateTimeOffset CreatedTime { get; set; }
         public DateTime? LastCompletedDate { get; set; }
         public bool IsCompletedToday { get; set; }
     }

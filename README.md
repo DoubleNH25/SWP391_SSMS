@@ -132,6 +132,53 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | GET | `/api/medical-events/activity-consents/vaccination-campaigns/{id}` | Danh sách đồng thuận tiêm chủng. | Admin, Manager, Nurse |
 
 ---
+## 👩‍⚕️ Medical Request APIs
+
+### 🩺 APIs for Nurses - Full CRUD:
+| Method | Endpoint                    | Description                                          | Roles                 |
+| ------ | --------------------------- | ---------------------------------------------------- | --------------------- |
+| POST   | `/api/medical/request`      | Tạo medical request mới (từ thông tin phụ huynh gửi) | Nurse, Manager, Admin |
+| GET    | `/api/medical/request`      | Xem tất cả medical requests                          | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/{id}` | Xem chi tiết một request                             | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}` | Cập nhật thông tin request                           | Nurse                 |
+| DELETE | `/api/medical/request/{id}` | Xóa request                                          | Nurse                 |
+
+
+### 🩺 APIs for day management:
+| Method | Endpoint                             | Description                                            | Roles                 |
+| ------ | ------------------------------------ | ------------------------------------------------------ | --------------------- |
+| GET    | `/api/medical/request/daily/{date}`  | Xem các request cần thực hiện trong ngày cụ thể        | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/daily/today`   | Xem các request cần thực hiện trong hôm nay            | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}/complete` | Đánh dấu đã cho học sinh uống thuốc trong ngày hôm nay | Nurse                 |
+
+
+### 🩺 State management APIs:
+| Method | Endpoint                                        | Description                              | Roles                 |
+| ------ | ----------------------------------------------- | ---------------------------------------- | --------------------- |
+| PUT    | `/api/medical/request/{id}/status`              | Cập nhật trạng thái của request          | Nurse                 |
+| GET    | `/api/medical/request/status/{status}`          | Lấy các request theo trạng thái          | Admin, Manager, Nurse |
+| POST   | `/api/medical/request/reset-daily-completion`   | Đặt lại trạng thái hoàn thành trong ngày | Nurse                 |
+| GET    | `/api/medical/request/completion-status/{date}` | Xem trạng thái hoàn thành theo ngày      | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/completion-status/today`  | Xem trạng thái hoàn thành trong hôm nay  | Admin, Manager, Nurse |
+
+
+### 🩺 Search APIs:
+| Method | Endpoint                                   | Description                                           | Roles                 |
+| ------ | ------------------------------------------ | ----------------------------------------------------- | --------------------- |
+| GET    | `/api/medical/request/search`              | Tìm kiếm theo tiêu chí (tên thuốc, học sinh, ngày...) | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/student/{studentId}` | Xem danh sách request của một học sinh cụ thể         | Admin, Manager, Nurse |
+
+
+## Note: Các trạng thái Medical Request:
+| Trạng thái    | Diễn giải                                                   |
+| ------------- | ----------------------------------------------------------- |
+| **Active**    | Đang hoạt động (trong khoảng thời gian StartTime – EndTime) |
+| **Completed** | Đã hoàn thành cho ngày hôm nay                              |
+| **Pending**   | Chờ thực hiện                                               |
+| **Expired**   | Hết hạn                                                     |
+| **Inactive**  | Tạm dừng                                                    |
+
+---
 
 ## 👩‍⚕️ Nurse APIs
 
@@ -216,3 +263,19 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | POST | `/api/users/students` | Tạo học sinh bởi admin. | Admin |
 | PUT | `/api/users/students/{id}` | Cập nhật học sinh. | Parent, Admin |
 | DELETE | `/api/users/students/{id}` | Xóa học sinh. | Parent, Admin |
+
+---
+
+## 🏥 Blog APIs
+| # | Method | Endpoint                   | Description                        | Auth Required | Notes                         |
+| - | ------ | -------------------------- | ---------------------------------- | ------------- | ----------------------------- |
+| 1 | GET    | `/api/blogs`               | Lấy tất cả blogs                   | ❌             | Chỉ hiện blog chưa bị xóa     |
+| 2 | GET    | `/api/blogs/{id}`          | Lấy chi tiết blog theo ID          | ❌             |                               |
+| 3 | POST   | `/api/blogs`               | Tạo blog mới (có upload ảnh)       | ✅             | Sử dụng `multipart/form-data` |
+| 4 | PUT    | `/api/blogs/{id}`          | Cập nhật blog (chỉ tác giả)        | ✅             | Sử dụng `multipart/form-data` |
+| 5 | DELETE | `/api/blogs/{id}`          | Xóa blog (soft delete)             | ✅             | Chỉ tác giả được quyền xóa    |
+| 6 | POST   | `/api/blogs/{id}/view`     | Tăng lượt xem cho blog             | ❌             | Không yêu cầu đăng nhập       |
+| 7 | GET    | `/api/blogs/user/{userId}` | Lấy blog của user bất kỳ           | ❌             |                               |
+| 8 | GET    | `/api/blogs/my-blogs`      | Lấy blog của người dùng hiện tại   | ✅             | Từ access token               |
+| 9 | POST   | `/api/blogs/upload-image`  | Upload ảnh riêng (dùng cho editor) | ✅             | Trả về `imageUrl`             |
+

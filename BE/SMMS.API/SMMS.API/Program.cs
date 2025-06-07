@@ -86,6 +86,7 @@ builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IMedicalService, MedicalService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
 
 
 // Infrastructure Services
