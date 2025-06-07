@@ -134,24 +134,37 @@ Most endpoints require JWT authentication via the `Authorization` header.
 ---
 ## 👩‍⚕️ Medical Request APIs
 
-### 🩺 Medical Request
+### 🩺 APIs for Nurses - Full CRUD:
 | Method | Endpoint                                        | Description                               | Roles                 |
 | ------ | ----------------------------------------------- | ----------------------------------------- | --------------------- |
-| POST   | `/api/medical/request`                          | Tạo lịch uống thuốc.                         | Nurse                 |
-| GET    | `/api/medical/request`                          | Lấy tất cả lịch.                       | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/{id}`                     | Lấy yêu cầu theo ID.                      | Admin, Manager, Nurse |
-| PUT    | `/api/medical/request/{id}`                     | Cập nhật yêu cầu.                         | Nurse                 |
-| DELETE | `/api/medical/request/{id}`                     | Xóa yêu cầu.                              | Nurse                 |
-| GET    | `/api/medical/request/daily/{date}`             | Lấy yêu cầu theo ngày.                    | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/daily/today`              | Lấy yêu cầu hôm nay.                      | Admin, Manager, Nurse |
-| PUT    | `/api/medical/request/{id}/complete`            | Đánh dấu hoàn thành.                      | Nurse                 |
+| POST   | `/api/medical/request`                          | Tạo medical request mới (từ thông tin phụ huynh gửi)                         | Nurse, Manager, Admin                 |
+| GET    | `/api/medical/request`                          | Xem tất cả medical requests                       | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/{id}`                     | Xem chi tiết một request                      | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}`                     | Cập nhật thông tin request                       | Nurse                 |
+| DELETE | `/api/medical/request/{id}`                     | Xóa request.                              | Nurse                 |
+
+### 🩺 APIs for day management:
+| GET    | `/api/medical/request/daily/{date}`             | Xem requests cần thực hiện trong ngày cụ thể.                    | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/daily/today`              | Xem requests cần thực hiện hôm nay                     | Admin, Manager, Nurse |
+| PUT    | `/api/medical/request/{id}/complete`            | Đánh dấu đã cho học sinh uống thuốc trong ngày                      | Nurse                 |
+
+### 🩺 State management APIs:
 | PUT    | `/api/medical/request/{id}/status`              | Cập nhật trạng thái.                      | Nurse                 |
-| GET    | `/api/medical/request/student/{studentId}`      | Lấy yêu cầu theo học sinh.                | Admin, Manager, Nurse |
 | GET    | `/api/medical/request/status/{status}`          | Lấy yêu cầu theo trạng thái.              | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/search`                   | Tìm kiếm yêu cầu.                         | Admin, Manager, Nurse |
 | POST   | `/api/medical/request/reset-daily-completion`   | Đặt lại trạng thái hoàn thành trong ngày. | Nurse                 |
 | GET    | `/api/medical/request/completion-status/{date}` | Trạng thái hoàn thành theo ngày.          | Admin, Manager, Nurse |
 | GET    | `/api/medical/request/completion-status/today`  | Trạng thái hoàn thành hôm nay.            | Admin, Manager, Nurse |
+
+### 🩺 Search APIs:
+| GET    | `/api/medical/request/search`                   | Tìm kiếm theo nhiều tiêu chí (tên thuốc, học sinh, ngày...)                       | Admin, Manager, Nurse |
+| GET    | `/api/medical/request/student/{studentId}`      | Xem requests của một học sinh                | Admin, Manager, Nurse |
+
+## Note: Các trạng thái Medical Request:
+**Active - Đang hoạt động (trong khoảng thời gian StartTime - EndTime)
+Completed - Đã hoàn thành cho ngày hôm nay
+Pending - Chờ thực hiện
+Expired - Hết hạn
+Inactive - Tạm dừng**
 
 ---
 
