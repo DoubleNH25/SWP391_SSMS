@@ -3,24 +3,24 @@ import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateVaccinationCampaign(vaccinationCampaign: VaccinationCampaignsUpdateCreateViewModel): Promise<VaccinationCampaignsViewModel> {
     if (!vaccinationCampaign || typeof vaccinationCampaign !== 'object') {
-        throw new Error('Vui lòng nhập đầy đủ thông tin chiến dịch tiêm chủng');
+        throw new Error('Please enter complete vaccination campaign information');
     }
     try {
-        var response = await ApiClient<VaccinationCampaignsViewModel>({
+        const response = await ApiClient<VaccinationCampaignsViewModel>({
             method: 'POST',
             endpoint: '/medical-events/vaccination-campaigns',
             data: vaccinationCampaign,
         });
         return response?.data || null;
-    } catch (err: any) {
+    } catch (err) {
         console.error(`Failed to create vaccination campaign: ${err}`);
-        throw new Error('Không thể tạo chiến dịch tiêm chủng. Vui lòng thử lại.');
+        throw new Error('Unable to create vaccination campaign. Please try again.');
     }
 }
 
 export async function FecthUpdateVaccinationCampaign(id: string, vaccinationCampaign: VaccinationCampaignsUpdateCreateViewModel): Promise<boolean> {
     if (!id) {
-        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
+        throw new Error("Vaccination campaign ID is required");
     }
     try {
         await ApiClient<void>({
@@ -29,9 +29,9 @@ export async function FecthUpdateVaccinationCampaign(id: string, vaccinationCamp
             data: vaccinationCampaign,
         });
         return true;
-    } catch (err: any) {
+    } catch (err) {
         console.error(`Failed to update vaccination campaign:`, err);
-        throw new Error('Không thể cập nhật chiến dịch tiêm chủng. Vui lòng thử lại.');
+        throw new Error('Unable to update vaccination campaign. Please try again.');
     }
 }
 
@@ -76,7 +76,7 @@ export async function FecthPendingVaccinationCampaign(): Promise<VaccinationCamp
 
 export async function FecthApproveVaccinationCampaign(id: string): Promise<boolean> {
     if (!id) {
-        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
+        throw new Error("Vaccination campaign ID is required");
     }
     try {
         await ApiClient<void>({
@@ -84,15 +84,15 @@ export async function FecthApproveVaccinationCampaign(id: string): Promise<boole
             endpoint: `/medical-events/vaccination-campaigns/${id}/approve`,
         });
         return true;
-    } catch (err: any) {
+    } catch (err) {
         console.error(`Failed to approve vaccination campaign:`, err);
-        throw new Error('Không thể phê duyệt chiến dịch tiêm chủng. Vui lòng thử lại.');
+        throw new Error('Vaccination campaign could not be approved. Please try again.');
     }
 }
 
 export async function FecthRejectVaccinationCampaign(id: string): Promise<boolean> {
     if (!id) {
-        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
+        throw new Error("Vaccination campaign ID is required");
     }
     try {
         await ApiClient<void>({
@@ -100,9 +100,9 @@ export async function FecthRejectVaccinationCampaign(id: string): Promise<boolea
             endpoint: `/medical-events/vaccination-campaigns/${id}/reject`,
         });
         return true;
-    } catch (err: any) {
+    } catch (err) {
         console.error(`Failed to reject vaccination campaign:`, err);
-        throw new Error('Không thể từ chối chiến dịch tiêm chủng. Vui lòng thử lại.');
+        throw new Error('Unable to opt out of vaccination campaign. Please try again.');
     }
 }
 
@@ -122,7 +122,7 @@ export async function FecthApproveVaccinationCampaigns(): Promise<VaccinationCam
 
 export async function FecthDeleteVaccinationCampaign(id: string,): Promise<boolean> {
     if (!id) {
-        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
+        throw new Error("Vaccination campaign ID is required");
     }
     try {
         await ApiClient<void>({
@@ -130,8 +130,8 @@ export async function FecthDeleteVaccinationCampaign(id: string,): Promise<boole
             endpoint: `/medical-events/vaccination-campaigns/${id}`
         });
         return true;
-    } catch (err: any) {
+    } catch (err) {
         console.error(`Failed to delete vaccination campaign:`, err);
-        throw new Error('Không thể xóa chiến dịch tiêm chủng. Vui lòng thử lại.');
+        throw new Error('Unable to delete vaccination campaign. Please try again.');
     }
 }

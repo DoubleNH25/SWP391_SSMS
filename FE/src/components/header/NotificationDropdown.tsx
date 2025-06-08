@@ -1,5 +1,4 @@
 import { useCallback, useState, memo, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { FecthConfirmNotification, FecthNotification } from "@/services/NotificationService";
 import { NotificationViewModel } from "@/types/Notification";
 import NotificationAnimation from "@/components/icons/notification.gif";
@@ -16,7 +15,7 @@ type StatusType = "Pending" | "Approved" | "Rejected";
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifying, setNotifying] = useState(false);
+  const [, setNotifying] = useState(false);
   const [notificationData, setNotificationData] = useState<NotificationViewModel[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);

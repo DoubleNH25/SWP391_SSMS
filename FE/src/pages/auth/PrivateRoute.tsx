@@ -1,7 +1,7 @@
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import { Navigate } from "react-router-dom";
 
-function PrivateRoute({ children, allowedRoles }) {
+function PrivateRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
     const payload = DecodeJWT();
     if (!payload) {
         return <Navigate to="/login" />;
@@ -20,7 +20,8 @@ function RoleBasedRedirect() {
     let decoded;
     try {
         decoded = DecodeJWT();
-    } catch (error) {
+    } catch {
+        console.error('DecodeJWT failed');
         return <Navigate to="/unauthorized" />;
     }
     const role = decoded?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];

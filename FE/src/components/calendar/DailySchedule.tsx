@@ -9,9 +9,12 @@ interface DailyScheduleProps {
   loading: boolean;
   onEventClick: (event: CalendarEvent) => void;
   onOpenModal: () => void;
-  onSetFormData: (formData: any) => void;
+  onSetFormData: (formData: FormDataType) => void;
   classOptions: { value: string; label: string }[];
 }
+type FormDataType =
+  | { type: "medical"; data: MedicalEventViewModel }
+  | { type: "vaccination"; data: VaccinationCampaignsViewModel };
 
 const DailySchedule = ({
   selectedDate,
@@ -53,7 +56,7 @@ const DailySchedule = ({
       return;
     }
 
-    onSetFormData((prev: any) => {
+    onSetFormData((prev) => {
       const newDate = new Date(selectedDate);
       newDate.setHours(9, 0);
 

@@ -14,7 +14,7 @@ interface MedicalEventFormProps {
   medicalData: MedicalEventUpdateCreateViewModel;
   classOptions: ClassOption[];
   selectedClasses: string[];
-  onInputChange: (field: keyof MedicalEventUpdateCreateViewModel, value: any) => void;
+  onInputChange: (field: keyof MedicalEventUpdateCreateViewModel, value: string | Date | string[]) => void;
   onClassChange: (classIds: string[]) => void;
   validationErrors?: Record<string, string>;
 }
@@ -121,3 +121,4 @@ const MedicalEventForm = ({
 };
 
 export default MedicalEventForm;
+

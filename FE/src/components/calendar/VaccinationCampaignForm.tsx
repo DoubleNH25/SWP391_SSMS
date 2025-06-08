@@ -14,7 +14,7 @@ interface VaccinationCampaignFormProps {
   vaccinationData: VaccinationCampaignsUpdateCreateViewModel;
   classOptions: ClassOption[];
   selectedClasses: string[];
-  onInputChange: (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: any) => void;
+  onInputChange: (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string | Date | string[]) => void;
   onClassChange: (classIds: string[]) => void;
   validationErrors?: Record<string, string>;
 }
@@ -166,3 +166,4 @@ const VaccinationCampaignForm = ({
 };
 
 export default VaccinationCampaignForm;
+

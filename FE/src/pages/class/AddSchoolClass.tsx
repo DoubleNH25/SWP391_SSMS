@@ -47,7 +47,7 @@ export default function AddSchoolClass() {
       } else {
         throw new Error('Creation failed');
       }
-    } catch (err) {
+    } catch (err ) {
       setError(`Failed to create class: ${err.message}`);
       toast.error(`Failed to create class: ${err.message}`);
     } finally {

@@ -2,13 +2,13 @@ import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, Phone, Mail } from "lucide-react";
+import { Camera, User} from "lucide-react";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthUpdateProfile, FecthUsersProfile } from "@/services/UserService";
 
 export default function EditProfile() {
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState(
         {

@@ -13,7 +13,7 @@ export default function CLassSchoolManager() {
   const [schoolClass, setSchoolClass] = useState<SchoolClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSchoolClassId, setSelectedSchoolClassId] = useState<string>(null);
+  const [selectedSchoolClassId, setSelectedSchoolClassId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +36,7 @@ export default function CLassSchoolManager() {
       const data = await FecthClass();
       setSchoolClass(data);
       setError(null);
-    } catch (err) {
+    } catch (err ) {
       setError(err.message.includes('authenticated')
         ? 'Please log in to view class.'
         : 'Failed to fetch class. Please try again.');
@@ -63,7 +63,7 @@ export default function CLassSchoolManager() {
       setIsDeleteModalOpen(false);
       setSelectedSchoolClassId(null);
       setError(null);
-    } catch (error) {
+    } catch (error ) {
       toast.error(`Failed to delete class: ${error.message}`);
     } finally {
       setDeleteLoading(false);

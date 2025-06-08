@@ -9,7 +9,7 @@ import { FecthUsersProfile } from "@/services/UserService";
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<{ name: string; email: string, image: any }>({
+  const [userName, setUserName] = useState<{ name: string; email: string, image: string | null | File }>({
     name: "Guest",
     email: "",
     image: null
@@ -35,8 +35,8 @@ export default function UserDropdown() {
     const payload = DecodeJWT();
     if (payload) {
       setUserName({
-        name: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
-        email: payload.email,
+        name: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ?? "",
+        email: payload.email ?? "",
         image: null
       });
     }

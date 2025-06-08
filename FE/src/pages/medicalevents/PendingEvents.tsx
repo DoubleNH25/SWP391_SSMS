@@ -6,7 +6,6 @@ import { FecthApproveMedicalEvent, FecthPendingMedicalEvent, FecthRejectMedicalE
 import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
 import { FecthApproveVaccinationCampaign, FecthPendingVaccinationCampaign, FecthRejectVaccinationCampaign } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
-import { SchoolClass } from "@/types/SchoolClass";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -31,9 +30,9 @@ export default function PendingEventManager() {
     medicalEvents.filter((event) => event.status === "Pending").length +
     vaccinationCampaigns.filter((campaign) => campaign.status === "Pending").length;
 
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage,] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsVaccinationCampaignsPerPage, setItemsVaccinationCampaignsPerPage] = useState(5);
+  const [itemsVaccinationCampaignsPerPage,] = useState(5);
   const [currentVaccinationCampaignsPage, setCurrentVaccinationCampaignsPage] = useState(1);
 
   const totalMedicalEventPages = Math.ceil(medicalEvents.length / itemsPerPage) || 1;
@@ -61,7 +60,7 @@ export default function PendingEventManager() {
       const data = await FecthPendingMedicalEvent();
       setMedicalEvents(data);
       setError((prev) => ({ ...prev, medicalEvents: null }));
-    } catch (err) {
+    } catch (err ) {
       setError((prev) => ({
         ...prev,
         medicalEvents: err.message.includes('authenticated')
@@ -79,7 +78,7 @@ export default function PendingEventManager() {
       const data = await FecthPendingVaccinationCampaign();
       setVaccinationCampaigns(data);
       setError((prev) => ({ ...prev, vaccinationCampaigns: null }));
-    } catch (err) {
+    } catch (err ) {
       setError((prev) => ({
         ...prev,
         vaccinationCampaigns: err.message.includes('authenticated')
@@ -102,21 +101,6 @@ export default function PendingEventManager() {
     } catch (err) {
       console.error('Failed to fetch class data:', err);
     }
-  };
-
-  const getClassNames = (classIds: string[]): string => {
-    if (!classIds || classIds.length === 0 || (classIds.length === 1 && classIds[0] === "")) {
-      return "No classes selected";
-    }
-
-    const classNames = classIds
-      .filter(id => id && id !== "")
-      .map(id => {
-        const foundClass = classOptions.find(cls => cls.value === id);
-        return foundClass ? foundClass.label : `Unknown (${id})`;
-      });
-
-    return classNames.length > 0 ? classNames.join(", ") : "No classes selected";
   };
 
   const handleConfirmApprovedEvent = async () => {
@@ -142,7 +126,7 @@ export default function PendingEventManager() {
       }
       setIsApprovedModalOpen(false);
       setSelectedEvent(null);
-    } catch (err) {
+    } catch (err ) {
       toast.error(`Failed to approve ${selectedEvent.type}: ${err.message}`);
     } finally {
       setApproving(false);
@@ -172,7 +156,7 @@ export default function PendingEventManager() {
       }
       setIsRejectModalOpen(false);
       setSelectedEvent(null);
-    } catch (err) {
+    } catch (err ) {
       toast.error(`Failed to reject ${selectedEvent.type}: ${err.message}`);
     } finally {
       setRejecting(false);

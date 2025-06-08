@@ -20,11 +20,11 @@ export async function FecthHealthProfile(): Promise<Student[]> {
 
 export async function FecthUpdateHealthProfile(studentId: string, profile: HealthProfileUpdate): Promise<boolean> {
   if (!studentId || typeof studentId !== 'string') {
-    throw new Error('ID học sinh là bắt buộc');
+    throw new Error('Student ID is required');
   }
 
   if (!profile || typeof profile !== 'object') {
-    throw new Error('Dữ liệu hồ sơ sức khỏe không hợp lệ');
+    throw new Error('Invalid health profile data');
   }
   try {
     await ApiClient<HealthProfileUpdate>({
@@ -33,9 +33,9 @@ export async function FecthUpdateHealthProfile(studentId: string, profile: Healt
       data: profile
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to update health profile: ${err}`);
-    throw new Error('Không thể cập nhật hồ sơ sức khỏe. Vui lòng thử lại.');
+    throw new Error('Unable to update health profile. Please try again.');
   }
 }
 

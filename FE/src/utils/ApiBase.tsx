@@ -1,10 +1,11 @@
+import { ApiRequestConfig, ApiResponse } from '@/types/ApiModel';
 import axios, { AxiosResponse } from 'axios';
 
 function getToken(){
   return localStorage.getItem('token');
 }
 
-async function ApiClient<T, D = any>({
+async function ApiClient<T, D = unknown>({
   method,
   endpoint,
   data,

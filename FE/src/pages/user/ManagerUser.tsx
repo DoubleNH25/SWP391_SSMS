@@ -5,7 +5,7 @@ import { PencilIcon, TrashBinIcon } from "../../components/icons/index"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
 import { PlusIcon } from "lucide-react";
-import { FecthUsers, FecthDeleteUsers, FecthClass } from "@/services/UserService";
+import { FecthUsers, FecthDeleteUsers } from "@/services/UserService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -13,7 +13,7 @@ export default function UserManager() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
@@ -184,7 +184,7 @@ export default function UserManager() {
                 <tr key={index} className="border-t">
                   <td className="p-2">
                     <div className="flex items-center flex-nowrap space-x-2 truncate">
-                      <img src={user.imageUrl} alt="..." className="w-5 h-5 rounded-full" />
+                      <img src={user.imageUrl ?? undefined} alt="..." className="w-5 h-5 rounded-full" />
                       <span className="truncate">{user.fullName}</span>
                     </div>
                   </td>
