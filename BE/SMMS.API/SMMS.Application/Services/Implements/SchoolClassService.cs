@@ -33,9 +33,11 @@ namespace SMMS.Application.Services.Implements
 								.Select(s => new StudentResponse
 								{
 									Id = s.Id,
+									StudentCode = s.StudentCode,
 									FullName = s.FullName,
 									Gender = s.Gender,
-									DateOfBirth = s.DateOfBirth
+									DateOfBirth = s.DateOfBirth,
+									Image = s.Image
 								}).ToList()
 				})
 				.ToListAsync();   // nhớ await
@@ -58,9 +60,11 @@ namespace SMMS.Application.Services.Implements
 								.Select(s => new StudentResponse
 								{
 									Id = s.Id,
+									StudentCode = s.StudentCode,
 									FullName = s.FullName,
 									Gender = s.Gender,
-									DateOfBirth = s.DateOfBirth
+									DateOfBirth = s.DateOfBirth,
+									Image = s.Image
 								}).ToList()
 				}).FirstOrDefault();
 			return schoolClass;

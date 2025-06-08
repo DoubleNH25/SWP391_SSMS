@@ -7,7 +7,6 @@ namespace SMMS.API.Controllers
 {
 	[ApiController]
 	[Route("api/school-classes")]
-	[Authorize(Roles = "Admin")]
 	public class SchoolClassController : ControllerBase
 	{
 		private readonly ISchoolClassService _schoolClassService;
@@ -18,6 +17,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetAllSchoolClasses()
 		{
 			var classes = await _schoolClassService.GetAllSchoolClassesAsync();
@@ -25,6 +25,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetSchoolClassById(string id)
 		{
 			var schoolClass = await _schoolClassService.GetSchoolClassByIdAsync(id);
@@ -33,6 +34,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> CreateSchoolClass([FromBody] SchoolClassRequest request)
 		{
 			var result = await _schoolClassService.CreateSchoolClassAsync(request);
@@ -41,6 +43,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> UpdateSchoolClass(string id, [FromBody] SchoolClassRequest request)
 		{
 			var result = await _schoolClassService.UpdateSchoolClassAsync(id, request);
@@ -49,6 +52,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> DeleteSchoolClass(string id)
 		{
 			var result = await _schoolClassService.DeleteSchoolClassAsync(id);
