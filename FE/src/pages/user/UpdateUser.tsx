@@ -3,7 +3,7 @@ import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import { FecthUpdateUsers, FecthUserById } from "@/services/UserService";
 import { UserUpdate } from "@/types/User";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,10 +27,15 @@ export default function UpdateUser() {
     if (userId) {
       loadUser();
     }
-  }, [userId]);
+  }, [userId, loadUser]);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     setLoading(true);
+    if (!userId) {
+      setError("User ID is required.");
+      setLoading(false);
+      return;
+    }
     try {
       const user = await FecthUserById(userId);
       if (user) {
@@ -51,7 +56,7 @@ export default function UpdateUser() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

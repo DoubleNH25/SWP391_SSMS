@@ -11,7 +11,7 @@ export default function Login() {
     const [showConfimPassword, setShowConfimPassword] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
-    const [error, setError] = useState("");
+    const [, setError] = useState("");
     const [loginError, setLoginError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
@@ -37,35 +37,35 @@ export default function Login() {
 
         try {
             switch (formType) {
-                case "phone":
+                case "phone": {
                     const phone = (e.target as HTMLFormElement).phone.value;
                     await new Promise(resolve => setTimeout(resolve, 800));
                     navigate("/confirm-otp", { state: { phone } });
                     break;
-
-                case "login":
+                }
+                case "login": {
                     await FecthLogin(userLogin);
                     navigate('/');
                     break;
-
-                case "register":
+                }
+                case "register": {
                     await new Promise(resolve => setTimeout(resolve, 800));
                     break;
-
-                case "forgotPassword":
+                }
+                case "forgotPassword": {
                     const email = (e.target as HTMLFormElement).email.value;
                     await new Promise(resolve => setTimeout(resolve, 800));
                     navigate("/confirm-otp", { state: { email } });
                     break;
-
+                }
                 default:
                     throw new Error("Invalid form type");
             }
-        } catch (err: any) {
+        } catch (err) {
             if (formType === "login") {
                 setLoginError("Incorrect email or password");
             } else {
-                setError(err.message || "An error occurred, please try again.");
+                setError(err instanceof Error ? err.message : "An error occurred, please try again.");
             }
         } finally {
             setIsLoading(false); // End loading regardless of outcome
@@ -203,8 +203,8 @@ export default function Login() {
                                         variants={{
                                             hover: { scale: 1.05, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)" },
                                         }}
-                                        whileHover={!isLoading && "hover"}
-                                        whileTap={!isLoading && { scale: 0.95 }}
+                                        whileHover={!isLoading ? "hover" : undefined}
+                                        whileTap={!isLoading ? { scale: 0.95 } : undefined}
                                         className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-400 relative"
                                     >
                                         {isLoading ? (

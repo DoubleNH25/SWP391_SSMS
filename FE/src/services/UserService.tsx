@@ -18,7 +18,7 @@ export async function FecthUsers(): Promise<User[]> {
 
 export async function FecthCreateUsers(users: UserCreate): Promise<boolean> {
   if (!users || !users.email || !users.password) {
-    throw new Error("Email và mật khẩu là bắt buộc");
+    throw new Error("Email and password are required");
   }
   try {
     await ApiClient<string>({
@@ -27,15 +27,15 @@ export async function FecthCreateUsers(users: UserCreate): Promise<boolean> {
       data: users,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to create user: ${err}`);
-    throw new Error("Không thể tạo người dùng. Vui lòng thử lại.");
+    throw new Error("Unable to create user. Please try again.");
   }
 }
 
-export async function FecthUpdateUsers(userId: String, users: UserUpdate): Promise<boolean> {
+export async function FecthUpdateUsers(userId: string, users: UserUpdate): Promise<boolean> {
   if (!userId) {
-    throw new Error("ID người dùng là bắt buộc");
+    throw new Error("User ID is required");
   }
   try {
     await ApiClient<string>({
@@ -44,13 +44,13 @@ export async function FecthUpdateUsers(userId: String, users: UserUpdate): Promi
       data: users,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to update user: ${err}`);
-    throw new Error("Không thể cập nhật người dùng. Vui lòng thử lại.");
+    throw new Error("Unable to update user. Please try again.");
   }
 }
 
-export async function FecthUserById(userId: string): Promise<UserUpdate> {
+export async function FecthUserById(userId: string): Promise<UserUpdate | null> {
   if (!userId) {
     console.error("User ID is required to get user.");
     return null;
@@ -70,7 +70,7 @@ export async function FecthUserById(userId: string): Promise<UserUpdate> {
 
 export async function FecthDeleteUsers(userId: string): Promise<boolean> {
   if (!userId) {
-    throw new Error("ID người dùng là bắt buộc");
+    throw new Error("User ID is required");
   }
   try {
     await ApiClient<void>({
@@ -78,9 +78,9 @@ export async function FecthDeleteUsers(userId: string): Promise<boolean> {
       endpoint: `/users/${userId}`,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to delete user:", err);
-    throw new Error("Không thể xóa người dùng. Vui lòng thử lại.");
+    throw new Error("Unable to delete user. Please try again.");
   }
 }
 
@@ -121,7 +121,7 @@ export async function FecthStudents(): Promise<Student[]> {
   }
 }
 
-export async function FecthStudentById(studentId: string): Promise<Student> {
+export async function FecthStudentById(studentId: string): Promise<Student | null> {
   if (!studentId) {
     console.error("Student ID is required to get student.");
     return null;
@@ -140,7 +140,7 @@ export async function FecthStudentById(studentId: string): Promise<Student> {
 
 export async function FecthCreateStudents(parentId: string, students: StudentCreate): Promise<boolean> {
   if (!parentId) {
-    throw new Error("ID phụ huynh là bắt buộc");
+    throw new Error("Parent ID is required");
   }
   try {
     await ApiClient<string>({
@@ -150,15 +150,15 @@ export async function FecthCreateStudents(parentId: string, students: StudentCre
       contentType: 'multipart/form-data',
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to create student:", err);
-    throw new Error("Không thể tạo học sinh. Vui lòng thử lại.");
+    throw new Error("Unable to create student. Please try again.");
   }
 }
 
-export async function FecthUpdateStudents(studentId: String, students: StudentUpdate): Promise<boolean> {
+export async function FecthUpdateStudents(studentId: string, students: StudentUpdate): Promise<boolean> {
   if (!studentId) {
-    throw new Error("ID học sinh là bắt buộc");
+    throw new Error("Student ID is required");
   }
   try {
     await ApiClient<string>({
@@ -168,15 +168,15 @@ export async function FecthUpdateStudents(studentId: String, students: StudentUp
       contentType: 'multipart/form-data',
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to update student:", err);
-    throw new Error("Không thể cập nhật học sinh. Vui lòng thử lại.");
+    throw new Error("Unable to update student. Please try again.");
   }
 }
 
 export async function FecthDeleteStudents(studentId: string): Promise<boolean> {
   if (!studentId) {
-    throw new Error("ID học sinh là bắt buộc");
+    throw new Error("Student ID is required");
   }
   try {
     await ApiClient<void>({
@@ -184,9 +184,9 @@ export async function FecthDeleteStudents(studentId: string): Promise<boolean> {
       endpoint: `/users/students/${studentId}`,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to delete student:", err);
-    throw new Error("Không thể xóa học sinh. Vui lòng thử lại.");
+    throw new Error("Unable to delete student. Please try again.");
   }
 }
 
@@ -205,7 +205,7 @@ export async function FecthParents(): Promise<ParentViewModel[]> {
 
 //========================================API PROFILE===========================================/
 
-export async function FecthUsersProfile(): Promise<UserProfile> {
+export async function FecthUsersProfile(): Promise<UserProfile | null> {
   try {
     const response = await ApiClient<UserProfile>({
       method: 'GET',
@@ -227,7 +227,7 @@ export async function FecthUpdateProfile(userProfile: UserProfileUpdateViewModel
       contentType: 'multipart/form-data',
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to update profile:", err);
     throw new Error("Failed to update profile.");
   }

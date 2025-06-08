@@ -32,14 +32,14 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
     if (defaultValue.length > 0 && selectedValues.length === 0) {
       setSelectedValues(defaultValue);
     }
-  }, [defaultValue]);
+  }, [defaultValue, selectedValues]);
 
   // Sync controlled value
   useEffect(() => {
     if (value !== undefined) {
       setSelectedValues(value);
     }
-  }, [value]);
+  }, [value, selectedValues]);
 
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -62,8 +62,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   const toggleOption = (optionValue: string) => {
     const newSelectedValues = selectedValues.includes(optionValue)
       ? selectedValues.filter(val => val !== optionValue)
-      : [...selectedValues, optionValue];
-    
+      : [...selectedValues, optionValue];   
     setSelectedValues(newSelectedValues);
     if (onChange) onChange(newSelectedValues);
   };
@@ -85,8 +84,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
 
   // Get display text for selected items
   const getDisplayText = () => {
-    if (selectedValues.length === 0) return placeholder;
-    
+    if (selectedValues.length === 0) return placeholder;  
     const selectedLabels = selectedValues.map(val => {
       const option = options.find(opt => opt.value === val);
       return option ? option.label : val;

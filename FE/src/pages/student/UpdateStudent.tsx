@@ -6,7 +6,7 @@ import Select from "@/components/ui/form/Select";
 import { FecthClass } from "@/services/SchoolClassService";
 import { FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
 import { StudentUpdate } from "@/types/Student";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,12 +27,12 @@ export default function UpdateStudents() {
     }
   );
 
-  const options = [
+  const options = useMemo(() => [
     { value: "Male", label: "Male" },
     { value: "Female", label: "Female" },
-  ];
+  ], []);
 
-  const handleGetClass = async () => {
+  const handleGetClass = useCallback(async () => {
     setLoading(true);
     try {
       const classRooms = await FecthClass();
@@ -49,28 +49,33 @@ export default function UpdateStudents() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFormData((prev) => ({ ...prev, image: file }));
   };
 
-  const handleClassChange = (value: string) => {
+  const handleClassChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, id: value }));
-  };
+  }, [setFormData]);
 
-  const handleSelectChange = (value: string) => {
+  const handleSelectChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, gender: value }));
-  };
+  }, [setFormData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     setLoading(true);
+    if (!studentId) {
+      setError("Student ID is required.");
+      setLoading(false);
+      return;
+    }
     try {
       const user = await FecthStudentById(studentId);
       if (user) {
@@ -100,14 +105,14 @@ export default function UpdateStudents() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [studentId, classOptions, options, handleSelectChange, handleClassChange]);
 
   useEffect(() => {
     if (studentId) {
       loadUser();
       handleGetClass();
     }
-  }, [studentId]);
+  }, [studentId, loadUser, handleGetClass]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +122,11 @@ export default function UpdateStudents() {
         || !formData.gender
         || !formData.classId) {
         throw new Error('Please fill in all required fields');
+      }
+      if (!studentId) {
+        setError("Student ID is required.");
+        setLoading(false);
+        return;
       }
       const success = await FecthUpdateStudents(studentId, formData);
       if (success) {

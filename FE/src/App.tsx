@@ -36,15 +36,10 @@ function App() {
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/profile" element={
-              <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
-                <EditProfile />
-              </PrivateRoute>}
-            />
-          <Route path="/" element={
             <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
-              <AppLayout />
-            </PrivateRoute>
-          }>
+              <EditProfile />
+            </PrivateRoute>}
+          />
 
           <Route
             path="/"

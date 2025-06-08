@@ -28,9 +28,9 @@ export async function FecthConfirmNotification(activityId: string, status: strin
       data: status
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error('Failed to confirm notifications:', err);
-    throw new Error('Không thể xác nhận thông báo. Vui lòng thử lại.');
+    throw new Error('Unable to confirm notification. Please try again.');
   }
 }
 
@@ -48,8 +48,8 @@ export async function FecthRejectNotification(activityId: string, status: string
       data: status
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error('Failed to reject notifications:', err);
-    throw new Error('Không thể từ chối thông báo. Vui lòng thử lại.');
+    throw new Error('Unable to opt out of notification. Please try again.');
   }
 }

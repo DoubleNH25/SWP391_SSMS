@@ -16,7 +16,7 @@ export async function FecthClass(): Promise<SchoolClass[]> {
 
 export async function FecthCreateSchoolClass(schoolClass : SchoolClassCreateUpdateViewModel): Promise<boolean> {
   if (!schoolClass || !schoolClass.className || !schoolClass.classRoom) {
-    throw new Error("Tên lớp và phòng học là bắt buộc");
+    throw new Error("Class and room names are required");
   }
   try {
     await ApiClient<string>({
@@ -25,15 +25,15 @@ export async function FecthCreateSchoolClass(schoolClass : SchoolClassCreateUpda
       data: schoolClass,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to create class: ${err}`);
-    throw new Error("Không thể tạo lớp học. Vui lòng thử lại.");
+    throw new Error("Unable to create class. Please try again.");
   }
 }
 
-export async function FecthUpdateSchoolClass(schoolClassId: String, schoolClass: SchoolClassCreateUpdateViewModel): Promise<boolean> {
+export async function FecthUpdateSchoolClass(schoolClassId: string, schoolClass: SchoolClassCreateUpdateViewModel): Promise<boolean> {
   if (!schoolClassId) {
-    throw new Error("ID lớp học là bắt buộc");
+    throw new Error("Class ID is required");
   }
   try {
     await ApiClient<string>({
@@ -42,13 +42,13 @@ export async function FecthUpdateSchoolClass(schoolClassId: String, schoolClass:
       data: schoolClass,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to update class: ${err}`);
-    throw new Error("Không thể cập nhật lớp học. Vui lòng thử lại.");
+    throw new Error("Unable to update class. Please try again.");
   }
 }
 
-export async function FecthSchoolClassById(schoolClassId: string): Promise<SchoolClass> {
+export async function FecthSchoolClassById(schoolClassId: string): Promise<SchoolClass | null> {
   if (!schoolClassId) {
     console.error("Class ID is required to get class.");
     return null;
@@ -67,7 +67,7 @@ export async function FecthSchoolClassById(schoolClassId: string): Promise<Schoo
 
 export async function FecthDeleteSchoolClass(schoolClassId: string): Promise<boolean> {
   if (!schoolClassId) {
-    throw new Error("ID lớp học là bắt buộc");
+    throw new Error("Class ID is required");
   }
   try {
     await ApiClient<void>({
@@ -75,8 +75,8 @@ export async function FecthDeleteSchoolClass(schoolClassId: string): Promise<boo
       endpoint: `/school-classes/${schoolClassId}`,
     });
     return true;
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to delete class:", err);
-    throw new Error("Không thể xóa lớp học. Vui lòng thử lại.");
+    throw new Error("Unable to delete class. Please try again.");
   }
 }

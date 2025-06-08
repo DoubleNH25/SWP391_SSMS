@@ -4,7 +4,7 @@ import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
 import { MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel, VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
-import { CalendarEvent, customFormatDate, customFormatDateOnly, customFormatTime, toLocalISOString } from "@/types/CalendarEvent";
+import { CalendarEvent, customFormatDate, customFormatDateOnly, toLocalISOString } from "@/types/CalendarEvent";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthCreateMedicalEvent, FecthDeleteMedicalEvents, FecthMedicalEvent, FecthUpdateMedicalEvent } from '@/services/MedicalEventService';
@@ -134,7 +134,7 @@ const Calendar: React.FC = () => {
 
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError((err as Error).message.includes('authenticated')
         ? 'Please log in to fetch class data.'
         : 'Failed to fetch class data. Please try again.');
     } finally {
@@ -306,7 +306,7 @@ const Calendar: React.FC = () => {
     [openModal]
   );
 
-  const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value: any) => {
+  const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value) => {
     setFormData((prev) => {
       if (prev.type === "medical") {
         return {
@@ -321,7 +321,7 @@ const Calendar: React.FC = () => {
     });
   }, []);
 
-  const handleVaccinationInputChange = useCallback((field: keyof VaccinationCampaignsUpdateCreateViewModel, value: any) => {
+  const handleVaccinationInputChange = useCallback((field: keyof VaccinationCampaignsUpdateCreateViewModel, value) => {
     setFormData((prev) => {
       if (prev.type === "vaccination") {
         return {
@@ -352,7 +352,7 @@ const Calendar: React.FC = () => {
     };
   }
 
-  const validateFormData = (type: string, data: any): Record<string, string> => {
+  const validateFormData = useCallback((type: string, data): Record<string, string> => {
     const errors: Record<string, string> = {};
 
     if (type === "medical") {
@@ -454,7 +454,7 @@ const Calendar: React.FC = () => {
     }
 
     return errors;
-  };
+  }, [selectedClasses, selectedEvent]);
 
   const handleAddOrUpdateEvent = useCallback(async () => {
     if (loading) return;
@@ -574,7 +574,7 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData, selectedEvent, closeModal, loading]);
+  }, [formData, selectedEvent, closeModal, loading, validateFormData]);
 
   const handleDeleteEvent = useCallback(async () => {
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
@@ -664,7 +664,7 @@ const Calendar: React.FC = () => {
         classOptions={classOptions}
       />
     );
-  }, [viewEventsDate, events, loading, handleEventClick, closeModal]);
+  }, [viewEventsDate, classOptions,events, loading, handleEventClick, closeModal]);
 
   const DailyScheduleComponent = useMemo(() => {
     return (

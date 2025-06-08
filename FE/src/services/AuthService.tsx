@@ -16,7 +16,7 @@ export async function FecthLogin(users: LoginRequest): Promise<void> {
             throw new Error("Incorrect email or password");
         }
         localStorage.setItem('token', response.data.token);
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to login:", err);
         throw new Error("Incorrect email or password");
     }

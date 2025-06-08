@@ -1,13 +1,8 @@
-import DatePicker from "@/components/ui/form/DateField";
 import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
-import SearchableSelect from "@/components/ui/form/SearchableSelect";
-import Select from "@/components/ui/form/Select";
-import { FecthClass, FecthSchoolClassById, FecthUpdateSchoolClass } from "@/services/SchoolClassService";
-import { FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
-import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";
-import { StudentUpdate } from "@/types/Student";
-import { useEffect, useState } from "react";
+import { FecthSchoolClassById, FecthUpdateSchoolClass } from "@/services/SchoolClassService";
+import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";;
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -30,8 +25,13 @@ export default function UpdateSchoolClass() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const loadSchoolClass = async () => {
+  const loadSchoolClass = useCallback( async () => {
     setLoading(true);
+    if (!schoolClassId) {
+      setError("School Class ID is required.");
+      setLoading(false);
+      return;
+    }
     try {
       const classes = await FecthSchoolClassById(schoolClassId);
       if (classes) {
@@ -51,13 +51,13 @@ export default function UpdateSchoolClass() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [schoolClassId]);
 
   useEffect(() => {
     if (schoolClassId) {
       loadSchoolClass();
     }
-  }, [schoolClassId]);
+  }, [schoolClassId, loadSchoolClass]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +68,11 @@ export default function UpdateSchoolClass() {
         || !formData.quantity) {
         throw new Error('Please fill in all required fields');
       }
+      if (!schoolClassId) {
+        setError("School Class ID is required.");
+        setLoading(false);
+        return;
+      }
       const success = await FecthUpdateSchoolClass(schoolClassId, formData);
       if (success) {
         toast.success('Class updated successfully');
@@ -75,7 +80,7 @@ export default function UpdateSchoolClass() {
       } else {
         throw new Error('Update failed');
       }
-    } catch (err) {
+    } catch (err ) {
       const errorMessage = err.message || 'An error occurred, please try again.';
       setError(errorMessage);
       toast.error(errorMessage);

@@ -45,7 +45,7 @@ export default function HealthProfiles() {
             vision: selectedStudent.healthProfile?.vision || "",
             hearing: selectedStudent.healthProfile?.hearing || "",
             dental: selectedStudent.healthProfile?.dental || "",
-            bmi: selectedStudent.healthProfile?.bmi ?? null,
+            bmi: selectedStudent.healthProfile?.bmi ?? 0,
             abnormalNote: selectedStudent.healthProfile?.abnormalNote || "",
             vaccinationHistory: selectedStudent.healthProfile?.vaccinationHistory || ""
         });
@@ -67,12 +67,12 @@ export default function HealthProfiles() {
             !formData.vision.trim() ||
             !formData.hearing.trim() ||
             !formData.dental.trim() ||
-            !formData.bmi ||
-            formData.bmi < 0 ||
+            formData.bmi <= 0 ||
+            formData.bmi > 100 ||
             !formData.vaccinationHistory.trim() ||
             !formData.abnormalNote.trim()
         ) {
-            setErrorModal("All fields are required and BMI must be non-negative.");
+            setErrorModal("All fields are required and BMI must be between 0 and 100.");
             return;
         }
         setSubmitting(true);
@@ -83,21 +83,21 @@ export default function HealthProfiles() {
             setIsUpdateModalOpen(false);
             setSelectedProfileId(null);
             setErrorModal(null);
-        } catch (error) {
-            setErrorModal(`Failed to update user: ${error.message}`);
+        } catch (err) {
+            setErrorModal(`Failed to update user: ${err.message}`);
         } finally {
             setSubmitting(false);
         }
     };
 
     const getHealthStatus = (profile: HealthProfileUpdate | null | undefined) => {
-        if (!profile) return ['No data'];
+        if (!profile) return [];
         const issues: string[] = [];
         if (profile.vision !== '20/20') issues.push('Vision');
         if (profile.hearing !== 'Normal') issues.push('Hearing');
         if (profile.dental?.includes('cavities')) issues.push('Dental');
         if (profile.abnormalNote !== 'None') issues.push('Health Note');
-        return issues.length > 0 ? issues : ['Healthy'];
+        return issues;
     };
 
     const getBMIStatus = (bmi: number | null) => {
@@ -199,7 +199,7 @@ export default function HealthProfiles() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <div className="">
-                                            <img src={student.image} className="w-20 h-20 border-2 rounded-full" alt="..." />
+                                            <img src={student.image ?? undefined} className="w-20 h-20 border-2 rounded-full" alt="..." />
                                         </div>
                                         <div className="ml-4">
                                             <div className="text-lg font-semibold text-gray-800">{student.fullName}</div>
@@ -257,17 +257,17 @@ export default function HealthProfiles() {
                                     <div className="bg-white p-4 border-b-2">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Eye className="w-5 h-5 text-blue-500 mr-2" />
-                                            Vision: {student.healthProfile?.vision || 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">Vision</span>
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">{student.healthProfile?.vision || 'N/A'}</p>
                                     </div>
                                     <div className="bg-white py-4 border-b-2">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Ear className="w-5 h-5 text-purple-500 mr-2" />
-                                            Hearing: {student.healthProfile?.hearing || 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">Hearing</span>
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.hearing === 'Normal' ? 'Normal' : student.healthProfile?.hearing || 'N/A'}
+                                            {student.healthProfile?.hearing || 'N/A'}
                                         </p>
                                     </div>
                                     <div className="bg-white py-4 border-b-2">
@@ -275,37 +275,38 @@ export default function HealthProfiles() {
                                             <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
                                             </svg>
-                                            Dental: {student.healthProfile?.dental || 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">Dental</span>
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.dental === 'No cavities' ? 'No cavities' :
-                                                student.healthProfile?.dental === 'Minor cavities' ? 'Mild tooth decay' :
-                                                    student.healthProfile?.dental || 'N/A'}
+                                            {student.healthProfile?.dental || 'N/A'}
                                         </p>
                                     </div>
                                     <div className="bg-white p-4">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Heart className="w-5 h-5 text-red-500 mr-2" />
-                                            BMI: {student.healthProfile?.bmi ? student.healthProfile.bmi.toFixed(2) : 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">BMI</span>
                                         </div>
+                                        <p className="text-lg font-medium text-gray-900">
+                                            {student.healthProfile?.bmi ? student.healthProfile.bmi.toFixed(2) : 'N/A'}
+                                        </p>
                                         <p className={`text-sm font-medium ${bmiStatus.color}`}>{bmiStatus.status}</p>
                                     </div>
                                     <div className="bg-white py-4">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <Shield className="w-5 h-5 text-indigo-500 mr-2" />
-                                            Vaccination: {student.healthProfile?.vaccinationHistory || 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">Vaccination</span>
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.vaccinationHistory === 'Fully vaccinated' ? 'Full' : student.healthProfile?.vaccinationHistory || 'N/A'}
+                                            {student.healthProfile?.vaccinationHistory || 'N/A'}
                                         </p>
                                     </div>
                                     <div className="bg-white py-4">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
-                                            Abnormal: {student.healthProfile?.abnormalNote || 'N/A'}
+                                            <span className="text-sm font-medium text-gray-700">Abnormal Note</span>
                                         </div>
                                         <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.abnormalNote === 'None' ? 'Nothing' : student.healthProfile?.abnormalNote || 'N/A'}
+                                            {student.healthProfile?.abnormalNote || 'N/A'}
                                         </p>
                                     </div>
                                 </div>

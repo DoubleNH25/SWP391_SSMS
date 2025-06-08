@@ -31,14 +31,14 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     if (defaultValue && !selectedValue) {
       setSelectedValue(defaultValue);
     }
-  }, [defaultValue]);
+  }, [defaultValue, selectedValue]);
 
   // Sync controlled value
   useEffect(() => {
     if (value !== undefined) {
       setSelectedValue(value);
     }
-  }, [value]);
+  }, [value, selectedValue]);
 
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())

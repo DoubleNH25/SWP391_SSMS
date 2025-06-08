@@ -14,16 +14,21 @@ export default function AddStudent() {
   const [error, setError] = useState<string | null>(null);
   const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(
-    {
+  const [formData, setFormData] = useState<{
+    parentId: string;
+    fullName: string;
+    gender: string;
+    dateOfBirth: string;
+    classId: string;
+    image: File | null; 
+  }>({
       parentId: "",
       fullName: "",
       gender: "",
       dateOfBirth: "",
       classId: "",
       image: null
-    }
-  );
+    });
   const navigate = useNavigate();
 
   useEffect(() => {

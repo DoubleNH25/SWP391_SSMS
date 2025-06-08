@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MedicalEventViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
 import { FecthApproveMedicalEvents, FecthRejectMedicalEvents } from "@/services/MedicalEventService";
 import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthApproveVaccinationCampaigns, FecthRejectVaccinationCampaigns } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
-import { SchoolClass } from "@/types/SchoolClass";
 
 export default function ApprovedEventManager() {
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>([]);
@@ -75,12 +74,7 @@ export default function ApprovedEventManager() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = currentData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    fetchData();
-    fetchClassData();
-  }, [selectedView, selectedStatus]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (selectedView === "MedicalEvents") {
@@ -104,9 +98,9 @@ export default function ApprovedEventManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedView, selectedStatus]);
 
-  const fetchClassData = async () => {
+  const fetchClassData = useCallback(async () => {
     try {
       const classRooms = await FecthClass();
       const options = classRooms.map(classRoom => ({
@@ -117,17 +111,17 @@ export default function ApprovedEventManager() {
     } catch (err) {
       console.error('Failed to fetch class data:', err);
     }
-  };
+  }, []);
 
-  const viewOptions = [
+  const viewOptions = useMemo(() => [
     { value: "MedicalEvents", label: "Medical Events" },
     { value: "VaccinationCampaigns", label: "Vaccination Campaigns" },
-  ];
+  ], []);
 
-  const statusOptions = [
+  const statusOptions = useMemo(() => [
     { value: "Approved", label: "Approved" },
     { value: "Rejected", label: "Rejected" },
-  ];
+  ], []);
 
   const handleSelectChange = (value: string) => {
     setSelectedView(value as "MedicalEvents" | "VaccinationCampaigns");
@@ -149,6 +143,11 @@ export default function ApprovedEventManager() {
       setCurrentPage(page);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+    fetchClassData();
+  }, [fetchData, fetchClassData]);
 
   return (
     <>

@@ -13,7 +13,7 @@ export default function StudentManager() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -284,7 +284,7 @@ export default function StudentManager() {
                 <tr key={index} className="border-t">
                   <td className="align-middle pl-2">
                     <div className="flex items-center space-x-2">
-                      <img src={student.image} alt="..." className="w-8 h-8 rounded-full" />
+                      <img src={student.image ?? undefined} alt="..." className="w-8 h-8 rounded-full" />
                       <span className="truncate">{student.fullName}</span>
                     </div>
                   </td>

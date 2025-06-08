@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, memo } from "react";
-import { useSidebar } from "../context/SidebarContext";
+import { useSidebar } from "../context/sidebar";
 import NotificationDropdown from "../header/NotificationDropdown";
 import UserDropdown from "../header/UserDropdown";
 
@@ -9,14 +9,16 @@ const AppHeader: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleToggle = useCallback(() => {
-    window.innerWidth >= 1024 ? toggleSidebar() : toggleMobileSidebar();
+    if (window.innerWidth >= 1024) {
+      toggleSidebar();
+    } else {
+      toggleMobileSidebar();
+    }
   }, [toggleSidebar, toggleMobileSidebar]);
 
   const toggleApplicationMenu = useCallback(() => {
     setApplicationMenuOpen((prev) => !prev);
   }, []);
-
-
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -31,7 +33,7 @@ const AppHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 flex w-full bg-white border-b border-gray-200">
-      <div className="flex w-full flex-col items-center h-[4.5rem] justify-between lg:flex-row lg:px-6">
+      <div className="flex w-full flex-col items-center h-[5rem] justify-between lg:flex-row lg:px-6">
         <div className="flex w-full items-center justify-between gap-4 border-b border-gray-200 px-3 py-2  lg:border-b-0 lg:px-0 lg:py-2">
           <button
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500"

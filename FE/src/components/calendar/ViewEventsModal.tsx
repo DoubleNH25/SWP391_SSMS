@@ -10,9 +10,13 @@ interface ViewEventsModalProps {
   onEventClick: (event: CalendarEvent) => void;
   onClose: () => void;
   onAddNewEvent: () => void;
-  onSetFormData: (formData: any) => void;
+  onSetFormData: (formData : FormDataType) => void;
   classOptions: { value: string; label: string }[];
 }
+
+type FormDataType =
+  | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
+  | { type: "vaccination"; data: VaccinationCampaignsUpdateCreateViewModel };
 
 const ViewEventsModal = ({ 
   viewEventsDate, 
@@ -44,7 +48,7 @@ const ViewEventsModal = ({
       return;
     }
     
-    onSetFormData((prev: any) => {
+    onSetFormData((prev) => {
       const newDate = new Date(viewEventsDate);
       newDate.setHours(9, 0);
       

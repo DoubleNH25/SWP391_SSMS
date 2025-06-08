@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, memo, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDownIcon, GridIcon, BoltIcon, HorizontaLDots, CalenderIcon } from "../icons";
-import { useSidebar } from "../context/SidebarContext";
+import { useSidebar } from "../context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
 type NavItem = {
@@ -49,6 +49,7 @@ const AppSidebar: React.FC = () => {
     try {
       return DecodeJWT()?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null;
     } catch (err) {
+      console.error("DecodeJWT failed:", err);
       return null;
     }
   }, []);

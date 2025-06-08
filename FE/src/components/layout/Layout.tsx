@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
-import { Hero } from "./Hero";
 
 interface LayoutProps {
   children: ReactNode;
