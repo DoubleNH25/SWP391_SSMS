@@ -1,0 +1,297 @@
+import { useState, useEffect } from "react";
+import Label from "@/components/ui/form/Label";
+
+interface ClassOption {
+  value: string;
+  label: string;
+}
+
+interface ClassSelectorProps {
+  classOptions: ClassOption[];
+  selectedClasses: string[];
+  onClassChange: (classIds: string[]) => void;
+  placeholder?: string;
+}
+
+const ClassSelector = ({ 
+  classOptions, 
+  selectedClasses, 
+  onClassChange, 
+  placeholder = "Select classes or blocks" 
+}: ClassSelectorProps) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Close dropdown when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const dropdownContainer = target.closest('[data-dropdown-container]');
+      if (!dropdownContainer && isDropdownOpen) {
+        setIsDropdownOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isDropdownOpen) {
+        setIsDropdownOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDropdownOpen]);
+
+  const handleClassToggle = (classId: string) => {
+    if (selectedClasses.includes(classId)) {
+      const newClasses = selectedClasses.filter(id => id !== classId);
+      onClassChange(newClasses);
+    } else {
+      const newClasses = [...selectedClasses, classId];
+      onClassChange(newClasses);
+    }
+  };
+
+  const handleBlockToggle = (blockIdentifier: string) => {
+    let classesInBlock: string[] = [];
+    
+    if (blockIdentifier === 'other') {
+      classesInBlock = classOptions.filter(classOption => 
+        !classOption.label.match(/\d+/)
+      ).map(classOption => classOption.value);
+    } else {
+      classesInBlock = classOptions.filter(classOption => {
+        const numberMatch = classOption.label.match(/\d+/);
+        return numberMatch && numberMatch[0] === blockIdentifier;
+      }).map(classOption => classOption.value);
+    }
+
+    const allSelected = classesInBlock.every(id => selectedClasses.includes(id));
+    
+    if (allSelected) {
+      // Bỏ chọn tất cả classes trong khối
+      const newClasses = selectedClasses.filter(id => !classesInBlock.includes(id));
+      onClassChange(newClasses);
+    } else {
+      // Chọn tất cả classes trong khối
+      const newClasses = selectedClasses.concat(classesInBlock.filter(id => !selectedClasses.includes(id)));
+      onClassChange(newClasses);
+    }
+  };
+
+  const renderDropdownOptions = () => {
+    const hierarchicalOptions = [];
+    const blockMap = new Map();
+    const otherClasses: ClassOption[] = [];
+    
+    // Phân loại classes theo khối
+    classOptions.forEach(classOption => {
+      const blockMatch = classOption.label.match(/\d+/);
+      if (blockMatch) {
+        const blockNumber = blockMatch[0];
+        if (!blockMap.has(blockNumber)) {
+          blockMap.set(blockNumber, []);
+        }
+        blockMap.get(blockNumber).push(classOption);
+      } else {
+        otherClasses.push(classOption);
+      }
+    });
+    
+    const sortedBlocks = Array.from(blockMap.keys()).sort((a, b) => parseInt(a) - parseInt(b));
+    
+    // Render các khối
+    sortedBlocks.forEach(block => {
+      const classesInBlock = blockMap.get(block);
+      const allClassesInBlockSelected = classesInBlock.every((classOption: ClassOption) =>
+        selectedClasses.includes(classOption.value)
+      );
+      
+      const blockLabel = `KHỐI ${block}`;
+      if (!searchTerm || blockLabel.toLowerCase().includes(searchTerm.toLowerCase())) {
+        hierarchicalOptions.push(
+          <div
+            key={`block-${block}`}
+            className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => handleBlockToggle(block)}
+          >
+            <input
+              type="checkbox"
+              checked={allClassesInBlockSelected}
+              onChange={() => {}}
+              className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="font-semibold text-sm text-gray-900">{blockLabel}</span>
+          </div>
+        );
+      }
+      
+      // Render classes trong khối
+      classesInBlock.forEach((classOption: ClassOption) => {
+        if (!searchTerm || classOption.label.toLowerCase().includes(searchTerm.toLowerCase())) {
+          hierarchicalOptions.push(
+            <div
+              key={classOption.value}
+              className="flex items-center px-4 py-2 pl-8 hover:bg-gray-100 cursor-pointer"
+              onClick={() => handleClassToggle(classOption.value)}
+            >
+              <input
+                type="checkbox"
+                checked={selectedClasses.includes(classOption.value)}
+                onChange={() => {}}
+                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-700">{classOption.label}</span>
+            </div>
+          );
+        }
+      });
+    });
+    
+    // Render nhóm "Other"
+    if (otherClasses.length > 0) {
+      const allOtherClassesSelected = otherClasses.every((classOption: ClassOption) =>
+        selectedClasses.includes(classOption.value)
+      );
+      
+      if (!searchTerm || "OTHER".toLowerCase().includes(searchTerm.toLowerCase())) {
+        hierarchicalOptions.push(
+          <div
+            key="block-other"
+            className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => handleBlockToggle('other')}
+          >
+            <input
+              type="checkbox"
+              checked={allOtherClassesSelected}
+              onChange={() => {}}
+              className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="font-semibold text-sm text-gray-900">OTHER</span>
+          </div>
+        );
+      }
+      
+      otherClasses.forEach(classOption => {
+        if (!searchTerm || classOption.label.toLowerCase().includes(searchTerm.toLowerCase())) {
+          hierarchicalOptions.push(
+            <div
+              key={classOption.value}
+              className="flex items-center px-4 py-2 pl-8 hover:bg-gray-100 cursor-pointer"
+              onClick={() => handleClassToggle(classOption.value)}
+            >
+              <input
+                type="checkbox"
+                checked={selectedClasses.includes(classOption.value)}
+                onChange={() => {}}
+                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-700">{classOption.label}</span>
+            </div>
+          );
+        }
+      });
+    }
+    
+    return hierarchicalOptions.length > 0 ? hierarchicalOptions : (
+      <div className="px-4 py-2 text-gray-500">No options found</div>
+    );
+  };
+
+  return (
+    <div>
+      <Label className="block text-sm font-semibold text-gray-700 mb-1">
+        Classes <span className="text-red-500">*</span>
+      </Label>
+      
+      <div className="relative" data-dropdown-container>
+        <div 
+          className="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 cursor-pointer"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
+          <span className="block truncate text-gray-400">
+            {selectedClasses.length > 0 
+              ? `${selectedClasses.length} classes selected` 
+              : placeholder
+            }
+          </span>
+          <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <svg
+              className={`h-5 w-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        </div>
+
+        {isDropdownOpen && (
+          <div className="absolute mt-1 w-full rounded-lg bg-white shadow-lg z-10 border border-gray-300 max-h-60 overflow-auto">
+            <input
+              type="text"
+              className="h-11 w-full appearance-none rounded-t-lg border-b border-gray-300 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoComplete="off"
+            />
+            <div className="py-1">
+              {renderDropdownOptions()}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Selected Classes Display */}
+      {selectedClasses.length > 0 && (
+        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+          <div className="flex justify-between items-center mb-2">
+            <Label className="text-sm font-medium text-gray-700">Selected Classes ({selectedClasses.length})</Label>
+            <button
+              type="button"
+              onClick={() => onClassChange([])}
+              className="text-xs text-red-600 hover:text-red-800"
+            >
+              Clear all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedClasses.map(classId => {
+              const classOption = classOptions.find(opt => opt.value === classId);
+              return (
+                <span
+                  key={classId}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {classOption?.label || classId}
+                  <button
+                    type="button"
+                    onClick={() => handleClassToggle(classId)}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ClassSelector;

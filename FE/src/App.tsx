@@ -20,6 +20,10 @@ import PendingEventManager from "./pages/medicalevents/PendingEvents";
 import ApprovedEventManager from "./pages/medicalevents/ApprovedEvents";
 import { PrivateRoute } from "./pages/auth/PrivateRoute";
 import Unauthorized from "./pages/auth/Unauthorized";
+import CLassSchoolManager from "./pages/class/ManagerClass";
+import AddSchoolClass from "./pages/class/AddSchoolClass";
+import UpdateSchoolClass from "./pages/class/UpdateSchoolClass";
+import EditProfile from "./pages/user/EditProfile";
 import Home from "./pages/Home";
 
 function App() {
@@ -31,6 +35,16 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/profile" element={
+              <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
+                <EditProfile />
+              </PrivateRoute>}
+            />
+          <Route path="/" element={
+            <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
+              <AppLayout />
+            </PrivateRoute>
+          }>
 
           <Route
             path="/"
@@ -69,6 +83,22 @@ function App() {
                   <UpdateUser />
                 </PrivateRoute>
               }
+            />
+            {/**Class*/}
+            <Route path="/class" element={
+              <PrivateRoute allowedRoles={['Admin']}>
+                <CLassSchoolManager />
+              </PrivateRoute>}
+            />
+            <Route path="/class/add-class" element={
+              <PrivateRoute allowedRoles={['Admin']}>
+                <AddSchoolClass />
+              </PrivateRoute>}
+            />
+            <Route path="/class/update-class/:schoolClassId" element={
+              <PrivateRoute allowedRoles={['Admin']}>
+                <UpdateSchoolClass />
+              </PrivateRoute>}
             />
             {/*Student*/}
             <Route

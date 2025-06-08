@@ -1,4 +1,4 @@
-import { HealthProfile } from "./HealthProfile";
+import { SchoolClass } from "./SchoolClass";
 
 export interface User {
   id: string;
@@ -8,6 +8,22 @@ export interface User {
   roleName: string;
   imageUrl: string | null;
 }
+
+
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  image: string | null;
+}
+
+export interface UserProfileUpdateViewModel {
+  fullName: string;
+  phone: string;
+  image: string | null;
+}
+
 
 export interface UserCreate {
   email: string;
@@ -26,14 +42,6 @@ export interface UserUpdate{
 
 export interface ParentViewModel extends User{
   students: Student
-}
-
-export interface SchoolClass {
-  id: string;
-  className: string;
-  classRoom: string;
-  quantity: number;
-  strudent: []
 }
 
 export interface Student {

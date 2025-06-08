@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "User", path: "/user", pro: false, allowedRoles: ["Admin"] },
       { name: "Student", path: "/student", pro: false, allowedRoles: ["Admin", "Manager"] },
+      { name: "Class", path: "/class", pro: false, allowedRoles: ["Admin"] },
     ],
   },
   { icon: <BoltIcon />, name: "Blog", path: "/blog", allowedRoles: ["Admin", "Manager", "Nurse", "Parent"] },
@@ -31,7 +32,7 @@ const navItems: NavItem[] = [
     allowedRoles: ["Admin", "Manager", "Nurse"],
     subItems: [
       { name: "Manager Pending", path: "/pending-medical-events", pro: false, allowedRoles: ["Admin", "Manager"] },
-      { name: "Manager Approved", path: "/approved-medical-events", pro: false, allowedRoles: ["Admin", "Manager", "Nurse"] },
+      { name: "Approval History", path: "/approved-medical-events", pro: false, allowedRoles: ["Admin", "Manager", "Nurse"] },
     ],
   },
 ];

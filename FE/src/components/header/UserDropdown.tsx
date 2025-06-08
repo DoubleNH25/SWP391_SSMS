@@ -4,25 +4,40 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import { UserIcon } from "@/components/icons/index"
+import { FecthUsersProfile } from "@/services/UserService";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<{ name: string; email: string }>({
+  const [userName, setUserName] = useState<{ name: string; email: string, image: any }>({
     name: "Guest",
-    email: ""
+    email: "",
+    image: null
   });
 
   useEffect(() => {
     handleChangeUserName();
+    loadUser();
   }, []);
+
+  const loadUser = async () => {
+    const user = await FecthUsersProfile();
+    if (user) {
+      setUserName({
+        name: user.fullName,
+        email: user.email,
+        image: user.image
+      });
+    }
+  }
 
   const handleChangeUserName = async () => {
     const payload = DecodeJWT();
     if (payload) {
       setUserName({
         name: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
-        email: payload.email
+        email: payload.email,
+        image: null
       });
     }
   };
@@ -46,13 +61,21 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex h-11 w-11 items-center text-gray-700 dropdown-toggle border-2 border-gray-200 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300"
       >
-        <UserIcon className="w-5 h-5 text-gray-500 text-center mx-auto" />
+        {userName.image ? (
+          <img
+            src={userName.image}
+            alt="Profile"
+            className="w-full h-full rounded-full"
+          />
+        ) : (
+          <UserIcon className="w-5 h-5 text-gray-500 text-center mx-auto" />
+        )}
       </button>
 
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg"
+        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg z-50"
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm">

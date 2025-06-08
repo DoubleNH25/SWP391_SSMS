@@ -111,7 +111,6 @@ export default function HealthProfiles() {
     };
 
     const fetchData = async () => {
-        console.log('fetchData called');
         setLoading(true);
         try {
             const fetchedProfile = await FecthHealthProfile();
@@ -126,7 +125,6 @@ export default function HealthProfiles() {
                     !healthProfile.abnormalNote ||
                     !healthProfile.vaccinationHistory;
             });
-            console.log(studentsWithMissingData);
             if (studentsWithMissingData.length > 0) {
                 const studentNames = studentsWithMissingData.map(s => s.fullName).join(", ");
                 toast.warning(
@@ -149,7 +147,6 @@ export default function HealthProfiles() {
     };
 
     useEffect(() => {
-        console.log('useEffect triggered');
         fetchData();
     }, []);
 

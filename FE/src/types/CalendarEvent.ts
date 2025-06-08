@@ -4,20 +4,21 @@ export interface CalendarEvent {
   start: string;
   allDay?: boolean;
   extendedProps: {
-    calendar: "pending" | "approve" | "cancel";
+    calendar:  "Pending" | "Approved" | "Rejected";
     description?: string;
     eventType: "medical" | "vaccination";
     vaccineName?: string;
     exp?: string;
     mfg?: string;
     vaccineType?: string;
+    classIds?: [string];
   };
 }
 
 export const eventCategories = {
-  pending: { label: "Pending", color: "bg-yellow-500", lightColor: "bg-yellow-50", textColor: "text-yellow-700" },
-  approve: { label: "Approve", color: "bg-green-500", lightColor: "bg-green-50", textColor: "text-green-700" },
-  cancel: { label: "Cancel", color: "bg-red-500", lightColor: "bg-red-50", textColor: "text-red-700" },
+  Pending: { label: "Pending", color: "bg-yellow-500", lightColor: "bg-yellow-50", textColor: "text-yellow-700" },
+  Approved: { label: "Approved", color: "bg-green-500", lightColor: "bg-green-50", textColor: "text-green-700" },
+  Rejected: { label: "Rejected", color: "bg-red-500", lightColor: "bg-red-50", textColor: "text-red-700" },
 };
 
 export function toLocalISOString(dateInput: Date | string): string {

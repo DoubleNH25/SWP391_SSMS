@@ -3,8 +3,7 @@ import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateVaccinationCampaign(vaccinationCampaign: VaccinationCampaignsUpdateCreateViewModel): Promise<VaccinationCampaignsViewModel> {
     if (!vaccinationCampaign || typeof vaccinationCampaign !== 'object') {
-        console.error('Invalid vaccination campaign data');
-        return null;
+        throw new Error('Vui lòng nhập đầy đủ thông tin chiến dịch tiêm chủng');
     }
     try {
         var response = await ApiClient<VaccinationCampaignsViewModel>({
@@ -13,16 +12,15 @@ export async function FecthCreateVaccinationCampaign(vaccinationCampaign: Vaccin
             data: vaccinationCampaign,
         });
         return response?.data || null;
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Failed to create vaccination campaign: ${err}`);
-        return null;
+        throw new Error('Không thể tạo chiến dịch tiêm chủng. Vui lòng thử lại.');
     }
 }
 
 export async function FecthUpdateVaccinationCampaign(id: string, vaccinationCampaign: VaccinationCampaignsUpdateCreateViewModel): Promise<boolean> {
     if (!id) {
-        console.error("Invalid update request: missing id.");
-        return false;
+        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
     }
     try {
         await ApiClient<void>({
@@ -31,9 +29,9 @@ export async function FecthUpdateVaccinationCampaign(id: string, vaccinationCamp
             data: vaccinationCampaign,
         });
         return true;
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Failed to update vaccination campaign:`, err);
-        return false;
+        throw new Error('Không thể cập nhật chiến dịch tiêm chủng. Vui lòng thử lại.');
     }
 }
 
@@ -42,6 +40,19 @@ export async function FecthVaccinationCampaign(): Promise<VaccinationCampaignsVi
         const response = await ApiClient<VaccinationCampaignsViewModel[]>({
             method: 'GET',
             endpoint: `/medical-events/vaccination-campaigns/all`,
+        });
+        return response?.data || [];
+    } catch (err) {
+        console.error(`Failed to get vaccination campaign:`, err);
+        return [];
+    }
+}
+
+export async function FecthRejectVaccinationCampaigns(): Promise<VaccinationCampaignsViewModel[]> {
+    try {
+        const response = await ApiClient<VaccinationCampaignsViewModel[]>({
+            method: 'GET',
+            endpoint: `/medical-events/vaccination-campaigns/reject`,
         });
         return response?.data || [];
     } catch (err) {
@@ -65,8 +76,7 @@ export async function FecthPendingVaccinationCampaign(): Promise<VaccinationCamp
 
 export async function FecthApproveVaccinationCampaign(id: string): Promise<boolean> {
     if (!id) {
-        console.error("Invalid approve request: missing id.");
-        return false;
+        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
     }
     try {
         await ApiClient<void>({
@@ -74,9 +84,25 @@ export async function FecthApproveVaccinationCampaign(id: string): Promise<boole
             endpoint: `/medical-events/vaccination-campaigns/${id}/approve`,
         });
         return true;
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Failed to approve vaccination campaign:`, err);
-        return false;
+        throw new Error('Không thể phê duyệt chiến dịch tiêm chủng. Vui lòng thử lại.');
+    }
+}
+
+export async function FecthRejectVaccinationCampaign(id: string): Promise<boolean> {
+    if (!id) {
+        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
+    }
+    try {
+        await ApiClient<void>({
+            method: 'PUT',
+            endpoint: `/medical-events/vaccination-campaigns/${id}/reject`,
+        });
+        return true;
+    } catch (err: any) {
+        console.error(`Failed to reject vaccination campaign:`, err);
+        throw new Error('Không thể từ chối chiến dịch tiêm chủng. Vui lòng thử lại.');
     }
 }
 
@@ -96,8 +122,7 @@ export async function FecthApproveVaccinationCampaigns(): Promise<VaccinationCam
 
 export async function FecthDeleteVaccinationCampaign(id: string,): Promise<boolean> {
     if (!id) {
-        console.error("Invalid delete request: missing id.");
-        return false;
+        throw new Error("ID chiến dịch tiêm chủng là bắt buộc");
     }
     try {
         await ApiClient<void>({
@@ -105,8 +130,8 @@ export async function FecthDeleteVaccinationCampaign(id: string,): Promise<boole
             endpoint: `/medical-events/vaccination-campaigns/${id}`
         });
         return true;
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Failed to delete vaccination campaign:`, err);
-    return false;
+        throw new Error('Không thể xóa chiến dịch tiêm chủng. Vui lòng thử lại.');
     }
 }

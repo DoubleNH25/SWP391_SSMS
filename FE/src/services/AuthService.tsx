@@ -3,7 +3,7 @@ import ApiClient from "@/utils/ApiBase";
 
 export async function FecthLogin(users: LoginRequest): Promise<void> {
     if (!users || !users.email || !users.password) {
-        console.error("Invalid login request data:", users);
+        throw new Error("Vui lòng nhập đầy đủ email và mật khẩu");
     }
     try {
         const response = await ApiClient<LoginResponse>({
@@ -13,12 +13,12 @@ export async function FecthLogin(users: LoginRequest): Promise<void> {
             requiresToken: false,
         });
         if (!response || !response.data || !response.data.token) {
-            console.error("Invalid response from login API:", response);
-            return;
+            throw new Error("Incorrect email or password");
         }
         localStorage.setItem('token', response.data.token);
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to login:", err);
+        throw new Error("Incorrect email or password");
     }
 }
 
