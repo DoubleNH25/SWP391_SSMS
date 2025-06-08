@@ -1,0 +1,260 @@
+import { CalendarEvent, customFormatDate, customFormatDateOnly, eventCategories } from "@/types/CalendarEvent";
+import { Tooltip } from "@material-tailwind/react";
+
+interface CalendarGridProps {
+  currentDate: Date;
+  selectedDate: string;
+  events: CalendarEvent[];
+  onDateSelect: (date: string) => void;
+  onEventClick: (event: CalendarEvent) => void;
+  onViewMoreEvents: (date: string) => void;
+  onNavigateMonth: (direction: "prev" | "next") => void;
+  onToday: () => void;
+  classOptions: { value: string; label: string }[];
+}
+
+const CalendarGrid = ({
+  currentDate,
+  selectedDate,
+  events,
+  onDateSelect,
+  onEventClick,
+  onViewMoreEvents,
+  onNavigateMonth,
+  onToday,
+  classOptions
+}: CalendarGridProps) => {
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => {
+      const eventDate = new Date(event.start);
+      return eventDate.toDateString() === date.toDateString();
+    });
+  };
+
+  return (
+    <div className="lg:w-2/3 bg-white rounded-lg shadow-lg border-2 border-gray-200">
+      {/* Calendar Header */}
+      <div className="p-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => onNavigateMonth("prev")}
+            className="p-2 hover:bg-gray-200 bg-gray-100 rounded-lg"
+          >
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h2 className="text-xl font-bold text-gray-900">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h2>
+          <button
+            onClick={() => onNavigateMonth("next")}
+            className="p-2 hover:bg-gray-200 bg-gray-100 rounded-lg"
+          >
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Legend */}
+        <div className="flex gap-4">
+          {Object.entries(eventCategories).map(([key, category]) => (
+            <div key={key} className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded ${category.color}`} />
+              <span className="text-sm text-gray-900 font-bold">{category.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={onToday}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+        >
+          Today
+        </button>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 bg-gray-50">
+        {dayNames.map((day) => (
+          <div key={day} className="p-3 text-center font-semibold text-gray-700 border-b border-gray-200">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7">
+        {getDaysInMonth(currentDate).map((date, index) => {
+          const isPast = date && new Date(customFormatDateOnly(date)) < new Date(customFormatDateOnly(new Date()));
+          const isToday = date && customFormatDateOnly(date) === customFormatDateOnly(new Date());
+          const isSelected = date && customFormatDateOnly(date) === selectedDate;
+
+          return (
+            <div
+              key={index}
+              className={`min-h-[120px] border border-gray-200 p-2 ${isPast ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+                } ${isSelected
+                  ? "bg-blue-100 hover:bg-blue-200"
+                  : isPast ? '' : "hover:bg-gray-100"
+                }`}
+              onClick={() => date && !isPast && onDateSelect(customFormatDate(date))}
+            >
+              {date && (
+                <>
+                  <div
+                    className={`text-sm font-medium mb-2 ${isToday
+                      ? "bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center"
+                      : isPast ? "text-gray-400" : "text-gray-700"
+                      }`}
+                  >
+                    {date.getDate()}
+                  </div>
+
+                  <div className="space-y-1">
+                    {getEventsForDate(date).slice(0, 2).map((event) => {
+                      const category = eventCategories[event.extendedProps.calendar] || eventCategories.Pending;
+                      return (
+                        <Tooltip
+                          key={event.id}
+                          className="border border-blue-gray-50 bg-white px-4 py-3 shadow-xl shadow-black/10"
+                          content={
+                            <div className="text-left text-gray-900 text-sm">
+                              <div className="font-semibold mb-1">{event.title}</div>
+                              <p>
+                                <strong>Time:</strong>{' '}
+                                {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              {event.extendedProps.eventType === "medical" ? (
+                                <>
+                                  <p><strong>Description:</strong> {event.extendedProps.description || "No description"}</p>
+                                  <p><strong>Date:</strong> {customFormatDateOnly(new Date(event.start))}</p>
+                                  <p><strong>Classes:</strong> {(() => {
+                                    const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
+                                    return validClassIds.length > 0 ? (
+                                      validClassIds.map((classId, index) => {
+                                        const classOption = classOptions.find(option => option.value === classId);
+                                        const className = classOption ? classOption.label : `Class ${classId}`;
+                                        return (
+                                          <span key={index} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 mr-1">
+                                            {className}
+                                          </span>
+                                        );
+                                      })
+                                    ) : (
+                                      <span className="text-gray-500">
+                                        No classes assigned
+                                      </span>
+                                    );
+                                  })()}</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p><strong>Vaccine Name:</strong> {event.extendedProps.vaccineName || "No vaccine name"}</p>
+                                  <p><strong>Vaccine Type:</strong> {event.extendedProps.vaccineType || "No vaccine type"}</p>
+                                  <p><strong>EXP:</strong> {customFormatDateOnly(new Date(event.extendedProps.exp!))}</p>
+                                  <p><strong>MFG:</strong> {customFormatDateOnly(new Date(event.extendedProps.mfg!))}</p>
+                                  <p><strong>Date:</strong> {customFormatDateOnly(new Date(event.start))}</p>
+                                  <p><strong>Classes:</strong> {(() => {
+                                    const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
+                                    return validClassIds.length > 0 ? (
+                                      validClassIds.map((classId, index) => {
+                                        const classOption = classOptions.find(option => option.value === classId);
+                                        const className = classOption ? classOption.label : `Class ${classId}`;
+                                        return (
+                                          <span key={index} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 mr-1">
+                                            {className}
+                                          </span>
+                                        );
+                                      })
+                                    ) : (
+                                      <span className="text-gray-500">
+                                        No classes assigned
+                                      </span>
+                                    );
+                                  })()}</p>
+                                </>
+                              )}
+                            </div>
+                          }
+                          placement="bottom"
+                        >
+                          <div
+                            key={event.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEventClick(event);
+                            }}
+                            className={`flex items-start gap-2 text-xs p-2 rounded-md cursor-pointer hover:opacity-80 transition-opacity ${category.lightColor} ${category.textColor} border-l-4 border-${category.color.split("-")[1]}-500`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-[10px] uppercase tracking-wide mb-1 text-center">
+                                {event.extendedProps.eventType === "medical" ? "Medical" : "Vaccination"}
+                              </div>
+                              <div className="font-medium truncate text-sm mb-1">{event.title}</div>
+                              <div className="text-xs truncate opacity-75">
+                                {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -{' '}
+                                {event.extendedProps.eventType === "medical"
+                                  ? event.extendedProps.description || "No description"
+                                  : event.extendedProps.vaccineName || "No vaccine name"}
+                              </div>
+                            </div>
+                          </div>
+                        </Tooltip>
+                      );
+                    })}
+
+                    {getEventsForDate(date).length > 2 && (
+                      <div
+                        className="text-xs text-blue-600 font-medium cursor-pointer hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewMoreEvents(customFormatDateOnly(date));
+                        }}
+                      >
+                        +{getEventsForDate(date).length - 2} more
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default CalendarGrid;

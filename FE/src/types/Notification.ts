@@ -5,6 +5,8 @@ export interface NotificationViewModel {
     activityType: string;
     activityId: string;
     activityName: string;
-    status: boolean;
+    status:  "Pending" | "Approved" | "Rejected";
     scheduleTime: string;
+    responsibleUserId: string;
+    responsibleUserName: string;
 }

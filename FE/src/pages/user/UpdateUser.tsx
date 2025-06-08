@@ -64,8 +64,7 @@ export default function UpdateUser() {
     try {
       if (!formData.email
         || !formData.phone
-        || !formData.fullName
-        || !formData.password) {
+        || !formData.fullName) {
         throw new Error('Please fill in all required fields');
       }
       const success = await FecthUpdateUsers(userId, formData);

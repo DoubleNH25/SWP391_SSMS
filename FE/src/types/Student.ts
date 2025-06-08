@@ -1,11 +1,6 @@
 import { HealthProfile } from "./HealthProfile";
+import { SchoolClassStudent } from "./SchoolClass";
 
-export interface SchoolClass {
-  id: string;
-  className: string;
-  classRoom: string;
-  quantity: number;
-}
 
 export interface Student {
   id: string;
@@ -13,7 +8,7 @@ export interface Student {
   gender: string;
   dateOfBirth: string;
   classId: string;
-  studentClass: SchoolClass;
+  studentClass: SchoolClassStudent;
   image: string | null;
   healthProfile: HealthProfile
 }
