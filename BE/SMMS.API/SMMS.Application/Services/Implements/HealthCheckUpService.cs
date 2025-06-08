@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CloudinaryDotNet.Actions;
+using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
@@ -24,7 +25,8 @@ namespace SMMS.Application.Services.Implements
 					user => user.Id,
 					(hcr, user) => new HealthCheckUpResponse
 					{
-						HealthActivityId = hcr.HealthActivityId, // Sử dụng HealthActivityId thay vì hcr.Id
+						HealthCheckUpId = hcr.Id,
+						HealthActivityId = hcr.HealthActivityId, 
 						StudentId = hcr.StudentId,
 						StudentName = hcr.Student.FullName,
 						NurseId = hcr.LastUpdatedBy,
@@ -51,6 +53,7 @@ namespace SMMS.Application.Services.Implements
 					user => user.Id,
 					(hcr, user) => new HealthCheckUpResponse
 					{
+						HealthCheckUpId = hcr.Id,
 						HealthActivityId = hcr.HealthActivityId,
 						StudentId = hcr.StudentId,
 						StudentName = hcr.Student.FullName,
@@ -124,6 +127,7 @@ namespace SMMS.Application.Services.Implements
 					user => user.Id,
 					(hcr, user) => new HealthCheckUpResponse
 					{
+						HealthCheckUpId = hcr.Id,
 						HealthActivityId = hcr.HealthActivityId,
 						StudentId = hcr.StudentId,
 						StudentName = hcr.Student.FullName,
@@ -146,25 +150,32 @@ namespace SMMS.Application.Services.Implements
 			return await _repositoryManager.HealthCheckRepository
 				.FindAll(false)
 				.Include(hcr => hcr.Student)
-				.Join(_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),
+				.GroupJoin(
+					_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),
 					hcr => hcr.LastUpdatedBy,
 					user => user.Id,
-					(hcr, user) => new HealthCheckUpResponse
+					(hcr, users) => new { hcr, users }
+				)
+				.SelectMany(
+					x => x.users.DefaultIfEmpty(),
+					(x, user) => new HealthCheckUpResponse
 					{
-						HealthActivityId = hcr.HealthActivityId,
-						StudentId = hcr.StudentId,
-						StudentName = hcr.Student.FullName,
-						NurseId = hcr.LastUpdatedBy,
-						NurseName = user.FullName,
-						Vision = hcr.Vision,
-						Hearing = hcr.Hearing,
-						Dental = hcr.Dental,
-						BMI = hcr.BMI,
-						AbnormalNote = hcr.AbnormalNote,
-						RecordDate = hcr.RecordDate,
-						Time = hcr.Time,
-						IsLatest = hcr.IsLatest
-					})
+						HealthCheckUpId = x.hcr.Id,
+						HealthActivityId = x.hcr.HealthActivityId,
+						StudentId = x.hcr.StudentId,
+						StudentName = x.hcr.Student.FullName,
+						NurseId = x.hcr.LastUpdatedBy,
+						NurseName = user != null ? user.FullName : "Pending To Update",
+						Vision = x.hcr.Vision,
+						Hearing = x.hcr.Hearing,
+						Dental = x.hcr.Dental,
+						BMI = x.hcr.BMI,
+						AbnormalNote = x.hcr.AbnormalNote,
+						RecordDate = x.hcr.RecordDate,
+						Time = x.hcr.Time,
+						IsLatest = x.hcr.IsLatest
+					}
+				)
 				.ToListAsync();
 		}
 	}

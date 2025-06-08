@@ -5,6 +5,7 @@ using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Interface.Repositories;
+using System.Linq.Expressions;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -21,7 +22,7 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<List<UserResponse>> GetAllUsersAsync()
 		{
-			var users = _repositoryManager.UserRepository.FindAll(false)
+			var users = await Task.Run(() => _repositoryManager.UserRepository.FindAll(false)
 				.Select(u => new UserResponse
 				{
 					Id = u.Id,
@@ -29,13 +30,13 @@ namespace SMMS.Application.Services.Implements
 					Phone = u.Phone,
 					FullName = u.FullName,
 					RoleName = u.Role.RoleName
-				}).ToList();
+				}).ToList());
 			return users;
 		}
 
 		public async Task<UserResponse> GetUserByIdAsync(string id)
 		{
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == id, false)
+			var user = await Task.Run(() => _repositoryManager.UserRepository.FindByCondition(u => u.Id == id, false)
 				.Select(u => new UserResponse
 				{
 					Id = u.Id,
@@ -43,7 +44,7 @@ namespace SMMS.Application.Services.Implements
 					Phone = u.Phone,
 					FullName = u.FullName,
 					RoleName = u.Role.RoleName
-				}).FirstOrDefault();
+				}).FirstOrDefault());
 			return user;
 		}
 
@@ -51,10 +52,10 @@ namespace SMMS.Application.Services.Implements
 		{
 			var user = new User
 			{
-				Email = request.Email,
-				Phone = request.Phone,
-				FullName = request.FullName,
-				RoleId = request.RoleId,
+				Email = request.Email ?? string.Empty,
+				Phone = request.Phone ?? string.Empty,
+				FullName = request.FullName ?? string.Empty,
+				RoleId = request.RoleId ?? string.Empty,
 				Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
 				CreatedBy = "Admin",
 				CreatedTime = DateTimeOffset.UtcNow
@@ -70,8 +71,8 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (user == null) return false;
 
-			user.Phone = request.Phone;
-			user.FullName = request.FullName;
+			user.Phone = request.Phone ?? string.Empty;
+			user.FullName = request.FullName ?? string.Empty;
 			if (!string.IsNullOrEmpty(request.Password))
 				user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
 			user.LastUpdatedBy = "Admin";
@@ -97,7 +98,7 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<UserProfileResponse> GetMyProfileAsync(string userId)
 		{
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false)
+			var user = await Task.Run(() => _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false)
 				.Select(u => new UserProfileResponse
 				{
 					Id = u.Id,
@@ -105,7 +106,7 @@ namespace SMMS.Application.Services.Implements
 					Phone = u.Phone,
 					FullName = u.FullName,
 					Image = u.Image
-				}).FirstOrDefault();
+				}).FirstOrDefault());
 			return user ?? throw new Exception("User not found");
 		}
 
@@ -115,8 +116,8 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (user == null) return false;
 
-			user.FullName = request.FullName;
-			user.Phone = request.Phone;
+			user.FullName = request.FullName ?? string.Empty;
+			user.Phone = request.Phone ?? string.Empty;
 
 			if (request.Image != null)
 			{
@@ -137,53 +138,180 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<List<StudentResponse>> GetMyStudentsAsync(string parentId)
 		{
-			var students = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.ParentId == parentId, false)
+			var students = await Task.Run(() => _repositoryManager.StudentRepository
+				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
+				.ToList()
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
-				}).ToList();
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							NurseName = _repositoryManager.UserRepository
+								.FindByCondition(u => u.Id == hcr.LastUpdatedBy, false)
+								.Select(u => u.FullName)
+								.FirstOrDefault(),
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
+				}).ToList());
+
 			return students;
 		}
 
 		public async Task<List<StudentResponse>> GetAllStudentsAsync()
 		{
-			var students = _repositoryManager.StudentRepository
-				.FindAll(false)
+			var students = await Task.Run(() => _repositoryManager.StudentRepository
+				.FindByCondition(s => s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
-				}).ToList();
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity,
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
+				}).ToList());
+
 			return students;
 		}
+
 		public async Task<StudentResponse> GetStudentByIdAsync(string id)
 		{
-			var student = _repositoryManager.StudentRepository.FindByCondition(s => s.Id == id, false)
+			var student = await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == id && s.DeletedTime == null, false)
 				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
 				.Select(s => new StudentResponse
 				{
 					Id = s.Id,
+					StudentCode = s.StudentCode,
 					FullName = s.FullName,
 					Gender = s.Gender,
 					DateOfBirth = s.DateOfBirth,
 					ClassId = s.ClassId,
-					SchoolClass = s.SchoolClass,
-					Image = s.Image
-				}).FirstOrDefault();
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
+				}).FirstOrDefaultAsync();
+
 			return student;
 		}
 
@@ -197,9 +325,9 @@ namespace SMMS.Application.Services.Implements
 			var student = new Student
 			{
 				ParentId = parentId,
-				ClassId = request.ClassId,
-				FullName = request.FullName,
-				Gender = request.Gender,
+				ClassId = request.ClassId ?? string.Empty,
+				FullName = request.FullName ?? string.Empty,
+				Gender = request.Gender ?? string.Empty ,
 				DateOfBirth = request.DateOfBirth,
 				CreatedBy = parentId,
 				CreatedTime = DateTimeOffset.UtcNow
@@ -223,11 +351,13 @@ namespace SMMS.Application.Services.Implements
 		{
 			var student = _repositoryManager.StudentRepository
 				.FindByCondition(s => s.Id == studentId, true)
+
 				.FirstOrDefault();
 			if (student == null) return false;
 
 			var user = _repositoryManager.UserRepository
 				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
 				.FirstOrDefault();
 			if (user == null || (user.Role.RoleName != "Admin" && student.ParentId != userId))
 				return false;
@@ -253,6 +383,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
+
 		public async Task<bool> DeleteStudentAsync(string studentId, string userId)
 		{
 			var student = _repositoryManager.StudentRepository
@@ -275,37 +406,6 @@ namespace SMMS.Application.Services.Implements
 			return true;
 		}
 
-		public async Task<List<StudentHealthResponse>> GetMyStudentsHealthProfileAsync(string parentId)
-		{
-			var students = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.ParentId == parentId && s.DeletedTime == null, false)
-				.Include(s => s.SchoolClass)
-				.Select(s => new StudentHealthResponse
-				{
-					Id = s.Id,
-					FullName = s.FullName,
-					Gender = s.Gender,
-					DateOfBirth = s.DateOfBirth,
-					ClassId = s.ClassId,
-					StudentClass = s.SchoolClass,
-					Image = s.Image,
-					HealthProfile = s.HealthProfiles
-						.Where(hp => hp.DeletedTime == null)
-						.Select(hp => new HealthProfileResponse
-						{
-							Id = hp.Id,
-							StudentId = hp.StudentId,
-							Vision = hp.Vision,
-							Hearing = hp.Hearing,
-							Dental = hp.Dental,
-							BMI = hp.BMI,
-							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
-						}).FirstOrDefault()
-				}).ToList();
-			return students;
-		}
-
 		public async Task<bool> UpdateHealthProfileByParentAsync(string studentId, HealthProfileRequest request, string parentId)
 		{
 			// Kiểm tra xem học sinh có tồn tại và thuộc về phụ huynh này không
@@ -325,9 +425,9 @@ namespace SMMS.Application.Services.Implements
 				healthProfile = new HealthProfile
 				{
 					StudentId = studentId,
-					Vision = request.Vision,
-					Hearing = request.Hearing,
-					Dental = request.Dental,
+					Vision = request.Vision ?? string.Empty,
+					Hearing = request.Hearing ?? string.Empty,
+					Dental = request.Dental ?? string.Empty,
 					BMI = request.BMI,
 					AbnormalNote = request.AbnormalNote,
 					VaccinationHistory = request.VaccinationHistory,
@@ -339,9 +439,9 @@ namespace SMMS.Application.Services.Implements
 			else
 			{
 				// Nếu đã có, cập nhật thông tin
-				healthProfile.Vision = request.Vision;
-				healthProfile.Hearing = request.Hearing;
-				healthProfile.Dental = request.Dental;
+				healthProfile.Vision = request.Vision ?? string.Empty;
+				healthProfile.Hearing = request.Hearing ?? string.Empty;
+				healthProfile.Dental = request.Dental ?? string.Empty;
 				healthProfile.BMI = request.BMI;
 				healthProfile.AbnormalNote = request.AbnormalNote;
 				healthProfile.VaccinationHistory = request.VaccinationHistory;
@@ -354,5 +454,38 @@ namespace SMMS.Application.Services.Implements
 			return true;
 		}
 
+		public async Task<List<ParentResponse>> GetAllParentsAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Parent" && u.DeletedTime == null, false)
+				.Include(u => u.Role)
+				.Include(u => u.Students.Where(s => s.DeletedTime == null))
+				.Select(u => new ParentResponse
+				{
+					Id = u.Id,
+					Email = u.Email,
+					Phone = u.Phone,
+					FullName = u.FullName,
+					RoleName = u.Role.RoleName,
+					ImageUrl = u.Image,
+					Students = u.Students.Select(s => new StudentResponse
+					{
+						Id = s.Id,
+						FullName = s.FullName,
+						Gender = s.Gender,
+						DateOfBirth = s.DateOfBirth,
+						ClassId = s.ClassId,
+						StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+						{
+							Id = s.SchoolClass.Id,
+							ClassName = s.SchoolClass.ClassName,
+							ClassRoom = s.SchoolClass.ClassRoom,
+							Quantity = s.SchoolClass.Quantity
+						} : null,
+						Image = s.Image
+					}).ToList()
+				})
+				.ToListAsync();
+		}
 	}
 }

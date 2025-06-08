@@ -10,11 +10,13 @@ using SMMS.Domain.Interface.Repositories;
 using SMMS.Infrastructure.Context;
 using SMMS.Infrastructure.Implements;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+	   .AddJsonOptions(options =>
+		   options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
@@ -29,7 +31,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-	options.MultipartBodyLengthLimit = 104857600; // 100 MB
+	options.MultipartBodyLengthLimit = 104857600; // 100 MB //Ok
 });
 
 
@@ -79,8 +81,13 @@ builder.Services.AddScoped<IActivityConsentService, ActivityConsentService>();
 builder.Services.AddScoped<IVaccinationRecordService, VaccinationRecordService>();
 builder.Services.AddScoped<IHealthCheckupService, HealthCheckupService>();
 builder.Services.AddScoped<IConselingService, ConselingService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
+builder.Services.AddScoped<IMedicalService, MedicalService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
+
 
 // Infrastructure Services
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

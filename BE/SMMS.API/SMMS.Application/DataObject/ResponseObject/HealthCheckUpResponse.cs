@@ -4,6 +4,7 @@ namespace SMMS.Application.DataObject.ResponseObject
 {
 	public class HealthCheckUpResponse
 	{
+		public string? HealthCheckUpId { get; set; }
 		public string? HealthActivityId { get; set; }
 		public string? StudentId { get; set; }
 		public string? StudentName { get; set; }

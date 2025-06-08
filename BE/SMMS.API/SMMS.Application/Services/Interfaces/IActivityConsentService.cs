@@ -1,12 +1,13 @@
 ﻿using SMMS.Application.DataObject.ResponseObject;
+using SMMS.Domain.Enum;
 
 namespace SMMS.Application.Services.Interfaces
 {
 	public interface IActivityConsentService
 	{
-		Task<bool> ConfirmActivityConsentAsync(string activityConsentId, bool status, string parentId);
+		Task<bool> UpdateActivityConsentStatusAsync(string activityConsentId, ApprovalStatus status, string parentId);
 		Task<List<ActivityConsentResponse>> GetConsentsByParentIdAsync(string parentId);
-		Task<List<ActivityConsentResponse>> GetConsentsByHAIdAsync(string healthActivityId); //Health Activity
-		Task<List<ActivityConsentResponse>> GetConsentsByVCIdAsync(string vaccinationCampaignId); //Vaccination Campaign
+		Task<List<ActivityConsentResponse>> GetConsentsByHAIdAsync(string healthActivityId);
+		Task<List<ActivityConsentResponse>> GetConsentsByVCIdAsync(string vaccinationCampaignId); 
 	}
 }

@@ -89,7 +89,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpPost("import-students")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> ImportStudents(IFormFile file)
 		{
 			if (file == null || file.Length == 0)
@@ -106,7 +106,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("students")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetAllStudents()
 		{
 			var students = await _userService.GetAllStudentsAsync();
@@ -114,7 +114,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("students/{studentId}")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetStudentsById(string studentId)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -144,7 +144,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpDelete("students/{studentId}")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> DeleteStudent(string studentId)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -152,6 +152,14 @@ namespace SMMS.API.Controllers
 			var result = await _userService.DeleteStudentAsync(studentId, userId);
 			if (!result) return BadRequest("Failed to delete student.");
 			return NoContent();
+		}
+
+		[HttpGet("parents/get-all-parent")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetAllParents()
+		{
+			var parents = await _userService.GetAllParentsAsync();
+			return Ok(parents);
 		}
 	}
 }

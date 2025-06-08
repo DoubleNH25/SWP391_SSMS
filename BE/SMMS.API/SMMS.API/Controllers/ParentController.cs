@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
 
 using SMMS.Application.Services.Interfaces;
+using SMMS.Domain.Enum;
 using System.Security.Claims;
 
 namespace SMMS.API.Controllers
@@ -66,16 +67,6 @@ namespace SMMS.API.Controllers
 			return Ok("Schedule requested.");
 		}
 
-
-		[HttpGet("students/health")]
-		public async Task<IActionResult> GetStudentsHealthProfile()
-		{
-			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized("Parent ID not found.");
-			var students = await _userService.GetMyStudentsHealthProfileAsync(parentId);
-			return Ok(students);
-		}
-
 		[HttpPut("students/{studentId}/health-profile")]
 		public async Task<IActionResult> UpdateStudentHealthProfile(string studentId, [FromBody] HealthProfileRequest request)
 		{
@@ -96,14 +87,16 @@ namespace SMMS.API.Controllers
 		}
 
 
-		[HttpPut("activity-consents/{id}/confirm")]
+		[HttpPut("activity-consents/{id}/status")]
 		[Authorize(Roles = "Parent")]
-		public async Task<IActionResult> ConfirmActivityConsent(string id, [FromBody] bool status)
+		public async Task<IActionResult> UpdateActivityConsentStatus(string id, [FromBody] ApprovalStatus status)
 		{
 			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 			if (string.IsNullOrEmpty(parentId)) return Unauthorized("Parent ID not found.");
-			var result = await _consentService.ConfirmActivityConsentAsync(id, status, parentId);
-			if (!result) return BadRequest("Failed to confirm consent.");
+			if (status != ApprovalStatus.Approved && status != ApprovalStatus.Rejected)
+				return BadRequest("Invalid status. Only Approved or Rejected are allowed.");
+			var result = await _consentService.UpdateActivityConsentStatusAsync(id, status, parentId);
+			if (!result) return BadRequest("Failed to update consent status.");
 			return NoContent();
 		}
 	}
