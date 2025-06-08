@@ -29,27 +29,20 @@ namespace SMMS.API.Controllers
 			return Ok(activities);
 		}
 
-		[HttpGet("health-activities/rejected")]
+		[HttpGet("health-activities/approve-reject")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetRejectedHealthActivities()
 		{
-			var activities = await _healthActivityService.GetRejectHealthActivitiesAsync();
+			var activities = await _healthActivityService.GetActivityWithoutPendingAsync();
 			return Ok(activities);
 		}
 
 		[HttpGet("health-activities/pending")]
-		[Authorize(Roles = "Admin,Manager")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetPendingHealthActivities()
 		{
 			var pending = await _healthActivityService.GetPendingHealthActivitiesAsync();
 			return Ok(pending);
-		}
-		[HttpGet("health-activities/approved")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetApprovedHealthActivities()
-		{
-			var activities = await _healthActivityService.GetApprovedHealthActivitiesAsync();
-			return Ok(activities);
 		}
 
 		[HttpPost("health-activities")]
@@ -62,23 +55,17 @@ namespace SMMS.API.Controllers
 			return Ok(response);
 		}
 
-		[HttpPut("health-activities/{id}/approve")]
+
+		[HttpPut("health-activities/{id}/approve-or-reject")]
 		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> ApproveHealthActivity(string id)
+		public async Task<IActionResult> UpdateHealthActivityStatus(string id, [FromQuery] string action)
 		{
-			var approverId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (approverId == null) return Unauthorized("Approver ID not found in claims.");
-			var result = await _healthActivityService.ApproveHealthActivityAsync(id, approverId);
-			if (!result) return NotFound();
-			return NoContent();
-		}
-		[HttpPut("health-activities/{id}/reject")]
-		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> RejectHealthActivity(string id)
-		{
-			var rejecterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (rejecterId == null) return Unauthorized("Rejecter ID not found in claims.");
-			var result = await _healthActivityService.RejectHealthActivityAsync(id, rejecterId);
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
+
+			if (action != "approve" && action != "reject") return BadRequest("Invalid action. Must be 'approve' or 'reject'.");
+
+			var result = await _healthActivityService.UpdateHealthActivityStatusAsync(id, action, userId);
 			if (!result) return NotFound();
 			return NoContent();
 		}
@@ -112,26 +99,18 @@ namespace SMMS.API.Controllers
 			return Ok(activities);
 		}
 
-		[HttpGet("vaccination-campaigns/reject")]
-		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> GetRejectVaccinationCampaigns()
-		{
-			var pending = await _vaccinationCampaignService.GetRejectVaccinationCampaignsAsync();
-			return Ok(pending);
-		}
-
 		[HttpGet("vaccination-campaigns/pending")]
-		[Authorize(Roles = "Admin,Manager")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetPendingVaccinationCampaigns()
 		{
 			var pending = await _vaccinationCampaignService.GetPendingVaccinationCampaignsAsync();
 			return Ok(pending);
 		}
-		[HttpGet("vaccination-campaigns/approved")]
+		[HttpGet("vaccination-campaigns/approve-reject")]
 		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetApprovedVaccinationCampaigns()
 		{
-			var campaigns = await _vaccinationCampaignService.GetApprovedVaccinationCampaignsAsync();
+			var campaigns = await _vaccinationCampaignService.GetCampaignWithoutPendingAsync();
 			return Ok(campaigns);
 		}
 
@@ -145,24 +124,14 @@ namespace SMMS.API.Controllers
 			return Ok(response);
 		}
 
-		[HttpPut("vaccination-campaigns/{id}/approve")]
+		[HttpPut("vaccination-campaigns/{id}/approve-or-reject")]
 		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> ApproveVaccinationCampaign(string id)
+		public async Task<IActionResult> ApproveVaccinationCampaign(string id, [FromQuery] string action)
 		{
-			var approverId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (approverId == null) return Unauthorized("Approver ID not found in claims.");
-			var result = await _vaccinationCampaignService.ApproveVaccinationCampaignAsync(id, approverId);
-			if (!result) return NotFound();
-			return NoContent();
-		}
-
-		[HttpPut("vaccination-campaigns/{id}/reject")]
-		[Authorize(Roles = "Admin,Manager")]
-		public async Task<IActionResult> RejectVaccinationCampaign(string id)
-		{
-			var rejecterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (rejecterId == null) return Unauthorized("Approver ID not found in claims.");
-			var result = await _vaccinationCampaignService.RejectVaccinationCampaignAsync(id, rejecterId);
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("User ID not found in claims.");
+			if (action != "approve" && action != "reject") return BadRequest("Invalid action. Must be 'approve' or 'reject'.");
+			var result = await _vaccinationCampaignService.UpdateVaccineCampaignStatusAsync(id, action, userId);
 			if (!result) return NotFound();
 			return NoContent();
 		}
@@ -188,11 +157,6 @@ namespace SMMS.API.Controllers
 			if (!result) return BadRequest("Cannot delete vaccination campaign.");
 			return NoContent();
 		}
-		/// <summary>
-		/// Thông báo Và chờ phụ huynh duyệt 
-		/// </summary>
-		/// <param name="healthActivityId"></param>
-		/// <returns></returns>
 
 		[HttpGet("activity-consents/health-activities/{healthActivityId}")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]

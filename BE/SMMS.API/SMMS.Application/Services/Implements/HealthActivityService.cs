@@ -35,8 +35,8 @@ namespace SMMS.Application.Services.Implements
 			var healthActivity = new HealthActivity
 			{
 				UserId = nurseId,
-				Name = request.Name,
-				Description = request.Description,
+				Name = request.Name ?? string.Empty,
+				Description = request.Description ?? string.Empty,
 				ScheduledDate = request.ScheduledDate,
 				Status = ApprovalStatus.Pending,
 				CreatedBy = nurseId,
@@ -53,53 +53,23 @@ namespace SMMS.Application.Services.Implements
 			return new HealthActivityResponse
 			{
 				Id = healthActivity.Id,
-				Name = healthActivity.Name,
+				Name = healthActivity.Name ?? string.Empty,
 				UserId = healthActivity.UserId,
 				UserName = user?.FullName ?? "Unknown Nurse",
-				Description = healthActivity.Description,
+				Description = healthActivity.Description ?? string.Empty,
 				ScheduledDate = healthActivity.ScheduledDate,
 				Status = healthActivity.Status,
 				ClassIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
 			};
 		}
 
-		public async Task<bool> ApproveHealthActivityAsync(string healthActivityId, string approverId)
-		{
-			var healthActivity = _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending && ha.DeletedTime == null, true)
-				.Include(ha => ha.HealthActivityClasses)
-				.FirstOrDefault();
-			if (healthActivity == null) return false;
-
-			healthActivity.Status = ApprovalStatus.Approved;
-			healthActivity.LastUpdatedBy = approverId;
-			healthActivity.LastUpdatedTime = DateTimeOffset.UtcNow;
-			_repositoryManager.HealthActivityRepository.Update(healthActivity);
-			await CreateActivityConsentsAsync(healthActivity);
-			await _repositoryManager.SaveAsync();
-			return true;
-		}
-		public async Task<bool> RejectHealthActivityAsync(string healthActivityId, string approverId)
-		{
-			var healthActivity = _repositoryManager.HealthActivityRepository
-			.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending && ha.DeletedTime == null, true)
-			.FirstOrDefault();
-			if (healthActivity == null) return false;
-
-			healthActivity.Status = ApprovalStatus.Rejected;
-			healthActivity.LastUpdatedBy = approverId;
-			healthActivity.LastUpdatedTime = DateTimeOffset.UtcNow;
-			_repositoryManager.HealthActivityRepository.Update(healthActivity);
-			await _repositoryManager.SaveAsync();
-			return true;
-		}
-
 		private async Task CreateActivityConsentsAsync(HealthActivity healthActivity)
 		{
 			var classIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList();
-			var students = _repositoryManager.StudentRepository
+			var students = await Task.Run(() => _repositoryManager.StudentRepository
 				.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
-				.ToList();
+				.ToList());
+
 			foreach (var student in students)
 			{
 				var consent = new ActivityConsent
@@ -117,14 +87,15 @@ namespace SMMS.Application.Services.Implements
 				};
 				_repositoryManager.ConsentRepository.Create(consent);
 			}
+			await _repositoryManager.SaveAsync();
 		}
 
 		public async Task<List<HealthActivityResponse>> GetPendingHealthActivitiesAsync()
 		{
-			return _repositoryManager.HealthActivityRepository
+			return await Task.Run(() => _repositoryManager.HealthActivityRepository
 				.FindByCondition(ha => ha.Status == ApprovalStatus.Pending, false)
 				.Include(ha => ha.HealthActivityClasses)
-				.Include(ha => ha.User) // Include User để lấy FullName
+				.Include(ha => ha.User) // Include User để lấy FullName  
 				.Select(ha => new HealthActivityResponse
 				{
 					Id = ha.Id,
@@ -135,33 +106,15 @@ namespace SMMS.Application.Services.Implements
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
 					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
-				}).ToList();
-		}
-		public async Task<List<HealthActivityResponse>> GetApprovedHealthActivitiesAsync()
-		{
-			return _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Status == ApprovalStatus.Approved, false)
-				.Include(ha => ha.HealthActivityClasses)
-				.Include(ha => ha.User) // Include User để lấy FullName
-				.Select(ha => new HealthActivityResponse
-				{
-					Id = ha.Id,
-					Name = ha.Name,
-					UserId = ha.UserId,
-					UserName = ha.User != null ? ha.User.FullName : "Unknown Nurse",
-					Description = ha.Description,
-					ScheduledDate = ha.ScheduledDate,
-					Status = ha.Status,
-					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
 
-		public async Task<List<HealthActivityResponse>> GetRejectHealthActivitiesAsync()
+		public async Task<List<HealthActivityResponse>> GetActivityWithoutPendingAsync()
 		{
-			return _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Status == ApprovalStatus.Rejected, false)
+			return await Task.Run(() => _repositoryManager.HealthActivityRepository
+				.FindByCondition(ha => ha.Status == ApprovalStatus.Approved || ha.Status == ApprovalStatus.Rejected, false)
 				.Include(ha => ha.HealthActivityClasses)
-				.Include(ha => ha.User) // Include User để lấy FullName
+				.Include(ha => ha.User) // Include User để lấy FullName  
 				.Select(ha => new HealthActivityResponse
 				{
 					Id = ha.Id,
@@ -172,15 +125,15 @@ namespace SMMS.Application.Services.Implements
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
 					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
 
 		public async Task<List<HealthActivityResponse>> GetAllHealthActivityAsync()
 		{
-			return _repositoryManager.HealthActivityRepository
+			return await Task.Run(() => _repositoryManager.HealthActivityRepository
 				.FindAll(false)
 				.Include(ha => ha.HealthActivityClasses)
-				.Include(ha => ha.User) // Include User để lấy FullName
+				.Include(ha => ha.User) // Include User để lấy FullName  
 				.Select(ha => new HealthActivityResponse
 				{
 					Id = ha.Id,
@@ -191,8 +144,38 @@ namespace SMMS.Application.Services.Implements
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
 					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
+
+		public async Task<bool> UpdateHealthActivityStatusAsync(string healthActivityId, string action, string userId)
+		{
+			var healthActivity = _repositoryManager.HealthActivityRepository
+				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending && ha.DeletedTime == null, true)
+				.Include(ha => ha.HealthActivityClasses)
+				.FirstOrDefault();
+			if (healthActivity == null) return false;
+
+			if (action == "approve")
+			{
+				healthActivity.Status = ApprovalStatus.Approved;
+				await CreateActivityConsentsAsync(healthActivity);
+			}
+			else if (action == "reject")
+			{
+				healthActivity.Status = ApprovalStatus.Rejected;
+			}
+			else
+			{
+				return false;
+			}
+
+			healthActivity.LastUpdatedBy = userId;
+			healthActivity.LastUpdatedTime = DateTimeOffset.UtcNow;
+			_repositoryManager.HealthActivityRepository.Update(healthActivity);
+			await _repositoryManager.SaveAsync();
+			return true;
+		}
+
 		public async Task<bool> UpdateHealthActivityAsync(string healthActivityId, HealthActivityRequest request, string userId)
 		{
 			var activity = _repositoryManager.HealthActivityRepository
@@ -202,13 +185,14 @@ namespace SMMS.Application.Services.Implements
 			if (activity == null) return false;
 
 			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
+			if (user == null) return false;
 			if (activity.UserId != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
 			{
 				return false;
 			}
 
-			activity.Name = request.Name;
-			activity.Description = request.Description;
+			activity.Name = request.Name ?? string.Empty;
+			activity.Description = request.Description ?? string.Empty;
 			activity.ScheduledDate = request.ScheduledDate;
 			activity.LastUpdatedBy = userId;
 			activity.LastUpdatedTime = DateTimeOffset.UtcNow;
@@ -220,11 +204,12 @@ namespace SMMS.Application.Services.Implements
 		public async Task<bool> DeleteHealthActivityAsync(string healthActivityId, string userId)
 		{
 			var activity = _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status != ApprovalStatus.Pending, true)
+				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending, true)
 				.FirstOrDefault();
 			if (activity == null) return false;
-
+			
 			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
+			if (user == null) return false;
 			if (activity.UserId != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
 			{
 				return false;

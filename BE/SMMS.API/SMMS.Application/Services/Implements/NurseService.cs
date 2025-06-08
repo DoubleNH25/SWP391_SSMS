@@ -29,9 +29,9 @@ namespace SMMS.Application.Services.Implements
 			var healthProfile = new HealthProfile
 			{
 				StudentId = studentId,
-				Vision = request.Vision,
-				Hearing = request.Hearing,
-				Dental = request.Dental,
+				Vision = request.Vision ?? string.Empty,
+				Hearing = request.Hearing ?? string.Empty,
+				Dental = request.Dental ?? string.Empty,
 				BMI = request.BMI,
 				AbnormalNote = request.AbnormalNote,
 				VaccinationHistory = request.VaccinationHistory,
@@ -46,7 +46,7 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<HealthProfileResponse> GetHealthProfileByStudentIdAsync(string studentId)
 		{
-			var healthProfile = _repositoryManager.HealthProfileRepository
+			var healthProfile = await Task.Run(() => _repositoryManager.HealthProfileRepository
 				.FindByCondition(hp => hp.StudentId == studentId && hp.DeletedTime == null, false)
 				.Select(hp => new HealthProfileResponse
 				{
@@ -58,7 +58,7 @@ namespace SMMS.Application.Services.Implements
 					BMI = hp.BMI,
 					AbnormalNote = hp.AbnormalNote,
 					VaccinationHistory = hp.VaccinationHistory
-				}).FirstOrDefault();
+				}).FirstOrDefault());
 			return healthProfile;
 		}
 
@@ -69,9 +69,9 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (healthProfile == null) return false;
 
-			healthProfile.Vision = request.Vision;
-			healthProfile.Hearing = request.Hearing;
-			healthProfile.Dental = request.Dental;
+			healthProfile.Vision = request.Vision ?? string.Empty;
+			healthProfile.Hearing = request.Hearing ?? string.Empty;
+			healthProfile.Dental = request.Dental ?? string.Empty;
 			healthProfile.BMI = request.BMI;
 			healthProfile.AbnormalNote = request.AbnormalNote;
 			healthProfile.VaccinationHistory = request.VaccinationHistory;

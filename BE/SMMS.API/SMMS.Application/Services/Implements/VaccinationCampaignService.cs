@@ -33,18 +33,18 @@ namespace SMMS.Application.Services.Implements
 			var campaign = new VaccinationCampaign
 			{
 				UserId = nurseId,
-				Name = request.Name,
-				VaccineName = request.VaccineName,
+				Name = request.Name ?? string.Empty,
+				VaccineName = request.VaccineName ?? string.Empty,
 				EXP = request.EXP,
 				MFG = request.MFG,
-				VaccineType = request.VaccineType,
+				VaccineType = request.VaccineType ?? string.Empty,
 				StartDate = request.StartDate,
 				Status = ApprovalStatus.Pending,
 				CreatedBy = nurseId,
 				CreatedTime = DateTimeOffset.UtcNow,
 				VaccinationCampaignClasses = request.ClassIds.Select(classId => new VaccinationCampaignClass
 				{
-					SchoolClassId = classId,
+					SchoolClassId = classId ?? string.Empty,
 					CreatedBy = nurseId,
 					CreatedTime = DateTimeOffset.UtcNow
 				}).ToList()
@@ -70,34 +70,31 @@ namespace SMMS.Application.Services.Implements
 			};
 		}
 
-		public async Task<bool> ApproveVaccinationCampaignAsync(string vaccinationCampaignId, string approverId)
+		public async Task<bool> UpdateVaccineCampaignStatusAsync(string vcId, string action, string userId)
 		{
-			var campaign = _repositoryManager.VaccinationCampaignRepository
-				.FindByCondition(vc => vc.Id == vaccinationCampaignId && vc.Status == ApprovalStatus.Pending, true)
+			var vaccination = _repositoryManager.VaccinationCampaignRepository
+				.FindByCondition(vc => vc.Id == vcId && vc.Status == ApprovalStatus.Pending && vc.DeletedTime == null, true)
 				.Include(vc => vc.VaccinationCampaignClasses)
 				.FirstOrDefault();
-			if (campaign == null) return false;
+			if (vaccination == null) return false;
 
-			campaign.Status = ApprovalStatus.Approved;
-			campaign.LastUpdatedBy = approverId;
-			campaign.LastUpdatedTime = DateTimeOffset.UtcNow;
-			_repositoryManager.VaccinationCampaignRepository.Update(campaign);
-			await CreateActivityConsentsAsync(campaign);
-			await _repositoryManager.SaveAsync();
-			return true;
-		}
+			if (action == "approve")
+			{
+				vaccination.Status = ApprovalStatus.Approved;
+				await CreateActivityConsentsAsync(vaccination);
+			}
+			else if (action == "reject")
+			{
+				vaccination.Status = ApprovalStatus.Rejected;
+			}
+			else
+			{
+				return false;
+			}
 
-		public async Task<bool> RejectVaccinationCampaignAsync(string vaccinationCampaignId, string approverId)
-		{
-			var campaign = _repositoryManager.VaccinationCampaignRepository
-				.FindByCondition(vc => vc.Id == vaccinationCampaignId && vc.Status == ApprovalStatus.Pending, true)
-				.FirstOrDefault();
-			if (campaign == null) return false;
-
-			campaign.Status = ApprovalStatus.Rejected;
-			campaign.LastUpdatedBy = approverId;
-			campaign.LastUpdatedTime = DateTimeOffset.UtcNow;
-			_repositoryManager.VaccinationCampaignRepository.Update(campaign);
+			vaccination.LastUpdatedBy = userId;
+			vaccination.LastUpdatedTime = DateTimeOffset.UtcNow;
+			_repositoryManager.VaccinationCampaignRepository.Update(vaccination);
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
@@ -128,7 +125,7 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<List<VaccinationCampaignResponse>> GetAllVaccineCampaignAsync()
 		{
-			return _repositoryManager.VaccinationCampaignRepository
+			return await Task.Run(() => _repositoryManager.VaccinationCampaignRepository
 				.FindAll(false)
 				.Include(vc => vc.VaccinationCampaignClasses)
 				.Include(vc => vc.User)
@@ -145,34 +142,12 @@ namespace SMMS.Application.Services.Implements
 					StartDate = vc.StartDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
-				}).ToList();
-		}
-
-		public async Task<List<VaccinationCampaignResponse>> GetRejectVaccinationCampaignsAsync()
-		{
-			return _repositoryManager.VaccinationCampaignRepository
-				.FindByCondition(vc => vc.Status == ApprovalStatus.Rejected, false)
-				.Include(vc => vc.VaccinationCampaignClasses)
-				.Include(vc => vc.User) // Include User to get FullName
-				.Select(vc => new VaccinationCampaignResponse
-				{
-					Id = vc.Id,
-					Name = vc.Name,
-					VaccineName = vc.VaccineName,
-					NurseId = vc.UserId,
-					NurseName = vc.User.FullName,
-					EXP = vc.EXP,
-					MFG = vc.MFG,
-					VaccineType = vc.VaccineType,
-					StartDate = vc.StartDate,
-					Status = vc.Status,
-					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
 
 		public async Task<List<VaccinationCampaignResponse>> GetPendingVaccinationCampaignsAsync()
 		{
-			return _repositoryManager.VaccinationCampaignRepository
+			return await Task.Run(() => _repositoryManager.VaccinationCampaignRepository
 				.FindByCondition(vc => vc.Status == ApprovalStatus.Pending, false)
 				.Include(vc => vc.VaccinationCampaignClasses)
 				.Include(vc => vc.User)
@@ -189,13 +164,13 @@ namespace SMMS.Application.Services.Implements
 					StartDate = vc.StartDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
 
-		public async Task<List<VaccinationCampaignResponse>> GetApprovedVaccinationCampaignsAsync()
+		public async Task<List<VaccinationCampaignResponse>> GetCampaignWithoutPendingAsync()
 		{
-			return _repositoryManager.VaccinationCampaignRepository
-				.FindByCondition(vc => vc.Status == ApprovalStatus.Approved, false)
+			return await Task.Run(() => _repositoryManager.VaccinationCampaignRepository
+				.FindByCondition(vc => vc.Status == ApprovalStatus.Approved || vc.Status == ApprovalStatus.Rejected, false)
 				.Include(vc => vc.VaccinationCampaignClasses)
 				.Include(vc => vc.User)
 				.Select(vc => new VaccinationCampaignResponse
@@ -211,7 +186,7 @@ namespace SMMS.Application.Services.Implements
 					StartDate = vc.StartDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
-				}).ToList();
+				}).ToList());
 		}
 
 		public async Task<bool> UpdateVaccinationCampaignAsync(string vaccinationCampaignId, VaccinationCampaignRequest request, string userId)
@@ -227,11 +202,11 @@ namespace SMMS.Application.Services.Implements
 				return false;
 			}
 
-			campaign.Name = request.Name;
-			campaign.VaccineName = request.VaccineName;
+			campaign.Name = request.Name ?? string.Empty;
+			campaign.VaccineName = request.VaccineName ?? string.Empty;
 			campaign.EXP = request.EXP;
 			campaign.MFG = request.MFG;
-			campaign.VaccineType = request.VaccineType;
+			campaign.VaccineType = request.VaccineType ?? string.Empty;
 			campaign.StartDate = request.StartDate;
 			campaign.LastUpdatedBy = userId;
 			campaign.LastUpdatedTime = DateTimeOffset.UtcNow;
@@ -248,7 +223,7 @@ namespace SMMS.Application.Services.Implements
 			if (campaign == null) return false;
 
 			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
-			if (campaign.CreatedBy != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
+			if (campaign.CreatedBy != userId && user?.Role.RoleName != "Admin" && user?.Role.RoleName != "Manager")
 			{
 				return false;
 			}
