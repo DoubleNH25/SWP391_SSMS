@@ -141,7 +141,7 @@ namespace SMMS.Application.Helpers.Implements
 						student.ParentId = parentUser.Id;
 						student.LastUpdatedBy = "System";
 						student.LastUpdatedTime = DateTimeOffset.UtcNow;
-						_repositoryManager.StudentRepository.Update(student);
+						//_repositoryManager.StudentRepository.Update(student);
 					}
 					// Handle old parent soft-deletion if parent has changed and old parent exists
 					if (hasChanges && oldParent != null && oldParent.Id != parentUser.Id)
