@@ -41,7 +41,7 @@ export default function StudentManager() {
       setStudents(fetchedStudents);
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view students.'
         : 'Failed to fetch students. Please try again.');
     } finally {
@@ -68,7 +68,7 @@ export default function StudentManager() {
       setSelectedStudentId(null);
       setError(null);
     } catch (error) {
-      toast.error(`Failed to delete student: ${error.message}`);
+      toast.error(`Failed to delete student: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -127,8 +127,8 @@ export default function StudentManager() {
         throw new Error('Import failed');
       }
     } catch (error) {
-      setImportMessage(`Error importing file: ${error.message}`);
-      toast.error(`Error importing file: ${error.message}`);
+      setImportMessage(`Error importing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error importing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setImportLoading(false);
     }

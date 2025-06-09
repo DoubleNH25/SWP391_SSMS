@@ -10,7 +10,7 @@ interface ViewEventsModalProps {
   onEventClick: (event: CalendarEvent) => void;
   onClose: () => void;
   onAddNewEvent: () => void;
-  onSetFormData: (formData : FormDataType) => void;
+  onSetFormData: (formData : FormDataType | ((prev: FormDataType) => FormDataType)) => void;
   classOptions: { value: string; label: string }[];
 }
 

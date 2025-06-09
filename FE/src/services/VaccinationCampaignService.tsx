@@ -48,19 +48,6 @@ export async function FecthVaccinationCampaign(): Promise<VaccinationCampaignsVi
     }
 }
 
-export async function FecthRejectVaccinationCampaigns(): Promise<VaccinationCampaignsViewModel[]> {
-    try {
-        const response = await ApiClient<VaccinationCampaignsViewModel[]>({
-            method: 'GET',
-            endpoint: `/medical-events/vaccination-campaigns/reject`,
-        });
-        return response?.data || [];
-    } catch (err) {
-        console.error(`Failed to get vaccination campaign:`, err);
-        return [];
-    }
-}
-
 export async function FecthPendingVaccinationCampaign(): Promise<VaccinationCampaignsViewModel[]> {
     try {
         const response = await ApiClient<VaccinationCampaignsViewModel[]>({
@@ -74,14 +61,14 @@ export async function FecthPendingVaccinationCampaign(): Promise<VaccinationCamp
     }
 }
 
-export async function FecthApproveVaccinationCampaign(id: string): Promise<boolean> {
+export async function FecthApproveRejectVaccinationCampaign(id: string, actions: string): Promise<boolean> {
     if (!id) {
         throw new Error("Vaccination campaign ID is required");
     }
     try {
         await ApiClient<void>({
             method: 'PUT',
-            endpoint: `/medical-events/vaccination-campaigns/${id}/approve`,
+            endpoint: `/medical-events/vaccination-campaigns/${id}/approve-or-reject?action=${actions}`,
         });
         return true;
     } catch (err) {
@@ -90,27 +77,11 @@ export async function FecthApproveVaccinationCampaign(id: string): Promise<boole
     }
 }
 
-export async function FecthRejectVaccinationCampaign(id: string): Promise<boolean> {
-    if (!id) {
-        throw new Error("Vaccination campaign ID is required");
-    }
-    try {
-        await ApiClient<void>({
-            method: 'PUT',
-            endpoint: `/medical-events/vaccination-campaigns/${id}/reject`,
-        });
-        return true;
-    } catch (err) {
-        console.error(`Failed to reject vaccination campaign:`, err);
-        throw new Error('Unable to opt out of vaccination campaign. Please try again.');
-    }
-}
-
-export async function FecthApproveVaccinationCampaigns(): Promise<VaccinationCampaignsViewModel[]> {
+export async function FecthApprovedRejectedVaccinationCampaigns(): Promise<VaccinationCampaignsViewModel[]> {
     try {
         const response = await ApiClient<VaccinationCampaignsViewModel[]>({
             method: 'GET',
-            endpoint: `/medical-events/vaccination-campaigns/approved`,
+            endpoint: `/medical-events/vaccination-campaigns/approve-reject`,
         });
         return response?.data || [];
     } catch (err) {

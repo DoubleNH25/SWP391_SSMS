@@ -21,7 +21,7 @@ export interface UserProfile {
 export interface UserProfileUpdateViewModel {
   fullName: string;
   phone: string;
-  image: string | null;
+  image: File | null;
 }
 
 

@@ -45,7 +45,7 @@ export default function UpdateSchoolClass() {
         throw new Error('Class not found');
       }
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view class data.'
         : 'Failed to load class data. Please try again.');
     } finally {
@@ -81,7 +81,7 @@ export default function UpdateSchoolClass() {
         throw new Error('Update failed');
       }
     } catch (err ) {
-      const errorMessage = err.message || 'An error occurred, please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

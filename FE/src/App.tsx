@@ -35,6 +35,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/blog" element={<Blog />} />
+          
           <Route path="/profile" element={
             <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
               <EditProfile />

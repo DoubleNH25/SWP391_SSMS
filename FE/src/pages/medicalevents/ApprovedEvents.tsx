@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MedicalEventViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
-import { FecthApproveMedicalEvents, FecthRejectMedicalEvents } from "@/services/MedicalEventService";
+import { FecthApprovedRejectedMedicalEvents } from "@/services/MedicalEventService";
 import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FecthApproveVaccinationCampaigns, FecthRejectVaccinationCampaigns } from "@/services/VaccinationCampaignService";
+import { FecthApprovedRejectedVaccinationCampaigns } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
 
 export default function ApprovedEventManager() {
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>([]);
   const [vaccinationCampaigns, setVaccinationCampaigns] = useState<VaccinationCampaignsViewModel[]>([]);
   const [selectedView, setSelectedView] = useState<"MedicalEvents" | "VaccinationCampaigns">("MedicalEvents");
-  const [selectedStatus, setSelectedStatus] = useState<"Approved" | "Rejected">("Approved");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -78,27 +77,25 @@ export default function ApprovedEventManager() {
     setLoading(true);
     try {
       if (selectedView === "MedicalEvents") {
-        const data = selectedStatus === "Approved"
-          ? await FecthApproveMedicalEvents()
-          : await FecthRejectMedicalEvents();
+        const data = await FecthApprovedRejectedMedicalEvents();
+        console.log("medical events", data);
         setMedicalEvents(data);
       } else {
-        const data = selectedStatus === "Approved"
-          ? await FecthApproveVaccinationCampaigns()
-          : await FecthRejectVaccinationCampaigns();
+        const data = await FecthApprovedRejectedVaccinationCampaigns();
+        console.log("vaccination campaigns", data);
         setVaccinationCampaigns(data);
       }
       setError(null);
     } catch (err) {
-      if (err.message.includes('authenticated')) {
-        setError(`Please log in to view ${selectedStatus.toLowerCase()} events.`);
+      if (err instanceof Error && err.message.includes('authenticated')) {
+        setError(`Please log in to view events.`);
       } else {
         setError('Failed to fetch data. Please try again.');
       }
     } finally {
       setLoading(false);
     }
-  }, [selectedView, selectedStatus]);
+  }, [selectedView]);
 
   const fetchClassData = useCallback(async () => {
     try {
@@ -118,18 +115,8 @@ export default function ApprovedEventManager() {
     { value: "VaccinationCampaigns", label: "Vaccination Campaigns" },
   ], []);
 
-  const statusOptions = useMemo(() => [
-    { value: "Approved", label: "Approved" },
-    { value: "Rejected", label: "Rejected" },
-  ], []);
-
   const handleSelectChange = (value: string) => {
     setSelectedView(value as "MedicalEvents" | "VaccinationCampaigns");
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setSelectedStatus(value as "Approved" | "Rejected");
     setCurrentPage(1);
   };
 
@@ -198,8 +185,6 @@ export default function ApprovedEventManager() {
                       Event
                     </li>
                     <li className="text-gray-300">›</li>
-                    <li>Manager {selectedStatus}</li>
-                    <li className="text-gray-300">›</li>
                     <li className="text-gray-700 font-medium">
                       {selectedView === "MedicalEvents" ? "Medical Events" : "Vaccination Campaigns"}
                     </li>
@@ -207,16 +192,6 @@ export default function ApprovedEventManager() {
                 </nav>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm font-medium text-gray-700">Status</Label>
-                    <Select
-                      options={statusOptions}
-                      defaultValue={selectedStatus}
-                      placeholder="Select status"
-                      onChange={handleStatusChange}
-                      className="dark:bg-dark-900 text-sm w-[150px] text-gray-500 border-gray-200 placeholder-gray-300 rounded-lg"
-                    />
-                  </div>
                   <div className="flex items-center gap-3">
                     <Label className="text-sm font-medium text-gray-700">View Type</Label>
                     <Select
@@ -330,12 +305,9 @@ export default function ApprovedEventManager() {
                                   variant="outline"
                                   size="sm"
                                   disabled
-                                  className={`px-3 py-1.5 text-xs font-medium border-2 ${selectedStatus === "Approved"
-                                    ? "text-green-800 bg-green-100 hover:bg-green-200"
-                                    : "text-red-800 bg-red-100"
-                                    }`}
+                                  className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2 `}
                                 >
-                                  {selectedStatus}
+                                  {item.status as string}
                                 </Button>
                               </td>
                             </tr>
@@ -348,7 +320,7 @@ export default function ApprovedEventManager() {
                               <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                               </svg>
-                              <p className="text-gray-500 font-medium">No {selectedStatus.toLowerCase()} medical events available</p>
+                              <p className="text-gray-500 font-medium">No approved medical events available</p>
                             </div>
                           </td>
                         </tr>
@@ -429,12 +401,9 @@ export default function ApprovedEventManager() {
                                 variant="outline"
                                 size="sm"
                                 disabled
-                                className={`px-3 py-1.5 text-xs font-medium border-2 ${selectedStatus === "Approved"
-                                  ? "text-green-800 bg-green-100 hover:bg-green-200"
-                                  : "text-red-800 bg-red-100"
-                                  }`}
+                                className={`px-3 py-1.5 text-xs font-medium border-2`}
                               >
-                                {selectedStatus}
+                                {item.status as string}
                               </Button>
                             </td>
                           </tr>
@@ -446,7 +415,7 @@ export default function ApprovedEventManager() {
                               <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                               </svg>
-                              <p className="text-gray-500 font-medium">No {selectedStatus.toLowerCase()} vaccination campaigns available</p>
+                              <p className="text-gray-500 font-medium">No approved vaccination campaigns available</p>
                             </div>
                           </td>
                         </tr>

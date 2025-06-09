@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { MedicalEventViewModel } from "@/types/MedicalEvent";
-import { FecthApproveMedicalEvent, FecthPendingMedicalEvent, FecthRejectMedicalEvent } from "@/services/MedicalEventService";
+import { FecthApproveRejectMedicalEvent, FecthPendingMedicalEvent } from "@/services/MedicalEventService";
 import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
-import { FecthApproveVaccinationCampaign, FecthPendingVaccinationCampaign, FecthRejectVaccinationCampaign } from "@/services/VaccinationCampaignService";
+import { FecthApproveRejectVaccinationCampaign, FecthPendingVaccinationCampaign } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -63,7 +63,7 @@ export default function PendingEventManager() {
     } catch (err ) {
       setError((prev) => ({
         ...prev,
-        medicalEvents: err.message.includes('authenticated')
+        medicalEvents: err instanceof Error && err.message.includes('authenticated')
           ? 'Please log in to view pending medical events.'
           : 'Failed to fetch medical events. Please try again.'
       }));
@@ -81,7 +81,7 @@ export default function PendingEventManager() {
     } catch (err ) {
       setError((prev) => ({
         ...prev,
-        vaccinationCampaigns: err.message.includes('authenticated')
+        vaccinationCampaigns: err instanceof Error && err.message.includes('authenticated')
           ? 'Please log in to view pending vaccination campaigns.'
           : 'Failed to fetch vaccination campaigns. Please try again.'
       }));
@@ -108,7 +108,7 @@ export default function PendingEventManager() {
     setApproving(true);
     try {
       if (selectedEvent.type === "medicalEvent") {
-        const success = await FecthApproveMedicalEvent(selectedEvent.id);
+        const success = await FecthApproveRejectMedicalEvent(selectedEvent.id, "approve");
         if (success) {
           setMedicalEvents(medicalEvents.filter((event) => event.id !== selectedEvent.id));
           toast.success('Medical event approved successfully');
@@ -116,7 +116,7 @@ export default function PendingEventManager() {
           throw new Error('Approval failed');
         }
       } else {
-        const success = await FecthApproveVaccinationCampaign(selectedEvent.id);
+        const success = await FecthApproveRejectVaccinationCampaign(selectedEvent.id, "approve");
         if (success) {
           setVaccinationCampaigns(vaccinationCampaigns.filter((event) => event.id !== selectedEvent.id));
           toast.success('Vaccination campaign approved successfully');
@@ -127,7 +127,7 @@ export default function PendingEventManager() {
       setIsApprovedModalOpen(false);
       setSelectedEvent(null);
     } catch (err ) {
-      toast.error(`Failed to approve ${selectedEvent.type}: ${err.message}`);
+      toast.error(`Failed to approve ${selectedEvent.type}: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setApproving(false);
     }
@@ -138,7 +138,7 @@ export default function PendingEventManager() {
     setRejecting(true);
     try {
       if (selectedEvent.type === "medicalEvent") {
-        const success = await FecthRejectMedicalEvent(selectedEvent.id);
+        const success = await FecthApproveRejectMedicalEvent(selectedEvent.id, "reject");
         if (success) {
           setMedicalEvents(medicalEvents.filter((event) => event.id !== selectedEvent.id));
           toast.success('Medical event rejected successfully');
@@ -146,7 +146,7 @@ export default function PendingEventManager() {
           throw new Error('Rejection failed');
         }
       } else {
-        const success = await FecthRejectVaccinationCampaign(selectedEvent.id);
+        const success = await FecthApproveRejectVaccinationCampaign(selectedEvent.id, "reject");
         if (success) {
           setVaccinationCampaigns(vaccinationCampaigns.filter((event) => event.id !== selectedEvent.id));
           toast.success('Vaccination campaign rejected successfully');
@@ -157,7 +157,7 @@ export default function PendingEventManager() {
       setIsRejectModalOpen(false);
       setSelectedEvent(null);
     } catch (err ) {
-      toast.error(`Failed to reject ${selectedEvent.type}: ${err.message}`);
+      toast.error(`Failed to reject ${selectedEvent.type}: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setRejecting(false);
     }

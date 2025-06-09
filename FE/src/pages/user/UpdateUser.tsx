@@ -23,12 +23,6 @@ export default function UpdateUser() {
   );
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (userId) {
-      loadUser();
-    }
-  }, [userId, loadUser]);
-
   const loadUser = useCallback(async () => {
     setLoading(true);
     if (!userId) {
@@ -50,13 +44,20 @@ export default function UpdateUser() {
         throw new Error('User not found');
       }
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view user data.'
         : 'Failed to load user data. Please try again.');
     } finally {
       setLoading(false);
     }
   }, [userId]);
+  
+  useEffect(() => {
+    if (userId) {
+      loadUser();
+    }
+  }, [userId, loadUser]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,7 +73,7 @@ export default function UpdateUser() {
         || !formData.fullName) {
         throw new Error('Please fill in all required fields');
       }
-      const success = await FecthUpdateUsers(userId, formData);
+      const success = await FecthUpdateUsers(userId as string, formData);
       if (success) {
         toast.success('User updated successfully');
         navigate('/user');
@@ -80,7 +81,7 @@ export default function UpdateUser() {
         throw new Error('Update failed');
       }
     } catch (err) {
-      const errorMessage = err.message || 'An error occurred, please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

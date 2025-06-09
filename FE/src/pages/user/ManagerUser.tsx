@@ -37,7 +37,7 @@ export default function UserManager() {
       setUsers(fetchedUsers);
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view users.'
         : 'Failed to fetch users. Please try again.');
     } finally {
@@ -63,7 +63,7 @@ export default function UserManager() {
       setSelectedUserId(null);
       setError(null);
     } catch (error) {
-      toast.error(`Failed to delete user: ${error.message}`);
+      toast.error(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleteLoading(false);
     }
