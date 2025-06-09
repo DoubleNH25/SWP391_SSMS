@@ -1,5 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;

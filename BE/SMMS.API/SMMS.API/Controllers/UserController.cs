@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.Helpers.Implements;
 using SMMS.Application.Services.Interfaces;
-using SMMS.Domain.Entity;
 using System.Security.Claims;
 
 namespace SMMS.API.Controllers
