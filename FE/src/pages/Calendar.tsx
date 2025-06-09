@@ -306,7 +306,7 @@ const Calendar: React.FC = () => {
     [openModal]
   );
 
-  const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value) => {
+  const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
     setFormData((prev) => {
       if (prev.type === "medical") {
         return {
@@ -321,7 +321,7 @@ const Calendar: React.FC = () => {
     });
   }, []);
 
-  const handleVaccinationInputChange = useCallback((field: keyof VaccinationCampaignsUpdateCreateViewModel, value) => {
+  const handleVaccinationInputChange = useCallback((field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string) => {
     setFormData((prev) => {
       if (prev.type === "vaccination") {
         return {
@@ -352,18 +352,17 @@ const Calendar: React.FC = () => {
     };
   }
 
-  const validateFormData = useCallback((type: string, data): Record<string, string> => {
+  const validateFormData = useCallback((type: string, data: MedicalEventUpdateCreateViewModel | VaccinationCampaignsUpdateCreateViewModel): Record<string, string> => {
     const errors: Record<string, string> = {};
-
     if (type === "medical") {
       // Validate Medical Event fields
       if (!data.name?.trim()) {
         errors.name = "Event name is required!";
       }
-      if (!data.description?.trim()) {
+      if (!(data as MedicalEventUpdateCreateViewModel).description?.trim()) {
         errors.description = "Description is required!";
       }
-      if (!data.scheduledDate) {
+      if (!(data as MedicalEventUpdateCreateViewModel).scheduledDate) {
         errors.scheduledDate = "Scheduled date is required!";
       }
       if (!selectedClasses || selectedClasses.length === 0) {
@@ -371,8 +370,8 @@ const Calendar: React.FC = () => {
       }
 
       // Validate scheduled date
-      if (data.scheduledDate) {
-        const scheduledDate = new Date(data.scheduledDate);
+      if ((data as MedicalEventUpdateCreateViewModel).scheduledDate) {
+        const scheduledDate = new Date((data as MedicalEventUpdateCreateViewModel).scheduledDate);
         if (isNaN(scheduledDate.getTime())) {
           errors.scheduledDate = "Invalid scheduled date!";
         } else {
@@ -391,19 +390,19 @@ const Calendar: React.FC = () => {
       if (!data.name?.trim()) {
         errors.name = "Campaign name is required!";
       }
-      if (!data.vaccineName?.trim()) {
+      if (!(data as VaccinationCampaignsUpdateCreateViewModel).vaccineName?.trim()) {
         errors.vaccineName = "Vaccine name is required!";
       }
-      if (!data.vaccineType?.trim()) {
+      if (!(data as VaccinationCampaignsUpdateCreateViewModel).vaccineType?.trim()) {
         errors.vaccineType = "Vaccine type is required!";
       }
-      if (!data.startDate) {
+      if (!(data as VaccinationCampaignsUpdateCreateViewModel).startDate) {
         errors.startDate = "Start date is required!";
       }
-      if (!data.exp) {
+      if (!(data as VaccinationCampaignsUpdateCreateViewModel).exp) {
         errors.exp = "Expiration date is required!";
       }
-      if (!data.mfg) {
+      if (!(data as VaccinationCampaignsUpdateCreateViewModel).mfg) {
         errors.mfg = "Manufacturing date is required!";
       }
       if (!selectedClasses || selectedClasses.length === 0) {
@@ -411,22 +410,22 @@ const Calendar: React.FC = () => {
       }
 
       // Validate dates
-      const startDate = new Date(data.startDate);
-      const expDate = new Date(data.exp);
-      const mfgDate = new Date(data.mfg);
+      const startDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).startDate);
+      const expDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).exp);
+      const mfgDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).mfg);
 
-      if (data.startDate && isNaN(startDate.getTime())) {
+      if ((data as VaccinationCampaignsUpdateCreateViewModel).startDate && isNaN(startDate.getTime())) {
         errors.startDate = "Invalid start date!";
       }
-      if (data.exp && isNaN(expDate.getTime())) {
+      if ((data as VaccinationCampaignsUpdateCreateViewModel).exp && isNaN(expDate.getTime())) {
         errors.exp = "Invalid expiration date!";
       }
-      if (data.mfg && isNaN(mfgDate.getTime())) {
+      if ((data as VaccinationCampaignsUpdateCreateViewModel).mfg && isNaN(mfgDate.getTime())) {
         errors.mfg = "Invalid manufacturing date!";
       }
 
       // Check date logic (only if all dates are valid)
-      if (data.mfg && data.exp && !isNaN(mfgDate.getTime()) && !isNaN(expDate.getTime())) {
+      if ((data as VaccinationCampaignsUpdateCreateViewModel).mfg && (data as VaccinationCampaignsUpdateCreateViewModel).exp && !isNaN(mfgDate.getTime()) && !isNaN(expDate.getTime())) {
         if (mfgDate >= expDate) {
           errors.mfg = "Manufacturing date must be before expiration date!";
         }
@@ -444,7 +443,7 @@ const Calendar: React.FC = () => {
       }
 
       // Check if start date is in the past (only for new events)
-      if (!selectedEvent && data.startDate && !isNaN(startDate.getTime())) {
+      if (!selectedEvent && (data as VaccinationCampaignsUpdateCreateViewModel).startDate && !isNaN(startDate.getTime())) {
         const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
         if (startDate < currentDate) {
@@ -614,7 +613,7 @@ const Calendar: React.FC = () => {
 
     const handleClassChange = (classIds: string[]) => {
       setSelectedClasses(classIds);
-      handleMedicalInputChange("classIds", classIds.length > 0 ? classIds as [string] : [""] as [string]);
+      handleMedicalInputChange("classIds", classIds.length > 0 ? classIds as unknown as string : [""] as unknown as string);
     };
 
     return (
@@ -622,7 +621,7 @@ const Calendar: React.FC = () => {
         medicalData={medicalData}
         classOptions={classOptions}
         selectedClasses={selectedClasses}
-        onInputChange={handleMedicalInputChange}
+        onInputChange={handleMedicalInputChange as (field: keyof MedicalEventUpdateCreateViewModel, value: string | Date | string[]) => void}
         onClassChange={handleClassChange}
         validationErrors={validationErrors}
       />
@@ -636,7 +635,7 @@ const Calendar: React.FC = () => {
 
     const handleClassChange = (classIds: string[]) => {
       setSelectedClasses(classIds);
-      handleVaccinationInputChange("classIds", classIds.length > 0 ? classIds as [string] : [""] as [string]);
+      handleVaccinationInputChange("classIds", classIds.length > 0 ? classIds as unknown as string : [""] as unknown as string);
     };
 
     return (
@@ -644,7 +643,7 @@ const Calendar: React.FC = () => {
         vaccinationData={vaccinationData}
         classOptions={classOptions}
         selectedClasses={selectedClasses}
-        onInputChange={handleVaccinationInputChange}
+        onInputChange={handleVaccinationInputChange as (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string | Date | string[]) => void}
         onClassChange={handleClassChange}
         validationErrors={validationErrors}
       />

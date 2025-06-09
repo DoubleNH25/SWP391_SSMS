@@ -50,7 +50,7 @@ export default function AddUser() {
       setRoleOptions(options);
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to fetch parent data.'
         : 'Failed to fetch parent data. Please try again.');
     } finally {
@@ -77,9 +77,9 @@ export default function AddUser() {
         throw new Error('Creation failed');
       }
     } catch (err) {
-      const errorMessage = err.message.includes('authenticated')
+      const errorMessage = err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to create a user.'
-        : `Failed to create user: ${err.message}`;
+        : `Failed to create user: ${err instanceof Error ? err.message : 'Unknown error'}`;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

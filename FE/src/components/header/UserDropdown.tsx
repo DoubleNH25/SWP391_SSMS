@@ -63,7 +63,7 @@ export default function UserDropdown() {
       >
         {userName.image ? (
           <img
-            src={userName.image}
+            src={userName.image as string}
             alt="Profile"
             className="w-full h-full rounded-full"
           />

@@ -6,6 +6,7 @@ import { Camera, User} from "lucide-react";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthUpdateProfile, FecthUsersProfile } from "@/services/UserService";
+import { UserProfileUpdateViewModel } from "@/types/User";
 
 export default function EditProfile() {
     const [, setError] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export default function EditProfile() {
             email: "",
             fullName: "",
             phone: "",
-            image: null,
+            image: null as File | null,
         }
     );
     const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function EditProfile() {
                 setFormData({
                     fullName: user.fullName,
                     phone: user.phone,
-                    image: user.image,
+                    image: user.image as File | null,
                     email: user.email
                 });
                 setError(null);
@@ -38,7 +39,7 @@ export default function EditProfile() {
             }
             setError(null);
         } catch (err) {
-            setError(err.message.includes('authenticated')
+            setError(err instanceof Error && err.message.includes('authenticated')
                 ? 'Please log in to view user data.'
                 : 'Failed to load user data. Please try again.');
         } finally {
@@ -58,7 +59,7 @@ export default function EditProfile() {
                 || !formData.phone) {
                 throw new Error('Please fill in all required fields');
             }
-            const success = await FecthUpdateProfile(formData);
+            const success = await FecthUpdateProfile(formData as UserProfileUpdateViewModel);
             if (success) {
                 toast.success('Profile updated successfully');
                 navigate('/');
@@ -68,7 +69,7 @@ export default function EditProfile() {
             toast.success('Profile updated successfully');
             navigate('/');
         } catch (err) {
-            const errorMessage = err.message || 'An error occurred, please try again.';
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -88,7 +89,7 @@ export default function EditProfile() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
-        setFormData((prev) => ({ ...prev, image: file }));
+        setFormData((prev) => ({ ...prev, image: file as File | null }));
     };
 
     return (
@@ -100,7 +101,7 @@ export default function EditProfile() {
                             <div className="w-full h-full rounded-full overflow-hidden bg-white">
                                 {formData.image ? (
                                     <img
-                                        src={formData.image}
+                                        src={formData.image as unknown as string}
                                         alt="Profile"
                                         className="w-full h-full object-cover"
                                     />

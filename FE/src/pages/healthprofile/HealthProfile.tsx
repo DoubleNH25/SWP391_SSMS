@@ -84,7 +84,7 @@ export default function HealthProfiles() {
             setSelectedProfileId(null);
             setErrorModal(null);
         } catch (err) {
-            setErrorModal(`Failed to update user: ${err.message}`);
+            setErrorModal(`Failed to update user: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
             setSubmitting(false);
         }
@@ -136,7 +136,7 @@ export default function HealthProfiles() {
             setError(null);
         } catch (err) {
             console.error('Fetch error:', err);
-            if (err.message.includes('authenticated')) {
+            if (err instanceof Error && err.message.includes('authenticated')) {
                 setError('Please log in to view health profiles.');
             } else {
                 setError('Failed to fetch health profiles. Please try again.');

@@ -37,7 +37,7 @@ export default function CLassSchoolManager() {
       setSchoolClass(data);
       setError(null);
     } catch (err ) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view class.'
         : 'Failed to fetch class. Please try again.');
     } finally {
@@ -64,7 +64,7 @@ export default function CLassSchoolManager() {
       setSelectedSchoolClassId(null);
       setError(null);
     } catch (error ) {
-      toast.error(`Failed to delete class: ${error.message}`);
+      toast.error(`Failed to delete class: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleteLoading(false);
     }

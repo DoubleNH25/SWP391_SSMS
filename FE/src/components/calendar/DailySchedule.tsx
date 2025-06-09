@@ -1,6 +1,6 @@
 import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
-import { MedicalEventViewModel } from "@/types/MedicalEvent";
-import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
+import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
+import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
 import { toast } from 'react-toastify';
 
 interface DailyScheduleProps {
@@ -9,12 +9,12 @@ interface DailyScheduleProps {
   loading: boolean;
   onEventClick: (event: CalendarEvent) => void;
   onOpenModal: () => void;
-  onSetFormData: (formData: FormDataType) => void;
+  onSetFormData: (formData: FormDataType | ((prev: FormDataType) => FormDataType)) => void;
   classOptions: { value: string; label: string }[];
 }
 type FormDataType =
-  | { type: "medical"; data: MedicalEventViewModel }
-  | { type: "vaccination"; data: VaccinationCampaignsViewModel };
+  | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
+  | { type: "vaccination"; data: VaccinationCampaignsUpdateCreateViewModel };
 
 const DailySchedule = ({
   selectedDate,
@@ -66,7 +66,7 @@ const DailySchedule = ({
           data: {
             ...prev.data,
             scheduledDate: newDate.toISOString(),
-          } as MedicalEventViewModel,
+          } as MedicalEventUpdateCreateViewModel,
         };
       } else {
         return {
@@ -74,7 +74,7 @@ const DailySchedule = ({
           data: {
             ...prev.data,
             startDate: newDate.toISOString(),
-          } as VaccinationCampaignsViewModel,
+          } as VaccinationCampaignsUpdateCreateViewModel,
         };
       }
     });

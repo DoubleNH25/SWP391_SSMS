@@ -46,7 +46,7 @@ export default function AddStudent() {
       setParentOptions(options);
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to fetch parent data.'
         : 'Failed to fetch parent data. Please try again.');
     } finally {
@@ -103,8 +103,8 @@ export default function AddStudent() {
         throw new Error('Creation failed');
       }
     } catch (err) {
-      setError(`Failed to create student: ${err.message}`);
-      toast.error(`Failed to create student: ${err.message}`);
+      setError(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -187,6 +187,7 @@ export default function AddStudent() {
                       label="Date Picker Input"
                       placeholder="Select a date"
                       onChange={(dates, currentDateString) => {
+                        console.log(dates);
                         setFormData((prev) => ({ ...prev, dateOfBirth: currentDateString }));
                       }}
                     />

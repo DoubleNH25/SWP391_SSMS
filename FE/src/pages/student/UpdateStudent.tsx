@@ -43,7 +43,7 @@ export default function UpdateStudents() {
       setClassOptions(options);
       setError(null);
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to fetch parent data.'
         : 'Failed to fetch parent data. Please try again.');
     } finally {
@@ -99,7 +99,7 @@ export default function UpdateStudents() {
         throw new Error('Student not found');
       }
     } catch (err) {
-      setError(err.message.includes('authenticated')
+      setError(err instanceof Error && err.message.includes('authenticated')
         ? 'Please log in to view student data.'
         : 'Failed to load student data. Please try again.');
     } finally {
@@ -136,7 +136,7 @@ export default function UpdateStudents() {
         throw new Error('Update failed');
       }
     } catch (err) {
-      const errorMessage = err.message || 'An error occurred, please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -214,6 +214,7 @@ export default function UpdateStudents() {
                       placeholder="Select a date"
                       defaultDate={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
                       onChange={(dates, currentDateString) => {
+                        console.log(dates);
                         setFormData((prev) => ({ ...prev, dateOfBirth: currentDateString }));
                       }}
                     />

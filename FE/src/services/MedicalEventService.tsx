@@ -48,18 +48,6 @@ export async function FecthMedicalEvent(): Promise<MedicalEventViewModel[]> {
     }
 }
 
-export async function FecthRejectMedicalEvents(): Promise<MedicalEventViewModel[]> {
-    try {
-        const response = await ApiClient<MedicalEventViewModel[]>({
-            method: 'GET',
-            endpoint: `/medical-events/health-activities/rejected`,
-        });
-        return response?.data || [];
-    } catch (err) {
-        console.error(`Failed to get medical event: ${err}`);
-        return [];
-    }
-}
 
 export async function FecthPendingMedicalEvent(): Promise<MedicalEventViewModel[]> {
     try {
@@ -74,14 +62,14 @@ export async function FecthPendingMedicalEvent(): Promise<MedicalEventViewModel[
     }
 }
 
-export async function FecthApproveMedicalEvent(id: string): Promise<boolean> {
+export async function FecthApproveRejectMedicalEvent(id: string, actions: string): Promise<boolean> {
     if (!id) {
         throw new Error("Medical event ID is required");
     }
     try {
         await ApiClient<void>({
             method: 'PUT',
-            endpoint: `/medical-events/health-activities/${id}/approve`,
+            endpoint: `/medical-events/health-activities/${id}/approve-or-reject?action=${actions}`,
         });
         return true;
     } catch (err) {
@@ -90,27 +78,11 @@ export async function FecthApproveMedicalEvent(id: string): Promise<boolean> {
     }
 }
 
-export async function FecthRejectMedicalEvent(id: string): Promise<boolean> {
-    if (!id) {
-        throw new Error("Medical event ID is required");
-    }
-    try {
-        await ApiClient<void>({
-            method: 'PUT',
-            endpoint: `/medical-events/health-activities/${id}/reject`,
-        });
-        return true;
-    } catch (err) {
-        console.error(`Failed to reject medical event: ${err}`);
-        throw new Error("Unable to opt out of medical event. Please try again.");
-    }
-}
-
-export async function FecthApproveMedicalEvents(): Promise<MedicalEventViewModel[]> {
+export async function FecthApprovedRejectedMedicalEvents(): Promise<MedicalEventViewModel[]> {
     try {
         const response = await ApiClient<MedicalEventViewModel[]>({
             method: 'GET',
-            endpoint: `/medical-events/health-activities/approved`,
+            endpoint: `/medical-events/health-activities/approve-reject`,
         });
         return response?.data || [];
     } catch (err) {
