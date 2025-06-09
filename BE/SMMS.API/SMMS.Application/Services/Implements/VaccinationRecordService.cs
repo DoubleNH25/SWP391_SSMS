@@ -3,6 +3,7 @@ using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Interface.Repositories;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -32,7 +33,7 @@ namespace SMMS.Application.Services.Implements
 		}
 		public async Task<List<VaccinationRecordResponse>> GetVaccinationRecordsByStudentIdAsync(string studentId)
 		{
-			return _repositoryManager.VaccinationRecordRepository
+			var records = await Task.Run(() => _repositoryManager.VaccinationRecordRepository
 				.FindByCondition(vr => vr.StudentId == studentId && vr.DeletedTime == null, false)
 				.Include(vr => vr.Student)
 				.Include(vr => vr.VaccinationCampaign)
@@ -46,12 +47,14 @@ namespace SMMS.Application.Services.Implements
 					ResultNote = vr.ResultNote,
 					Time = vr.Time,
 					VaccinatedAt = vr.VaccinatedAt
-				}).ToList();
+				}).ToList());
+
+			return records;
 		}
 
 		public async Task<List<VaccinationRecordResponse>> GetAllVaccinationRecordsAsync()
 		{
-			return _repositoryManager.VaccinationRecordRepository
+			return await Task.Run(() => _repositoryManager.VaccinationRecordRepository
 				.FindAll(false)
 				.Include(vr => vr.Student)
 				.Include(vr => vr.VaccinationCampaign)
@@ -65,7 +68,25 @@ namespace SMMS.Application.Services.Implements
 					ResultNote = vr.ResultNote,
 					Time = vr.Time,
 					VaccinatedAt = vr.VaccinatedAt
-				}).ToList();
+				}).ToList());
+		}
+		public async Task<List<VaccinationRecordResponse>> GetVaccineRecordsByDateAsync(DateTime date)
+		{
+			return await Task.Run(() => _repositoryManager.VaccinationRecordRepository
+				.FindByCondition(vr => vr.Time.Date == date.Date && vr.DeletedTime == null, false)
+				.Include(vr => vr.Student)
+				.Include(vr => vr.VaccinationCampaign)
+				.Select(vr => new VaccinationRecordResponse
+				{
+					Id = vr.Id,
+					StudentId = vr.StudentId,
+					StudentName = vr.Student.FullName,
+					VaccinationCampaignId = vr.VaccinationCampaignId,
+					VaccineName = vr.VaccinationCampaign.VaccineName,
+					ResultNote = vr.ResultNote,
+					Time = vr.Time,
+					VaccinatedAt = vr.VaccinatedAt
+				}).ToList());
 		}
 	}
 }

@@ -95,6 +95,18 @@ namespace SMMS.API.Controllers
 			return Ok(records);
 		}
 
+		[HttpGet("health-checkup-records/by-date")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetCheckupRecordsByDate([FromQuery] DateTime date)
+		{
+			var records = await _healthCheckupService.GetCheckupRecordsByDateAsync(date);
+			if (records == null || !records.Any())
+			{
+				return NotFound("No health checkup records found for the specified date.");
+			}
+			return Ok(records);
+		}
+
 		[HttpPut("health-checkup-records/{id}")]
 		public async Task<IActionResult> UpdateHealthCheckupRecord(string id, [FromBody] HealthCheckupUpdateRequest request)
 		{
@@ -154,6 +166,16 @@ namespace SMMS.API.Controllers
 			if (!result) return NotFound();
 			return NoContent();
 		}
-
+		[HttpGet("vaccination-records/by-date")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetVaccineRecordsByDate([FromQuery] DateTime date)
+		{
+			var records = await _vaccinationRecordService.GetVaccineRecordsByDateAsync(date);
+			if (records == null || !records.Any())
+			{
+				return NotFound("No health checkup records found for the specified date.");
+			}
+			return Ok(records);
+		}
 	}
 }

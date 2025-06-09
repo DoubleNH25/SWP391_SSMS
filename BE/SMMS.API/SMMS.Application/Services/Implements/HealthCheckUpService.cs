@@ -178,5 +178,38 @@ namespace SMMS.Application.Services.Implements
 				)
 				.ToListAsync();
 		}
+		public async Task<List<HealthCheckUpResponse>> GetCheckupRecordsByDateAsync(DateTime date)
+		{
+			return await _repositoryManager.HealthCheckRepository
+				.FindByCondition(hcr => hcr.Time.Date == date.Date && hcr.DeletedTime == null, false)
+				.Include(hcr => hcr.Student)
+				.GroupJoin(
+					_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),
+					hcr => hcr.LastUpdatedBy,
+					user => user.Id,
+					(hcr, users) => new { hcr, users }
+				)
+				.SelectMany(
+					x => x.users.DefaultIfEmpty(),
+					(x, user) => new HealthCheckUpResponse
+					{
+						HealthCheckUpId = x.hcr.Id,
+						HealthActivityId = x.hcr.HealthActivityId,
+						StudentId = x.hcr.StudentId,
+						StudentName = x.hcr.Student.FullName,
+						NurseId = x.hcr.LastUpdatedBy,
+						NurseName = user != null ? user.FullName : "Pending To Update",
+						Vision = x.hcr.Vision,
+						Hearing = x.hcr.Hearing,
+						Dental = x.hcr.Dental,
+						BMI = x.hcr.BMI,
+						AbnormalNote = x.hcr.AbnormalNote,
+						RecordDate = x.hcr.RecordDate,
+						Time = x.hcr.Time,
+						IsLatest = x.hcr.IsLatest
+					}
+				)
+				.ToListAsync();
+		}
 	}
 }

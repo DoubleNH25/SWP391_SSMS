@@ -31,7 +31,7 @@ namespace SMMS.API.Controllers
 
 		[HttpGet("health-activities/approve-reject")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetRejectedHealthActivities()
+		public async Task<IActionResult> GetHealthActivitiesWithoutPending()
 		{
 			var activities = await _healthActivityService.GetActivityWithoutPendingAsync();
 			return Ok(activities);

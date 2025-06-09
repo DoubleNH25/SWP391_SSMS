@@ -1,4 +1,3 @@
-
 # 📘 School Medical Management System API Documentation
 
 This project is a **School Medical Management System** designed for managing student health records, medical events, and communication between school nurses and parents.
@@ -9,273 +8,191 @@ This project is a **School Medical Management System** designed for managing stu
 API documentation is available at:
 https://localhost:7172/swagger/index.html
 
-
 Most endpoints require JWT authentication via the `Authorization` header.
 
-
-### 🧾 Xử lý Kiểm Tra Sức Khỏe
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| POST | `/api/medical-events/health-activities` | Tạo một hoạt động sức khỏe. | Nurse |
-| PUT | `/api/medical-events/health-activities/{id}/approve` | Phê duyệt hoạt động sức khỏe. | Admin, Manager |
-| GET | `/api/medical-events/health-activities/pending` | Danh sách đang chờ xử lý. | Admin, Manager |
-| GET | `/api/medical-events/health-activities/approved` | Danh sách đã được phê duyệt. | Admin, Manager, Nurse |
-| PUT | `/api/medical-events/health-activities/{id}` | Cập nhật hoạt động. | Nurse, Admin, Manager |
-| DELETE | `/api/medical-events/health-activities/{id}` | Xóa hoạt động. | Nurse, Admin, Manager |
-
-## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
-
-### ✅ Activity Consents
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
-| PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
-
----
-## Note: Sau khi Parent chấp nhận thì những Health Check Record sẽ tự động tạo ra để khi kiểm tra sức khỏe nhân viên y tế điền vào
-
-### 👀 Health Checkups (Health Check Record nhân viên y tế điền vào)
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/nurse/get-all-checkup` | Lấy tất cả đợt kiểm tra. | Nurse |
-| PUT | `/api/nurse/health-checkup-records/{id}` | Cập nhật kết quả kiểm tra. | Nurse |
-| GET | `/api/nurse/health-checkup-records` | Lấy hồ sơ kiểm tra. | Admin, Manager, Nurse |
----
-## Note: Sau khi nhân viên y tế kiểm tra sức khỏe và điền vào /api/nurse/health-checkup-records/{id} thì hệ thống sẽ tự cập nhật health profile cho student
-
-
-### 🎓 Students
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/parents/students` | Danh sách học sinh. | Parent |
-| GET | `/api/parents/students-with-healthprofile` | Học sinh có hồ sơ. | Parent |
-| GET | `/api/parents/students/health` | Hồ sơ học sinh. | Parent |
-| PUT | `/api/parents/students/{id}/health-profile` | Cập nhật hồ sơ. | Parent |
----
-## Note: Sau khi có kết quả nếu phụ huynh cần tư vấn thì có thể tạo schedule để nurse tư vấn
-
-### 👁️‍🗨️ Health Checkups & Counseling
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/parents/get-all-student-health-checkup` | Đợt kiểm tra của học sinh. | Parent |
-| GET | `/api/parents/get-all-conseling-schedules` | Lịch tư vấn học sinh. | Parent |
-| POST | `/api/parents/conseling-schedules` | Yêu cầu tư vấn. | Parent |
-| PUT | `/api/nurse/accept-conseling-schedules` | Chấp nhận tư vấn. | Nurse |
-| GET | `/api/nurse/get-all-conseling-schedules` | Lịch tư vấn. | Nurse |
 ---
 
-### 💉 Vaccination Campaigns (Xử lý tiêm vaccine)
+## 1. Authentication APIs
+
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| POST | `/api/medical-events/vaccination-campaigns` | Tạo chiến dịch tiêm chủng. | Nurse |
-| PUT | `/api/medical-events/vaccination-campaigns/{id}/approve` | Phê duyệt chiến dịch. | Admin, Manager |
-| GET | `/api/medical-events/vaccination-campaigns/pending` | Danh sách chờ xử lý. | Admin, Manager |
-| GET | `/api/medical-events/vaccination-campaigns/approved` | Danh sách đã phê duyệt. | Admin, Manager, Nurse, Parent |
-| PUT | `/api/medical-events/vaccination-campaigns/{id}` | Cập nhật chiến dịch. | Nurse, Admin, Manager |
-| DELETE | `/api/medical-events/vaccination-campaigns/{id}` | Xóa chiến dịch. | Nurse, Admin, Manager |
-
-## Note: Sau khi phê duyệt approve bởi manager/admin thì hệ thống sẽ tự tạo Activity Consent cho Parent đồng ý hoặc không
-
-### ✅ Activity Consents
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
-| PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
-
-
-## Note: Sau khi Parent chấp nhận thì những Vaccination Record sẽ tự động tạo ra để khi kiểm tra sức khỏe nhân viên y tế điền vào
-
-### 💉 Vaccination Records
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm. | Nurse |
-| GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ. | Admin, Manager, Nurse ||
-
-## Note: Sau khi nhân viên y tế kiểm tra sức khỏe và điền vào /api/nurse/vaccination-records/{id}
-
-
-## 🔐 Authentication APIs
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| POST | `/api/auth/parent/send-otp` | Gửi OTP đến số điện thoại của phụ huynh. | No auth required |
-| POST | `/api/auth/parent/verify-otp` | Xác minh OTP để đăng nhập. | No auth required |
-| POST | `/api/auth/login` | Đăng nhập bằng email và mật khẩu. | No auth required |
+| POST | `/api/auth/parent/send-otp` | Gửi OTP đến số điện thoại phụ huynh | Public |
+| POST | `/api/auth/parent/verify-otp` | Xác minh OTP để đăng nhập | Public |
+| POST | `/api/auth/login` | Đăng nhập bằng email và mật khẩu | Public |
 
 ---
 
-## 🏥 Medical Events APIs
+## 2. User & Role Management
 
-### 🧾 Health Activities
+### Users
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| POST | `/api/medical-events/health-activities` | Tạo một hoạt động sức khỏe. | Nurse |
-| PUT | `/api/medical-events/health-activities/{id}/approve` | Phê duyệt hoạt động sức khỏe. | Admin, Manager |
-| GET | `/api/medical-events/health-activities/pending` | Danh sách đang chờ xử lý. | Admin, Manager |
-| GET | `/api/medical-events/health-activities/approved` | Danh sách đã được phê duyệt. | Admin, Manager, Nurse |
-| PUT | `/api/medical-events/health-activities/{id}` | Cập nhật hoạt động. | Nurse, Admin, Manager |
-| DELETE | `/api/medical-events/health-activities/{id}` | Xóa hoạt động. | Nurse, Admin, Manager |
+| GET | `/api/users` | Lấy tất cả người dùng | Admin |
+| GET | `/api/users/{id}` | Lấy người dùng theo ID | Admin |
+| POST | `/api/users` | Tạo người dùng mới | Admin |
+| PUT | `/api/users/{id}` | Cập nhật người dùng | Admin |
+| DELETE | `/api/users/{id}` | Xóa người dùng | Admin |
+| GET | `/api/users/profile` | Lấy hồ sơ người dùng hiện tại | Authenticated |
+| PUT | `/api/users/profile` | Cập nhật hồ sơ người dùng hiện tại | Authenticated |
+| POST | `/api/users/import-students` | Nhập học sinh từ Excel | Admin, Manager |
+| GET | `/api/users/students` | Lấy tất cả học sinh | Admin, Manager, Nurse |
+| GET | `/api/users/students/{studentId}` | Lấy học sinh theo ID | Admin, Manager, Nurse |
+| POST | `/api/users/students` | Tạo học sinh bởi admin | Admin |
+| PUT | `/api/users/students/{studentId}` | Cập nhật học sinh | Parent, Admin |
+| DELETE | `/api/users/students/{studentId}` | Xóa học sinh | Admin, Manager |
+| GET | `/api/users/parents/get-all-parent` | Lấy tất cả phụ huynh | Admin, Manager, Nurse |
 
-### 💉 Vaccination Campaigns
+### Roles
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| POST | `/api/medical-events/vaccination-campaigns` | Tạo chiến dịch tiêm chủng. | Nurse |
-| PUT | `/api/medical-events/vaccination-campaigns/{id}/approve` | Phê duyệt chiến dịch. | Admin, Manager |
-| GET | `/api/medical-events/vaccination-campaigns/pending` | Danh sách chờ xử lý. | Admin, Manager |
-| GET | `/api/medical-events/vaccination-campaigns/approved` | Danh sách đã phê duyệt. | Admin, Manager, Nurse, Parent |
-| PUT | `/api/medical-events/vaccination-campaigns/{id}` | Cập nhật chiến dịch. | Nurse, Admin, Manager |
-| DELETE | `/api/medical-events/vaccination-campaigns/{id}` | Xóa chiến dịch. | Nurse, Admin, Manager |
-
-### 📝 Activity Consents
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/medical-events/activity-consents/health-activities/{id}` | Danh sách đồng thuận sức khỏe. | Admin, Manager, Nurse |
-| GET | `/api/medical-events/activity-consents/vaccination-campaigns/{id}` | Danh sách đồng thuận tiêm chủng. | Admin, Manager, Nurse |
-
----
-## 👩‍⚕️ Medical Request APIs
-
-### 🩺 APIs for Nurses - Full CRUD:
-| Method | Endpoint                    | Description                                          | Roles                 |
-| ------ | --------------------------- | ---------------------------------------------------- | --------------------- |
-| POST   | `/api/medical/request`      | Tạo medical request mới (từ thông tin phụ huynh gửi) | Nurse, Manager, Admin |
-| GET    | `/api/medical/request`      | Xem tất cả medical requests                          | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/{id}` | Xem chi tiết một request                             | Admin, Manager, Nurse |
-| PUT    | `/api/medical/request/{id}` | Cập nhật thông tin request                           | Nurse                 |
-| DELETE | `/api/medical/request/{id}` | Xóa request                                          | Nurse                 |
-
-
-### 🩺 APIs for day management:
-| Method | Endpoint                             | Description                                            | Roles                 |
-| ------ | ------------------------------------ | ------------------------------------------------------ | --------------------- |
-| GET    | `/api/medical/request/daily/{date}`  | Xem các request cần thực hiện trong ngày cụ thể        | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/daily/today`   | Xem các request cần thực hiện trong hôm nay            | Admin, Manager, Nurse |
-| PUT    | `/api/medical/request/{id}/complete` | Đánh dấu đã cho học sinh uống thuốc trong ngày hôm nay | Nurse                 |
-
-
-### 🩺 State management APIs:
-| Method | Endpoint                                        | Description                              | Roles                 |
-| ------ | ----------------------------------------------- | ---------------------------------------- | --------------------- |
-| PUT    | `/api/medical/request/{id}/status`              | Cập nhật trạng thái của request          | Nurse                 |
-| GET    | `/api/medical/request/status/{status}`          | Lấy các request theo trạng thái          | Admin, Manager, Nurse |
-| POST   | `/api/medical/request/reset-daily-completion`   | Đặt lại trạng thái hoàn thành trong ngày | Nurse                 |
-| GET    | `/api/medical/request/completion-status/{date}` | Xem trạng thái hoàn thành theo ngày      | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/completion-status/today`  | Xem trạng thái hoàn thành trong hôm nay  | Admin, Manager, Nurse |
-
-
-### 🩺 Search APIs:
-| Method | Endpoint                                   | Description                                           | Roles                 |
-| ------ | ------------------------------------------ | ----------------------------------------------------- | --------------------- |
-| GET    | `/api/medical/request/search`              | Tìm kiếm theo tiêu chí (tên thuốc, học sinh, ngày...) | Admin, Manager, Nurse |
-| GET    | `/api/medical/request/student/{studentId}` | Xem danh sách request của một học sinh cụ thể         | Admin, Manager, Nurse |
-
-
-## Note: Các trạng thái Medical Request:
-| Trạng thái    | Diễn giải                                                   |
-| ------------- | ----------------------------------------------------------- |
-| **Active**    | Đang hoạt động (trong khoảng thời gian StartTime – EndTime) |
-| **Completed** | Đã hoàn thành cho ngày hôm nay                              |
-| **Pending**   | Chờ thực hiện                                               |
-| **Expired**   | Hết hạn                                                     |
-| **Inactive**  | Tạm dừng                                                    |
+| GET | `/api/roles` | Lấy tất cả role | Admin |
+| GET | `/api/roles/{id}` | Lấy role theo ID | Admin |
+| POST | `/api/roles` | Tạo role mới | Admin |
+| PUT | `/api/roles/{id}` | Cập nhật role | Admin |
+| DELETE | `/api/roles/{id}` | Xóa role | Admin |
 
 ---
 
-## 👩‍⚕️ Nurse APIs
+## 3. School Classes
 
-### 🩺 Health Profiles
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| POST | `/api/nurse/health-profiles` | Tạo hồ sơ sức khỏe. | Nurse |
-| GET | `/api/nurse/health-profiles/{studentId}` | Lấy hồ sơ học sinh. | Nurse |
-| PUT | `/api/nurse/health-profiles/{studentId}` | Cập nhật hồ sơ. | Nurse |
-| DELETE | `/api/nurse/health-profiles/{studentId}` | Xóa hồ sơ. | Nurse |
-| POST | `/api/nurse/health-profiles/import` | Nhập hồ sơ từ Excel. | Nurse |
-
-### 💉 Vaccination Records
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm. | Nurse |
-| GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ. | Admin, Manager, Nurse |
-
-### 👀 Health Checkups
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| GET | `/api/nurse/get-all-checkup` | Lấy tất cả đợt kiểm tra. | Nurse |
-| PUT | `/api/nurse/health-checkup-records/{id}` | Cập nhật kết quả kiểm tra. | Nurse |
-| GET | `/api/nurse/health-checkup-records` | Lấy hồ sơ kiểm tra. | Admin, Manager, Nurse |
-
-### 🧑‍⚕️ Counseling Schedules
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| PUT | `/api/nurse/accept-conseling-schedules` | Chấp nhận tư vấn. | Nurse |
-| GET | `/api/nurse/get-all-conseling-schedules` | Lịch tư vấn. | Nurse |
+| GET | `/api/school-classes` | Lấy tất cả lớp học | Admin, Manager, Nurse |
+| GET | `/api/school-classes/{id}` | Lấy lớp học theo ID | Admin, Manager, Nurse |
+| POST | `/api/school-classes` | Tạo lớp học | Admin, Manager |
+| PUT | `/api/school-classes/{id}` | Cập nhật lớp học | Admin, Manager |
+| DELETE | `/api/school-classes/{id}` | Xóa lớp học | Admin, Manager |
 
 ---
 
-## 👨‍👩‍👧 Parent APIs
+## 4. Medical Events
 
-### 🎓 Students
+### Health Activities
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/parents/students` | Danh sách học sinh. | Parent |
-| GET | `/api/parents/students-with-healthprofile` | Học sinh có hồ sơ. | Parent |
-| GET | `/api/parents/students/health` | Hồ sơ học sinh. | Parent |
-| PUT | `/api/parents/students/{id}/health-profile` | Cập nhật hồ sơ. | Parent |
+| GET | `/api/medical-events/health-activities/all` | Lấy tất cả hoạt động sức khỏe | Admin, Manager, Nurse |
+| GET | `/api/medical-events/health-activities/approve-reject` | Lấy hoạt động đã duyệt/từ chối | Admin, Manager, Nurse |
+| GET | `/api/medical-events/health-activities/pending` | Lấy hoạt động chờ duyệt | Admin, Manager, Nurse |
+| POST | `/api/medical-events/health-activities` | Tạo hoạt động sức khỏe | Nurse |
+| PUT | `/api/medical-events/health-activities/{id}/approve-or-reject` | Duyệt/từ chối hoạt động | Admin, Manager |
+| PUT | `/api/medical-events/health-activities/{id}` | Cập nhật hoạt động | Nurse, Admin, Manager |
+| DELETE | `/api/medical-events/health-activities/{id}` | Xóa hoạt động | Nurse, Admin, Manager |
 
-### 👁️‍🗨️ Health Checkups & Counseling
+### Vaccination Campaigns
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/parents/get-all-student-health-checkup` | Đợt kiểm tra của học sinh. | Parent |
-| GET | `/api/parents/get-all-conseling-schedules` | Lịch tư vấn học sinh. | Parent |
-| POST | `/api/parents/conseling-schedules` | Yêu cầu tư vấn. | Parent |
+| GET | `/api/medical-events/vaccination-campaigns/all` | Lấy tất cả chiến dịch tiêm chủng | Admin, Manager, Nurse |
+| GET | `/api/medical-events/vaccination-campaigns/pending` | Lấy chiến dịch chờ duyệt | Admin, Manager, Nurse |
+| GET | `/api/medical-events/vaccination-campaigns/approve-reject` | Lấy chiến dịch đã duyệt/từ chối | Admin, Manager, Nurse, Parent |
+| POST | `/api/medical-events/vaccination-campaigns` | Tạo chiến dịch tiêm chủng | Nurse |
+| PUT | `/api/medical-events/vaccination-campaigns/{id}/approve-or-reject` | Duyệt/từ chối chiến dịch | Admin, Manager |
+| PUT | `/api/medical-events/vaccination-campaigns/{id}` | Cập nhật chiến dịch | Nurse, Admin, Manager |
+| DELETE | `/api/medical-events/vaccination-campaigns/{id}` | Xóa chiến dịch | Nurse, Admin, Manager |
 
-### ✅ Activity Consents
+### Activity Consents
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/parents/activity-consents/my-children` | Đồng thuận hoạt động. | Parent |
-| PUT | `/api/parents/activity-consents/{id}/confirm` | Xác nhận đồng thuận. | Parent |
+| GET | `/api/medical-events/activity-consents/health-activities/{healthActivityId}` | Lấy đồng thuận hoạt động sức khỏe | Admin, Manager, Nurse |
+| GET | `/api/medical-events/activity-consents/vaccination-campaigns/{vaccinationCampaignId}` | Lấy đồng thuận tiêm chủng | Admin, Manager, Nurse |
 
 ---
 
-## 👥 User Management APIs
+## 5. Medical Management
 
-### 👤 Users
+### Medical Stock, Incident, Usage
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/users` | Lấy tất cả người dùng. | Admin |
-| GET | `/api/users/{id}` | Lấy người dùng theo ID. | Admin |
-| POST | `/api/users` | Tạo người dùng mới. | Admin |
-| PUT | `/api/users/{id}` | Cập nhật người dùng. | Admin |
-| DELETE | `/api/users/{id}` | Xóa người dùng. | Admin |
+| POST | `/api/medical/stock` | Tạo kho y tế | Admin, Manager, Nurse |
+| DELETE | `/api/medical/stock/{id}` | Xóa kho y tế | Admin, Manager, Nurse |
+| GET | `/api/medical/stock/{id}` | Lấy kho y tế theo ID | Admin, Manager, Nurse |
+| GET | `/api/medical/stock` | Lấy tất cả kho y tế | Admin, Manager, Nurse |
+| PUT | `/api/medical/stock/{id}` | Cập nhật kho y tế | Admin, Manager, Nurse |
+| POST | `/api/medical/incident` | Tạo sự cố y tế | Admin, Manager, Nurse |
+| DELETE | `/api/medical/incident/{id}` | Xóa sự cố y tế | Admin, Manager, Nurse |
+| GET | `/api/medical/incident/{id}` | Lấy sự cố y tế theo ID | Admin, Manager, Nurse, Parent |
+| GET | `/api/medical/incident` | Lấy tất cả sự cố y tế | Admin, Manager, Nurse, Parent |
+| PUT | `/api/medical/incident/{id}` | Cập nhật sự cố y tế | Admin, Manager, Nurse |
+| POST | `/api/medical/usage` | Tạo sử dụng y tế | Admin, Manager, Nurse |
+| DELETE | `/api/medical/usage/{id}` | Xóa sử dụng y tế | Admin, Manager, Nurse |
+| PUT | `/api/medical/usage/{id}` | Cập nhật sử dụng y tế | Admin, Manager, Nurse |
 
-### 🧾 Profile
+### Medical Requests (CRUD, State, Search)
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
-| GET | `/api/users/profile` | Hồ sơ người dùng. | Authenticated |
-| PUT | `/api/users/profile` | Cập nhật hồ sơ. | Authenticated |
-
-### 👨‍🎓 Students
-| Method | Endpoint | Description | Roles |
-|--------|----------|-------------|-------|
-| POST | `/api/users/import-students` | Nhập học sinh từ Excel. | Admin |
-| GET | `/api/users/students` | Lấy tất cả học sinh. | Admin |
-| POST | `/api/users/parents/students` | Tạo học sinh bởi phụ huynh. | Parent |
-| POST | `/api/users/students` | Tạo học sinh bởi admin. | Admin |
-| PUT | `/api/users/students/{id}` | Cập nhật học sinh. | Parent, Admin |
-| DELETE | `/api/users/students/{id}` | Xóa học sinh. | Parent, Admin |
+| POST | `/api/medical/request` | Tạo medical request | Admin, Manager, Nurse |
+| GET | `/api/medical/request` | Lấy tất cả medical request | Admin, Manager, Nurse |
+| GET | `/api/medical/request/{id}` | Lấy chi tiết request | Admin, Manager, Nurse |
+| PUT | `/api/medical/request/{id}` | Cập nhật request | Admin, Manager, Nurse |
+| DELETE | `/api/medical/request/{id}` | Xóa request | Admin, Manager, Nurse |
+| GET | `/api/medical/request/daily/{date}` | Lấy request theo ngày | Admin, Manager, Nurse |
+| GET | `/api/medical/request/daily/today` | Lấy request hôm nay | Admin, Manager, Nurse |
+| PUT | `/api/medical/request/{id}/complete` | Đánh dấu hoàn thành | Admin, Manager, Nurse |
+| PUT | `/api/medical/request/{id}/status` | Cập nhật trạng thái | Admin, Manager, Nurse |
+| GET | `/api/medical/request/status/{status}` | Lấy request theo trạng thái | Admin, Manager, Nurse |
+| POST | `/api/medical/request/reset-daily-completion` | Đặt lại trạng thái hoàn thành | Admin, Manager, Nurse |
+| GET | `/api/medical/request/completion-status/{date}` | Trạng thái hoàn thành theo ngày | Admin, Manager, Nurse |
+| GET | `/api/medical/request/completion-status/today` | Trạng thái hoàn thành hôm nay | Admin, Manager, Nurse |
+| GET | `/api/medical/request/search` | Tìm kiếm request | Admin, Manager, Nurse |
+| GET | `/api/medical/request/student/{studentId}` | Lấy request của học sinh | Admin, Manager, Nurse |
 
 ---
 
-## 🏥 Blog APIs
-| # | Method | Endpoint                   | Description                        | Auth Required | Notes                         |
-| - | ------ | -------------------------- | ---------------------------------- | ------------- | ----------------------------- |
-| 1 | GET    | `/api/blogs`               | Lấy tất cả blogs                   | ❌             | Chỉ hiện blog chưa bị xóa     |
-| 2 | GET    | `/api/blogs/{id}`          | Lấy chi tiết blog theo ID          | ❌             |                               |
-| 3 | POST   | `/api/blogs`               | Tạo blog mới (có upload ảnh)       | ✅             | Sử dụng `multipart/form-data` |
-| 4 | PUT    | `/api/blogs/{id}`          | Cập nhật blog (chỉ tác giả)        | ✅             | Sử dụng `multipart/form-data` |
-| 5 | DELETE | `/api/blogs/{id}`          | Xóa blog (soft delete)             | ✅             | Chỉ tác giả được quyền xóa    |
-| 6 | POST   | `/api/blogs/{id}/view`     | Tăng lượt xem cho blog             | ❌             | Không yêu cầu đăng nhập       |
-| 7 | GET    | `/api/blogs/user/{userId}` | Lấy blog của user bất kỳ           | ❌             |                               |
-| 8 | GET    | `/api/blogs/my-blogs`      | Lấy blog của người dùng hiện tại   | ✅             | Từ access token               |
-| 9 | POST   | `/api/blogs/upload-image`  | Upload ảnh riêng (dùng cho editor) | ✅             | Trả về `imageUrl`             |
+## 6. Nurse APIs
+
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/nurse/health-profiles/{studentId}` | Lấy hồ sơ sức khỏe học sinh | Nurse |
+| POST | `/api/nurse/health-profiles` | Tạo hồ sơ sức khỏe | Nurse |
+| POST | `/api/nurse/health-profiles/import` | Nhập hồ sơ từ Excel | Nurse |
+| PUT | `/api/nurse/health-profiles/{studentId}` | Cập nhật hồ sơ sức khỏe | Nurse |
+| DELETE | `/api/nurse/health-profiles/{studentId}` | Xóa hồ sơ sức khỏe | Nurse |
+| GET | `/api/nurse/get-all-checkup` | Lấy tất cả đợt kiểm tra | Nurse |
+| GET | `/api/nurse/health-checkup-records` | Lấy hồ sơ kiểm tra | Admin, Manager, Nurse |
+| GET | `/api/nurse/health-checkup-records/by-date` | Lấy hồ sơ kiểm tra theo ngày | Admin, Manager, Nurse |
+| PUT | `/api/nurse/health-checkup-records/{id}` | Cập nhật kết quả kiểm tra | Nurse |
+| GET | `/api/nurse/get-all-conseling-schedules` | Lấy lịch tư vấn | Nurse |
+| PUT | `/api/nurse/accept-conseling-schedules` | Chấp nhận tư vấn | Nurse |
+| GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ tiêm chủng | Admin, Manager, Nurse |
+| PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm chủng | Nurse |
+| GET | `/api/nurse/vaccination-records/by-date` | Lấy hồ sơ tiêm chủng theo ngày | Admin, Manager, Nurse |
+
+---
+
+## 7. Parent APIs
+
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/parents/students` | Lấy danh sách học sinh của phụ huynh | Parent |
+| GET | `/api/parents/get-all-student-health-checkup` | Lấy đợt kiểm tra sức khỏe học sinh | Parent |
+| GET | `/api/parents/get-all-conseling-schedules` | Lấy lịch tư vấn học sinh | Parent |
+| POST | `/api/parents/conseling-schedules` | Yêu cầu tư vấn | Parent |
+| PUT | `/api/parents/students/{studentId}/health-profile` | Cập nhật hồ sơ sức khỏe học sinh | Parent |
+| GET | `/api/parents/activity-consents/my-children` | Lấy đồng thuận hoạt động cho con | Parent |
+| PUT | `/api/parents/activity-consents/{id}/status` | Xác nhận đồng thuận | Parent |
+
+---
+
+## 8. Blog APIs
+
+| Method | Endpoint | Description | Auth Required | Notes |
+|--------|----------|-------------|--------------|-------|
+| GET | `/api/blogs` | Lấy tất cả blogs | ❌ | Chỉ hiện blog chưa bị xóa |
+| GET | `/api/blogs/{id}` | Lấy chi tiết blog | ❌ | |
+| POST | `/api/blogs` | Tạo blog mới | ✅ | Sử dụng multipart/form-data |
+| PUT | `/api/blogs/{id}` | Cập nhật blog | ✅ | Chỉ tác giả, multipart/form-data |
+| DELETE | `/api/blogs/{id}` | Xóa blog | ✅ | Chỉ tác giả |
+| POST | `/api/blogs/{id}/view` | Tăng lượt xem | ❌ | Không yêu cầu đăng nhập |
+| GET | `/api/blogs/user/{userId}` | Lấy blog của user bất kỳ | ❌ | |
+| GET | `/api/blogs/my-blogs` | Lấy blog của người dùng hiện tại | ✅ | Từ access token |
+| POST | `/api/blogs/upload-image` | Upload ảnh cho editor | ✅ | Trả về imageUrl |
+
+---
+
+## 9. Weather Forecast (Demo/Test)
+
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/WeatherForecast` | Lấy dự báo thời tiết mẫu | Public |
+
+---
 
