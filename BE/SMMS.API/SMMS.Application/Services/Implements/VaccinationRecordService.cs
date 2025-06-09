@@ -3,7 +3,6 @@ using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Interface.Repositories;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SMMS.Application.Services.Implements
 {
