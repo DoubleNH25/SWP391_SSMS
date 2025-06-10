@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, memo, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDownIcon, GridIcon, BoltIcon, HorizontaLDots, CalenderIcon } from "../icons";
-import { useSidebar } from "../context/sidebar";
+import { ChevronDownIcon, HorizontaLDots, CalenderIcon, PieChartIcon, UserCircleIcon, DocsIcon, TaskIcon, TimeIcon, CheckCircleIcon } from "@/components/icons";
+import { useSidebar } from "@/components/context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
 type NavItem = {
@@ -14,7 +14,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <PieChartIcon />,
     name: "Dashboard",
     allowedRoles: ["Admin", "Manager"],
     subItems: [
@@ -23,11 +23,11 @@ const navItems: NavItem[] = [
       { name: "Class", path: "/class", pro: false, allowedRoles: ["Admin"] },
     ],
   },
-  { icon: <BoltIcon />, name: "Blog", path: "/blog", allowedRoles: ["Admin", "Manager", "Nurse", "Parent"] },
-  { icon: <BoltIcon />, name: "Health Profile", path: "/parent/health-profiles", allowedRoles: ["Parent"] },
+  { icon: <DocsIcon />, name: "Blog", path: "/blog", allowedRoles: ["Admin", "Manager", "Nurse", "Parent"] },
+  { icon: <UserCircleIcon />, name: "Health Profile", path: "/parent/health-profiles", allowedRoles: ["Parent"] },
   { icon: <CalenderIcon />, name: "Calendar", path: "/calendar", allowedRoles: ["Admin", "Manager", "Nurse"] },
   {
-    icon: <GridIcon />,
+    icon: <TaskIcon />,
     name: "Medical Events",
     allowedRoles: ["Admin", "Manager", "Nurse"],
     subItems: [
@@ -35,6 +35,8 @@ const navItems: NavItem[] = [
       { name: "Approval History", path: "/approved-medical-events", pro: false, allowedRoles: ["Admin", "Manager", "Nurse"] },
     ],
   },
+  { icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4"/>, name: "Health Checkup", path: "/parent/health-checkup", allowedRoles: ["Parent"] },
+  { icon: <TimeIcon />, name: "Conseling Schedules", path: "/conseling-schedules", allowedRoles: ["Admin", "Manager", "Nurse"] },
 ];
 
 const AppSidebar: React.FC = () => {

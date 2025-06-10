@@ -1,4 +1,6 @@
 import lineClamp from '@tailwindcss/line-clamp';
+import lineClamp from '@tailwindcss/line-clamp';
+import lineClamp from '@tailwindcss/line-clamp';
 import scrollbar from 'tailwind-scrollbar';
 // tailwind.config.js
 export default {

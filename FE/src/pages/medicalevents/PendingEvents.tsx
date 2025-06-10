@@ -8,6 +8,8 @@ import { FecthApproveRejectVaccinationCampaign, FecthPendingVaccinationCampaign 
 import { FecthClass } from "@/services/SchoolClassService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PageHeader from "@/components/ui/PageHeader";
+import { ClockAlert } from "lucide-react";
 
 type EventType = "medicalEvent" | "vaccinationCampaign";
 
@@ -197,6 +199,11 @@ export default function PendingEventManager() {
 
   return (
     <div className="p-6">
+      <PageHeader
+        title="Quản lý sự kiện chờ duyệt"
+        icon={<ClockAlert className="w-6 h-6 text-orange-600" />}
+        description="Quản lý và phê duyệt các sự kiện y tế đang chờ xử lý"
+      />
       <ToastContainer position="top-right" autoClose={3000} />
       {loading.medicalEvents || loading.vaccinationCampaigns ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -230,16 +237,8 @@ export default function PendingEventManager() {
         <div className="text-center text-gray-600">No pending events available</div>
       ) : (
         <div>
-          <div className="flex items-center justify-between">
-            <nav className="text-base text-gray-500 mb-4 mt-4" aria-label="Breadcrumb">
-              <ol className="list-reset flex">
-                <li><span className="mx-2">›</span></li>
-                <li>Events</li>
-                <li><span className="mx-2">›</span></li>
-                <li className="text-gray-700">Manager Pending</li>
-              </ol>
-            </nav>
-            <div className="mt-4 relative">
+          <div className="flex items-center justify-end mb-6">
+            <div className="relative">
               {totalPendingCount > 0 ? (
                 <Button
                   variant="outline"

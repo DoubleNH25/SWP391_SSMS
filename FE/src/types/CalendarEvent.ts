@@ -16,9 +16,9 @@ export interface CalendarEvent {
 }
 
 export const eventCategories = {
-  Pending: { label: "Pending", color: "bg-yellow-500", lightColor: "bg-yellow-50", textColor: "text-yellow-700" },
-  Approved: { label: "Approved", color: "bg-green-500", lightColor: "bg-green-50", textColor: "text-green-700" },
-  Rejected: { label: "Rejected", color: "bg-red-500", lightColor: "bg-red-50", textColor: "text-red-700" },
+  Pending: { label: "Pending", color: "bg-yellow-500", lightColor: "bg-yellow-50", textColor: "text-black-700" },
+  Approved: { label: "Approved", color: "bg-green-500", lightColor: "bg-green-50", textColor: "text-black-800" },
+  Rejected: { label: "Rejected", color: "bg-red-500", lightColor: "bg-red-50", textColor: "text-black-800" },
 };
 
 export function toLocalISOString(dateInput: Date | string): string {

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PencilIcon, TrashBinIcon } from "../../components/icons/index"
+import { PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, GraduationCap } from "lucide-react";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { SchoolClass } from "@/types/SchoolClass";
 import { FecthClass, FecthDeleteSchoolClass } from "@/services/SchoolClassService";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function CLassSchoolManager() {
   const [schoolClass, setSchoolClass] = useState<SchoolClass[]>([]);
@@ -97,6 +98,11 @@ export default function CLassSchoolManager() {
 
   return (
     <div className="p-6">
+      <PageHeader
+        title="Quản lý lớp học"
+        icon={<GraduationCap className="w-6 h-6 text-blue-600" />}
+        description="Quản lý thông tin lớp học trong hệ thống"
+      />
       <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -122,7 +128,7 @@ export default function CLassSchoolManager() {
           )}
         </div>
       ) : schoolClass.length === 0 ? (
-        <div className="text-center text-gray-600">No students available</div>
+        <div className="text-center text-gray-600">No classes available</div>
       ) : (
         <div className="space-y-6">
           <Modal
@@ -150,25 +156,13 @@ export default function CLassSchoolManager() {
               </div>
             </div>
           </Modal>
-          <div className="flex items-center justify-between">
-            <nav className="text-base text-gray-500 mb-4 mt-4">
-              <ol className="list-reset flex">
-                <li><span className="mx-2">›</span></li>
-                <li>
-                  Dashboard
-                </li>
-                <li><span className="mx-2">›</span></li>
-                <li className="text-gray-700">Class</li>
-              </ol>
-            </nav>
-            <div className="flex items-center">
-              <button className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
-                onClick={handleAddClass}
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add New Class
-              </button>
-            </div>
+          <div className="flex items-center justify-end mb-6">
+            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+              onClick={handleAddClass}
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add New Class
+            </button>
           </div>
           <table className="w-full border text-sm">
             <thead className="bg-gray-100 text-left">

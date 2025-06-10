@@ -9,8 +9,12 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthApprovedRejectedVaccinationCampaigns } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/ui/PageHeader";
+import { CheckCircle2 } from "lucide-react";
 
 export default function ApprovedEventManager() {
+  const navigate = useNavigate();
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>([]);
   const [vaccinationCampaigns, setVaccinationCampaigns] = useState<VaccinationCampaignsViewModel[]>([]);
   const [selectedView, setSelectedView] = useState<"MedicalEvents" | "VaccinationCampaigns">("MedicalEvents");
@@ -21,6 +25,7 @@ export default function ApprovedEventManager() {
   const [classOptions, setClassOptions] = useState<{ value: string; label: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchDate, setSearchDate] = useState<string>("");
 
   // Filter and sort data
   const getFilteredAndSortedData = (): (MedicalEventViewModel | VaccinationCampaignsViewModel)[] => {
@@ -33,6 +38,15 @@ export default function ApprovedEventManager() {
           item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.description.toLowerCase().includes(searchTerm.toLowerCase())
         );
+      }
+
+      // Apply date filter
+      if (searchDate) {
+        const searchDateObj = new Date(searchDate);
+        data = data.filter(item => {
+          const itemDate = new Date(item.scheduledDate);
+          return itemDate.toDateString() === searchDateObj.toDateString();
+        });
       }
 
       // Apply date sorting
@@ -55,6 +69,15 @@ export default function ApprovedEventManager() {
         );
       }
 
+      // Apply date filter
+      if (searchDate) {
+        const searchDateObj = new Date(searchDate);
+        data = data.filter(item => {
+          const itemDate = new Date(item.startDate);
+          return itemDate.toDateString() === searchDateObj.toDateString();
+        });
+      }
+
       // Apply date sorting
       data.sort((a, b) => {
         const dateA = new Date(a.startDate);
@@ -65,6 +88,14 @@ export default function ApprovedEventManager() {
       return data;
     }
   };
+
+  const handleGetMedicalRecord = useCallback(async (medicalEventDate: string) => {
+    if (selectedView === "MedicalEvents") {
+      navigate(`/medical-health-checkup-record/${medicalEventDate}`);
+    } else {
+      navigate(`/medical-vaccination-record/${medicalEventDate}`);
+    }
+  }, [navigate, selectedView]);
 
   const currentData = getFilteredAndSortedData();
   const totalItems = currentData.length;
@@ -78,11 +109,9 @@ export default function ApprovedEventManager() {
     try {
       if (selectedView === "MedicalEvents") {
         const data = await FecthApprovedRejectedMedicalEvents();
-        console.log("medical events", data);
         setMedicalEvents(data);
       } else {
         const data = await FecthApprovedRejectedVaccinationCampaigns();
-        console.log("vaccination campaigns", data);
         setVaccinationCampaigns(data);
       }
       setError(null);
@@ -139,7 +168,12 @@ export default function ApprovedEventManager() {
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="p-8 min-h-screen">
+      <div className="p-4 min-h-screen">
+        <PageHeader
+          title="Quản lý sự kiện đã duyệt"
+          icon={<CheckCircle2 className="w-6 h-6 text-green-600" />}
+          description="Quản lý các sự kiện y tế đã được phê duyệt"
+        />
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -174,22 +208,10 @@ export default function ApprovedEventManager() {
             )}
           </div>
         ) : (
-          <div>
+          <div className="space-y-2">
             {/* Header Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
               <div className="flex justify-between items-start">
-                <nav className="text-sm text-gray-500">
-                  <ol className="flex items-center space-x-2">
-                    <li className="text-gray-300">›</li>
-                    <li className="flex items-center">
-                      Event
-                    </li>
-                    <li className="text-gray-300">›</li>
-                    <li className="text-gray-700 font-medium">
-                      {selectedView === "MedicalEvents" ? "Medical Events" : "Vaccination Campaigns"}
-                    </li>
-                  </ol>
-                </nav>
 
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
@@ -207,60 +229,143 @@ export default function ApprovedEventManager() {
             </div>
 
             {/* Search Controls */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-grow max-w-md">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder={selectedView === "MedicalEvents"
-                      ? "Search by name or description..."
-                      : "Search by name, vaccine name, or vaccine type..."
-                    }
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
-                  />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Search Filters</h2>
+                  {(searchTerm || searchDate) && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSearchDate("");
+                        setCurrentPage(1);
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Clear Filters
+                    </button>
+                  )}
                 </div>
-                <Label className="text-sm font-medium text-gray-700 whitespace-nowrap">Search</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label className="block text-sm font-medium text-gray-700">
+                      Search by {selectedView === "MedicalEvents" ? "Name or Description" : "Name, Vaccine Name, or Type"}
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={selectedView === "MedicalEvents"
+                          ? "Enter name or description..."
+                          : "Enter name, vaccine name, or type..."
+                        }
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => {
+                            setSearchTerm("");
+                            setCurrentPage(1);
+                          }}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="block text-sm font-medium text-gray-700">
+                      Filter by Date
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="date"
+                        value={searchDate}
+                        onChange={(e) => {
+                          setSearchDate(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      />
+                      {searchDate && (
+                        <button
+                          onClick={() => {
+                            setSearchDate("");
+                            setCurrentPage(1);
+                          }}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {(searchTerm || searchDate) && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>
+                      Showing results for {searchTerm && <span className="font-medium">"{searchTerm}"</span>}
+                      {searchTerm && searchDate && " and "}
+                      {searchDate && <span className="font-medium">date: {new Date(searchDate).toLocaleDateString()}</span>}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Data Table */}
-            <div className="bg-white shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
               {selectedView === "MedicalEvents" ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600  tracking-wider w-[20%]">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[25%]">
                           Name
                         </th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600  tracking-wider w-[25%]">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[30%]">
                           Description
                         </th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600  tracking-wider w-[12%]">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[15%]">
                           <button
                             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                             className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
                           >
-                            Date
+                            Ngày tháng
                             <svg className={`w-4 h-4 transition-transform group-hover:text-blue-600 ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
                         </th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600  tracking-wider w-[25%]">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[20%]">
                           Classes
                         </th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600  tracking-wider w-[18%]">
+                        <th className="px-6 py-4 text-center text-xs font-medium text-gray-600 tracking-wider w-[10%]">
                           Status
                         </th>
                       </tr>
@@ -270,7 +375,10 @@ export default function ApprovedEventManager() {
                         paginatedData.map((item, index) => {
                           const medicalEvent = item as MedicalEventViewModel;
                           return (
-                            <tr key={index} className="hover:bg-gray-50 transition-colors">
+                            <tr key={index} className={`hover:bg-gray-50 transition-colors ${item.status === "Rejected"
+                              ? "cursor-not-allowed"
+                              : "cursor-pointer"}`}
+                              onClick={() => item.status === "Rejected" ? null : handleGetMedicalRecord(new Date((item as MedicalEventViewModel).scheduledDate).toISOString())}>
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                 {medicalEvent.name}
                               </td>
@@ -300,12 +408,12 @@ export default function ApprovedEventManager() {
                                   );
                                 })()}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 text-center">
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   disabled
-                                  className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2 `}
+                                  className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2`}
                                 >
                                   {item.status as string}
                                 </Button>
@@ -333,12 +441,12 @@ export default function ApprovedEventManager() {
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[15%]">Name</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[15%]">Vaccine Name</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[10%]">Vaccine Type</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[12%]">EXP</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[12%]">MFG</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[12%]">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[20%]">Name</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[15%]">Vaccine Name</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[15%]">Vaccine Type</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">EXP</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">MFG</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">
                           <button
                             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                             className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
@@ -349,14 +457,17 @@ export default function ApprovedEventManager() {
                             </svg>
                           </button>
                         </th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[12%]">Classes</th>
-                        <th className="px-6 py-4 text-left text-xs text-gray-600 uppercase tracking-wider w-[12%]">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[14%]">Classes</th>
+                        <th className="px-6 py-4 text-center text-xs font-medium text-gray-600 tracking-wider">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {paginatedData.length > 0 ? (
                         paginatedData.map((item, index) => (
-                          <tr key={index} className="hover:bg-gray-50 transition-colors">
+                          <tr key={index} className={`hover:bg-gray-50 transition-colors ${item.status === "Rejected"
+                            ? "cursor-not-allowed"
+                            : "cursor-pointer"}`}
+                            onClick={() => item.status === "Rejected" ? null : handleGetMedicalRecord(new Date((item as VaccinationCampaignsViewModel).startDate).toISOString())}>
                             <td className="px-6 py-4 text-sm font-medium text-gray-900">
                               {(item as VaccinationCampaignsViewModel).name}
                             </td>
@@ -396,12 +507,12 @@ export default function ApprovedEventManager() {
                                 );
                               })()}
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 text-center">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 disabled
-                                className={`px-3 py-1.5 text-xs font-medium border-2`}
+                                className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2`}
                               >
                                 {item.status as string}
                               </Button>
@@ -410,7 +521,7 @@ export default function ApprovedEventManager() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={8} className="px-6 py-12 text-center">
+                          <td colSpan={7} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center">
                               <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -428,7 +539,7 @@ export default function ApprovedEventManager() {
 
             {/* Pagination */}
             {currentData.length > 0 && (
-              <div className="bg-white p-6 mt-6">
+              <div className="bg-white p-5 mt-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6">
                     <p className="text-sm text-gray-600">

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileIcon, PencilIcon, TrashBinIcon } from "../../components/icons/index"
+import { FileIcon, PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, Users } from "lucide-react";
 import { FecthDeleteStudents, FecthImportUserByExcel, FecthStudents } from "@/services/UserService";
 import { Student } from "@/types/Student";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function StudentManager() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -146,6 +147,11 @@ export default function StudentManager() {
 
   return (
     <div className="p-6">
+      <PageHeader
+        title="Quản lý học sinh"
+        icon={<Users className="w-6 h-6 text-blue-600" />}
+        description="Quản lý thông tin học sinh trong hệ thống"
+      />
       <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -242,19 +248,9 @@ export default function StudentManager() {
               )}
             </div>
           </Modal>
-          <div className="flex items-center justify-between">
-            <nav className="text-base text-gray-500 mb-4 mt-4">
-              <ol className="list-reset flex">
-                <li><span className="mx-2">›</span></li>
-                <li>
-                  Dashboard
-                </li>
-                <li><span className="mx-2">›</span></li>
-                <li className="text-gray-700">Student</li>
-              </ol>
-            </nav>
-            <div className="flex items-center">
-              <button className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+          <div className="flex items-center justify-end mb-6">
+            <div className="flex items-center gap-2">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
                 onClick={handleAddStudent}
               >
                 <PlusIcon className="w-4 h-4" />
@@ -262,7 +258,7 @@ export default function StudentManager() {
               </button>
               <button
                 onClick={handleOpenImportModal}
-                className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2">
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2">
                 <FileIcon className="w-4 h-4" />
                 Import from Excel
               </button>

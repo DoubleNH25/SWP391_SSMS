@@ -39,7 +39,6 @@ export default function AddSchoolClass() {
         className: formData.className,
         quantity: formData.quantity,
       };
-      console.log(submitData);
       const success = await FecthCreateSchoolClass(submitData);
       if (success) {
         toast.success('Class created successfully');

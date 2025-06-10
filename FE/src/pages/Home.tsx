@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/ui/PageHeader";
+import { LayoutDashboard } from "lucide-react";
 
 interface DashboardStats {
   totalStudents: number;
@@ -413,10 +415,11 @@ export default function Home() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Welcome back, {userName}</p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        icon={<LayoutDashboard className="w-6 h-6 text-blue-600" />}
+        description={`Welcome back, ${userName}`}
+      />
 
       {role === "Admin" && renderAdminDashboard()}
       {role === "Manager" && renderManagerDashboard()}

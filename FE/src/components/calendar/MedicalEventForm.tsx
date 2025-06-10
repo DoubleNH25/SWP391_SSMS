@@ -45,33 +45,15 @@ const MedicalEventForm = ({
               value={medicalData.name || ""}
               onChange={(e) => onInputChange("name", e.target.value)}
               placeholder="Enter event name"
-              className={`w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                validationErrors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${validationErrors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {validationErrors.name && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
             )}
           </div>
-          <div className="w-full mt-3">
-            <Label className="block text-sm font-semibold text-gray-700 mb-1">
-              Description <span className="text-red-500">*</span>
-            </Label>
-            <textarea
-              value={medicalData.description || ""}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onInputChange("description", e.target.value)}
-              placeholder="Enter description"
-              rows={3}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                validationErrors.description ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {validationErrors.description && (
-              <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
-            )}
-          </div>
         </div>
-        
+
         <div className="w-1/2">
           <ClassSelector
             classOptions={classOptions}
@@ -84,7 +66,24 @@ const MedicalEventForm = ({
           )}
         </div>
       </div>
-      
+
+      <div className="w-full mt-3">
+        <Label className="block text-sm font-semibold text-gray-700 mb-1">
+          Description <span className="text-red-500">*</span>
+        </Label>
+        <textarea
+          value={medicalData.description || ""}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onInputChange("description", e.target.value)}
+          placeholder="Enter description"
+          rows={3}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${validationErrors.description ? 'border-red-500' : 'border-gray-300'
+            }`}
+        />
+        {validationErrors.description && (
+          <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
+        )}
+      </div>
+
       <div className="flex justify-between">
         <div>
           <DatePicker

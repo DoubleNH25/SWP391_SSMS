@@ -1,7 +1,7 @@
 import Input from "@/components/ui/form/InputField";
 import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FecthCreateStudents, FecthParents } from "@/services/UserService";
 import { StudentCreate } from "@/types/Student";
@@ -9,10 +9,13 @@ import DatePicker from "@/components/ui/form/DateField";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FecthClass } from "@/services/SchoolClassService";
+import { SchoolClass } from "@/types/SchoolClass";
 
 export default function AddStudent() {
   const [error, setError] = useState<string | null>(null);
   const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([]);
+  const [classOptions, setClassOptions] = useState<{ value: string; label: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<{
     parentId: string;
@@ -20,22 +23,18 @@ export default function AddStudent() {
     gender: string;
     dateOfBirth: string;
     classId: string;
-    image: File | null; 
+    image: File | null;
   }>({
-      parentId: "",
-      fullName: "",
-      gender: "",
-      dateOfBirth: "",
-      classId: "",
-      image: null
-    });
+    parentId: "",
+    fullName: "",
+    gender: "",
+    dateOfBirth: "",
+    classId: "",
+    image: null
+  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    handleGetParent();
-  }, []);
-
-  const handleGetParent = async () => {
+  const handleGetParent = useCallback(async () => {
     setLoading(true);
     try {
       const parents = await FecthParents();
@@ -52,25 +51,45 @@ export default function AddStudent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGetClass = useCallback(async () => {
+    setLoading(true);
+    const classes = await FecthClass();
+    const options = classes.map((classItem: SchoolClass) => ({
+      value: classItem.id,
+      label: classItem.className
+    }));
+    setClassOptions(options);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    handleGetParent();
+    handleGetClass();
+  }, [handleGetClass, handleGetParent]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, [setFormData]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFormData((prev) => ({ ...prev, image: file }));
   };
 
-  const handleSelectChange = (value: string) => {
+  const handleSelectChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, gender: value }));
-  };
+  }, [setFormData]);
 
-  const handleParentChange = (value: string) => {
+  const handleParentChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, parentId: value }));
-  };
+  }, [setFormData]);
+
+  const handleClassChange = useCallback((value: string) => {
+    setFormData((prev) => ({ ...prev, classId: value }));
+  }, [setFormData]);
 
   const options = [
     { value: "Male", label: "Male" },
@@ -194,13 +213,12 @@ export default function AddStudent() {
                   </div>
                   <div>
                     <Label htmlFor="input-class">Class</Label>
-                    <Input
-                      name="classId"
-                      type="text"
-                      id="input-class"
-                      onChange={handleInputChange}
-                      value={formData.classId}
-                      placeholder="Please enter class" />
+                    <SearchableSelect
+                      options={classOptions}
+                      placeholder="Select a class"
+                      onChange={handleClassChange}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <Label>Upload image</Label>
