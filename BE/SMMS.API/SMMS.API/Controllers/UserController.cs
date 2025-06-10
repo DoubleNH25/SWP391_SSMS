@@ -21,7 +21,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager")]
 		public async Task<IActionResult> GetAllUsers()
 		{
 			var users = await _userService.GetAllUsersAsync();
@@ -29,7 +29,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetUserById(string id)
 		{
 			var user = await _userService.GetUserByIdAsync(id);

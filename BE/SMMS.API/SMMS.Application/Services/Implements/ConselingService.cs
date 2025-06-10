@@ -85,6 +85,7 @@ namespace SMMS.Application.Services.Implements
 					.FirstOrDefault();
 				responses.Add(new ConselingResponse
 				{
+					Id = schedule.Id,
 					StudentId = student?.Id,
 					StudentName = student?.FullName,
 					ParentName = parent?.FullName,
@@ -120,6 +121,7 @@ namespace SMMS.Application.Services.Implements
 					.FirstOrDefault();
 				responses.Add(new ConselingResponse
 				{
+					Id = schedule.Id,
 					StudentId = student?.Id,
 					StudentName = student?.FullName,
 					ParentName = parent?.FullName,

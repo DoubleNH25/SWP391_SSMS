@@ -4,6 +4,7 @@ namespace SMMS.Application.DataObject.ResponseObject
 {
 	public class ConselingResponse
 	{
+		public string? Id { get; set; }
 		public string? StudentId { get; set; }
 		public string? StudentName { get; set; }
 		public string? ParentName { get; set; }
