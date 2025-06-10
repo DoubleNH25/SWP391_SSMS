@@ -1,0 +1,188 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+*.html text eol=lf
+*.htm text eol=lf
+*.xml text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+
+# Configuration files
+*.config.js text eol=lf
+*.config.ts text eol=lf
+*.config.json text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.editorconfig text eol=lf
+.eslintrc* text eol=lf
+.prettierrc* text eol=lf
+tsconfig*.json text eol=lf
+package.json text eol=lf
+package-lock.json text eol=lf
+yarn.lock text eol=lf
+pnpm-lock.yaml text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Documentation
+*.md text eol=lf
+*.rst text eol=lf
+*.adoc text eol=lf
+*.tex text eol=lf
+LICENSE text eol=lf
+CHANGELOG* text eol=lf
+README* text eol=lf
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.webp binary
+*.avif binary
+*.bmp binary
+*.tiff binary
+*.tif binary
+
+# Fonts
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+
+# Audio
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.flac binary
+*.aac binary
+
+# Video
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.wmv binary
+*.flv binary
+*.webm binary
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.7z binary
+*.rar binary
+
+# Documents
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
+# Executables
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Database
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Other binary files
+*.bin binary
+*.dat binary
+
+# Linguist overrides for better language detection
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.css linguist-language=CSS
+*.scss linguist-language=SCSS
+*.sass linguist-language=Sass
+*.less linguist-language=Less
+*.html linguist-language=HTML
+*.htm linguist-language=HTML
+
+# Mark vendor files
+node_modules/** linguist-vendored
+dist/** linguist-generated
+build/** linguist-generated
+coverage/** linguist-generated
+*.min.js linguist-generated
+*.min.css linguist-generated
+
+# Diff settings
+*.json diff=json
+*.md diff=markdown
+*.css diff=css
+*.html diff=html
+*.js diff=javascript
+*.jsx diff=javascript
+*.ts diff=typescript
+*.tsx diff=typescript
+
+# Merge settings
+*.json merge=ours
+package-lock.json merge=ours
+yarn.lock merge=ours
+pnpm-lock.yaml merge=ours
+
+# Export ignore (files not included in git archive)
+.gitignore export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
+.vscode/ export-ignore
+.idea/ export-ignore
+*.test.js export-ignore
+*.test.ts export-ignore
+*.test.jsx export-ignore
+*.test.tsx export-ignore
+*.spec.js export-ignore
+*.spec.ts export-ignore
+*.spec.jsx export-ignore
+*.spec.tsx export-ignore
+__tests__/ export-ignore
+test/ export-ignore
+tests/ export-ignore
+coverage/ export-ignore
+.nyc_output/ export-ignore
+.eslintrc* export-ignore
+.prettierrc* export-ignore
+jest.config.* export-ignore
+vitest.config.* export-ignore
+playwright.config.* export-ignore
