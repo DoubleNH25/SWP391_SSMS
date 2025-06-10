@@ -25,7 +25,6 @@ export default function EditProfile() {
         setLoading(true);
         try {
             const user = await FecthUsersProfile();
-            console.log(user);
             if (user) {
                 setFormData({
                     fullName: user.fullName,

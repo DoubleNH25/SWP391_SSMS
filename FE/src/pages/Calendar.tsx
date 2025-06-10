@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/ui/modal/index";
 import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
@@ -16,12 +17,15 @@ import VaccinationCampaignForm from "@/components/calendar/VaccinationCampaignFo
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import ViewEventsModal from "@/components/calendar/ViewEventsModal";
 import DailySchedule from "@/components/calendar/DailySchedule";
+import PageHeader from "@/components/ui/PageHeader";
+import { CalendarDays } from "lucide-react";
 
 type FormData =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
   | { type: "vaccination"; data: VaccinationCampaignsUpdateCreateViewModel };
 
 const Calendar: React.FC = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -199,6 +203,15 @@ const Calendar: React.FC = () => {
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 
+      if (event.extendedProps.calendar === "Approved") {
+        if (event.extendedProps.eventType === "medical") {
+          navigate(`/medical-health-checkup-record/${event.start}`);
+        } else {
+          navigate(`/medical-vaccination-record/${event.start}`);
+        }
+        return;
+      }
+
       if (eventDate < currentDate) {
         toast.error("Cannot edit past events");
         return;
@@ -303,7 +316,7 @@ const Calendar: React.FC = () => {
         // No need to setLoading(false) here since we're not using global loading state
       }
     },
-    [openModal]
+    [navigate, openModal]
   );
 
   const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
@@ -663,7 +676,7 @@ const Calendar: React.FC = () => {
         classOptions={classOptions}
       />
     );
-  }, [viewEventsDate, classOptions,events, loading, handleEventClick, closeModal]);
+  }, [viewEventsDate, classOptions, events, loading, handleEventClick, closeModal]);
 
   const DailyScheduleComponent = useMemo(() => {
     return (
@@ -741,6 +754,11 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="p-4">
+      <PageHeader
+        title="Lịch sự kiện y tế"
+        icon={<CalendarDays className="w-6 h-6 text-purple-600" />}
+        description="Quản lý và theo dõi các sự kiện y tế, tiêm chủng trong trường"
+      />
       <ToastContainer position="top-right" autoClose={3000} className="z-9999" />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -767,14 +785,6 @@ const Calendar: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="mb-4 flex items-center justify-between">
-            <nav className="text-base text-gray-500">
-              <ol className="flex items-center">
-                <li><span className="mx-2">›</span></li>
-                <li className="text-gray-700">Calendar Event</li>
-              </ol>
-            </nav>
-          </div>
 
           <div className="flex flex-col lg:flex-row gap-2">
             <CalendarGrid

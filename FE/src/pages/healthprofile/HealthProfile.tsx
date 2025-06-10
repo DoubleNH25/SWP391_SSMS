@@ -151,278 +151,269 @@ export default function HealthProfiles() {
     }, []);
 
     return (
-        <div className="p-6">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
             <ToastContainer position="top-right" autoClose={3000} />
             {loading ? (
-                <div className="text-center text-gray-500">Loading...</div>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
             ) : error ? (
-                <div role="alert" className="text-center text-red-500 p-4 bg-red-100 rounded">
-                    <p>{error}</p>
-                    {error.includes('authenticated') ? (
-                        <button
-                            onClick={() => window.location.href = '/login'}
-                            aria-label="Log in to view health profiles"
-                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Log In
-                        </button>
-                    ) : (
-                        <button
-                            onClick={fetchData}
-                            aria-label="Retry fetching health profiles"
-                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Retry
-                        </button>
-                    )}
+                <div role="alert" className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-sm border border-red-100">
+                    <div className="text-center">
+                        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                        <p className="text-lg text-gray-800 mb-4">{error}</p>
+                        {error.includes('authenticated') ? (
+                            <button
+                                onClick={() => window.location.href = '/login'}
+                                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Đăng nhập
+                            </button>
+                        ) : (
+                            <button
+                                onClick={fetchData}
+                                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Thử lại
+                            </button>
+                        )}
+                    </div>
                 </div>
             ) : healthProfiles.length === 0 ? (
-                <div className="flex flex-col items-center space-y-5">
-                    <div className="text-gray-600">No health records available</div>
-                    <div
-                        role="button"
-                        className="w-max text-gray-100 bg-blue-400 hover:bg-blue-500 font-bold py-2 px-4 rounded cursor-pointer"
+                <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                    <div className="text-xl text-gray-600 mb-6">Không có hồ sơ sức khỏe nào</div>
+                    <button
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        Add student health records
-                    </div>
+                        Thêm hồ sơ sức khỏe học sinh
+                    </button>
                 </div>
             ) : (
-                <div>
-                    <div className="flex items-center justify-center mb-4">
-                        <h1 className="text-4xl font-bold text-gray-800">Health Profile</h1>
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                                <Heart className="w-8 h-8 text-blue-600" />
+                            </div>
+                            <h1 className="text-3xl font-bold text-gray-800">Hồ sơ sức khỏe</h1>
+                        </div>
                     </div>
-                    {healthProfiles.map((student, index) => {
-                        const healthIssues = getHealthStatus(student.healthProfile ?? null);
-                        const bmiStatus = getBMIStatus(student.healthProfile ? student.healthProfile.bmi ?? null : null);
-                        return (
-                            <div key={index} className="mt-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        <div className="">
-                                            <img src={student.image ?? undefined} className="w-20 h-20 border-2 rounded-full" alt="..." />
-                                        </div>
-                                        <div className="ml-4">
-                                            <div className="text-lg font-semibold text-gray-800">{student.fullName}</div>
-                                            <div className="flex flex-between items-center">
-                                                <div className="flex items-center mt-3 r gap-5">
-                                                    <div className="text-sm text-gray-500">
-                                                        {new Date(student.dateOfBirth).toLocaleDateString('vi-VN')}
+                    <div className="grid gap-6">
+                        {healthProfiles.map((student, index) => {
+                            const healthIssues = getHealthStatus(student.healthProfile ?? null);
+                            const bmiStatus = getBMIStatus(student.healthProfile ? student.healthProfile.bmi ?? null : null);
+                            return (
+                                <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-start gap-4">
+                                                <div className="relative">
+                                                    <img 
+                                                        src={student.image ?? undefined} 
+                                                        className="w-20 h-20 rounded-xl object-cover border border-gray-100" 
+                                                        alt={student.fullName} 
+                                                    />
+                                                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm border border-gray-100">
+                                                        {healthIssues.length === 0 ? (
+                                                            <CheckCircle className="w-5 h-5 text-emerald-500" />
+                                                        ) : (
+                                                            <AlertCircle className="w-5 h-5 text-amber-500" />
+                                                        )}
                                                     </div>
-                                                    <span>{student.gender}</span>
-                                                    <span className="bg-blue-500 px-3 py-1 rounded-full text-sm font-medium">
-                                                        Class {student.studentClass.className}
-                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-semibold text-gray-800">{student.fullName}</h2>
+                                                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                                                        <span>{new Date(student.dateOfBirth).toLocaleDateString('vi-VN')}</span>
+                                                        <span>•</span>
+                                                        <span>{student.gender}</span>
+                                                        <span>•</span>
+                                                        <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+                                                            Lớp {student.studentClass.className}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        {healthIssues.length === 0 ? (
-                                            <div className="flex items-center flex-nowrap space-x-2 text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                                                <CheckCircle className="w-4 h-4" />
-                                                <span className="text-sm font-medium">Khỏe mạnh</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center space-x-2 flex-nowrap text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-                                                <AlertCircle className="w-4 h-4" />
-                                                <span className="text-sm font-medium">Cần theo dõi</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 rounded-lg shadow-xl border-2 p-2 mt-5 relative">
-                                    <div
-                                        onClick={() => handleOpenUpdateModal(student.id)}
-                                        role="button"
-                                        className="absolute flex top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 focus:outline-none"
-                                    >
-                                        <PenBox className="mr-2" />
-                                        Edit
-                                    </div>
-                                    <div className="col-span-2 bg-white p-4 border-b-2">
-                                        Full Name: {student.fullName}
-                                    </div>
-                                    <div className="bg-white py-4 border-b-2">
-                                        Date Of Birth: {new Date(student.dateOfBirth).toLocaleDateString('vi-VN')}
-                                    </div>
-                                    <div className="bg-white p-4 border-b-2">
-                                        Gender: {student.gender}
-                                    </div>
-                                    <div className="bg-white py-4 border-b-2">
-                                        Class Name: {student.studentClass.className}
-                                    </div>
-                                    <div className="bg-white py-4 border-b-2">
-                                        Class Room: {student.studentClass.classRoom}
-                                    </div>
-                                    <div className="bg-white p-4 border-b-2">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <Eye className="w-5 h-5 text-blue-500 mr-2" />
-                                            <span className="text-sm font-medium text-gray-700">Vision</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">{student.healthProfile?.vision || 'N/A'}</p>
-                                    </div>
-                                    <div className="bg-white py-4 border-b-2">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <Ear className="w-5 h-5 text-purple-500 mr-2" />
-                                            <span className="text-sm font-medium text-gray-700">Hearing</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.hearing || 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div className="bg-white py-4 border-b-2">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                                            </svg>
-                                            <span className="text-sm font-medium text-gray-700">Dental</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.dental || 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div className="bg-white p-4">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <Heart className="w-5 h-5 text-red-500 mr-2" />
-                                            <span className="text-sm font-medium text-gray-700">BMI</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.bmi ? student.healthProfile.bmi.toFixed(2) : 'N/A'}
-                                        </p>
-                                        <p className={`text-sm font-medium ${bmiStatus.color}`}>{bmiStatus.status}</p>
-                                    </div>
-                                    <div className="bg-white py-4">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <Shield className="w-5 h-5 text-indigo-500 mr-2" />
-                                            <span className="text-sm font-medium text-gray-700">Vaccination</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.vaccinationHistory || 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div className="bg-white py-4">
-                                        <div className="flex items-center space-x-2 mb-2">
-                                            <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
-                                            <span className="text-sm font-medium text-gray-700">Abnormal Note</span>
-                                        </div>
-                                        <p className="text-lg font-medium text-gray-900">
-                                            {student.healthProfile?.abnormalNote || 'N/A'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <hr className="mt-10 border-t border-gray-300" />
-                                <Modal
-                                    isOpen={isUpdateModalOpen}
-                                    onClose={handleCloseUpdateModal}
-                                    showCloseButton={true}
-                                    className="w-2/5 mx-auto"
-                                >
-                                    {errorModal && (
-                                        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-                                            {errorModal}
-                                        </div>
-                                    )}
-                                    <h2 className="text-2xl font-bold mb-4 ml-5">Update Health Profile</h2>
-                                    <form onSubmit={handleSubmit} className="space-y-4 m-5">
-                                        <div className="flex gap-5">
-                                            <div>
-                                                <Label htmlFor="vision" className="block text-sm font-medium text-gray-700">
-                                                    Vision
-                                                </Label>
-                                                <Input
-                                                    type="text"
-                                                    name="vision"
-                                                    value={formData.vision}
-                                                    onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="hearing" className="block text-sm font-medium text-gray-700">
-                                                    Hearing
-                                                </Label>
-                                                <Input
-                                                    type="text"
-                                                    name="hearing"
-                                                    value={formData.hearing}
-                                                    onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="dental" className="block text-sm font-medium text-gray-700">
-                                                    Dental
-                                                </Label>
-                                                <Input
-                                                    type="text"
-                                                    name="dental"
-                                                    value={formData.dental}
-                                                    onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="bmi" className="block text-sm font-medium text-gray-700">
-                                                    BMI
-                                                </Label>
-                                                <Input
-                                                    min="0"
-                                                    max="100"
-                                                    type="number"
-                                                    step={0.1}
-                                                    name="bmi"
-                                                    value={formData.bmi ?? ''}
-                                                    onChange={handleInputChange}
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="vaccinationHistory" className="block text-sm font-medium text-gray-700">
-                                                Vaccination History
-                                            </Label>
-                                            <textarea
-                                                name="vaccinationHistory"
-                                                rows={3}
-                                                value={formData.vaccinationHistory}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block p-2 border-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="abnormalNote" className="block text-sm font-medium text-gray-700">
-                                                Abnormal Note
-                                            </Label>
-                                            <textarea
-                                                name="abnormalNote"
-                                                rows={4}
-                                                value={formData.abnormalNote}
-                                                onChange={handleInputChange}
-                                                className="mt-1 p-2 border-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                                            />
-                                        </div>
-                                        <div className="flex justify-end space-x-2">
                                             <button
-                                                type="button"
-                                                onClick={handleCloseUpdateModal}
-                                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                                onClick={() => handleOpenUpdateModal(student.id)}
+                                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                                             >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                            >
-                                                {submitting ? 'Saving...' : 'Save'}
+                                                <PenBox className="w-4 h-4" />
+                                                Chỉnh sửa
                                             </button>
                                         </div>
-                                    </form>
-                                </Modal>
-                            </div>
-                        );
-                    })}
+
+                                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Eye className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">Thị lực</span>
+                                                </div>
+                                                <p className="text-gray-600">{student.healthProfile?.vision || 'Chưa cập nhật'}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Ear className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">Thính lực</span>
+                                                </div>
+                                                <p className="text-gray-600">{student.healthProfile?.hearing || 'Chưa cập nhật'}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Shield className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">Răng miệng</span>
+                                                </div>
+                                                <p className="text-gray-600">{student.healthProfile?.dental || 'Chưa cập nhật'}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Heart className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">BMI</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-gray-600">{student.healthProfile?.bmi || 'Chưa cập nhật'}</p>
+                                                    {student.healthProfile?.bmi && (
+                                                        <span className={`text-xs font-medium ${bmiStatus.color}`}>
+                                                            ({bmiStatus.status})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <AlertCircle className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">Ghi chú bất thường</span>
+                                                </div>
+                                                <p className="text-gray-600">{student.healthProfile?.abnormalNote || 'Không có'}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Shield className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-sm font-medium text-gray-700">Lịch sử tiêm chủng</span>
+                                                </div>
+                                                <p className="text-gray-600">{student.healthProfile?.vaccinationHistory || 'Chưa cập nhật'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={isUpdateModalOpen}
+                onClose={handleCloseUpdateModal}
+                showCloseButton={true}
+                isFullscreen={false}
+                className="max-w-2xl"
+            >
+                <form onSubmit={handleSubmit} className="p-6">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">Cập nhật hồ sơ sức khỏe</h2>
+                    {errorModal && (
+                        <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
+                            {errorModal}
+                        </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                Thị lực
+                            </Label>
+                            <Input
+                                type="text"
+                                name="vision"
+                                value={formData.vision}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: 20/20"
+                            />
+                        </div>
+                        <div>
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                Thính lực
+                            </Label>
+                            <Input
+                                type="text"
+                                name="hearing"
+                                value={formData.hearing}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: Normal"
+                            />
+                        </div>
+                        <div>
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                Răng miệng
+                            </Label>
+                            <Input
+                                type="text"
+                                name="dental"
+                                value={formData.dental}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: No cavities"
+                            />
+                        </div>
+                        <div>
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                BMI
+                            </Label>
+                            <Input
+                                type="number"
+                                name="bmi"
+                                value={formData.bmi}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: 22.5"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                Ghi chú bất thường
+                            </Label>
+                            <Input
+                                type="text"
+                                name="abnormalNote"
+                                value={formData.abnormalNote}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: None"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <Label className="block text-sm font-medium text-gray-700 mb-2">
+                                Lịch sử tiêm chủng
+                            </Label>
+                            <Input
+                                type="text"
+                                name="vaccinationHistory"
+                                value={formData.vaccinationHistory}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ví dụ: Up to date"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-8">
+                        <button
+                            type="button"
+                            onClick={handleCloseUpdateModal}
+                            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                            {submitting ? 'Đang cập nhật...' : 'Cập nhật'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }

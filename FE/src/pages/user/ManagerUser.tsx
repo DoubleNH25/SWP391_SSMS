@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/User";
-import { PencilIcon, TrashBinIcon } from "../../components/icons/index"
+import { PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
-import { PlusIcon } from "lucide-react";
-import { FecthUsers, FecthDeleteUsers } from "@/services/UserService";
+import { PlusIcon, UploadIcon, UserCog } from "lucide-react";
+import { FecthUsers, FecthDeleteUsers, FecthImportUserByExcel } from "@/services/UserService";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FileUploadModal } from '@/components/ui/FileUploadModal';
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function UserManager() {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,6 +20,7 @@ export default function UserManager() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const totalItems = users.length;
@@ -94,8 +97,31 @@ export default function UserManager() {
     }
   };
 
+  const handleUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    try {
+      const file = files[0]; // Take the first file
+      const success = await FecthImportUserByExcel(file);
+
+      if (success) {
+        toast.success('Users imported successfully');
+        fetchData(); // Refresh the user list
+      } else {
+        toast.error('Failed to import users');
+      }
+    } catch (error) {
+      toast.error(`Failed to import users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   return (
     <div className="p-6">
+      <PageHeader
+        title="Quản lý người dùng"
+        icon={<UserCog className="w-6 h-6 text-blue-600" />}
+        description="Quản lý thông tin người dùng trong hệ thống"
+      />
       <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -149,19 +175,22 @@ export default function UserManager() {
               </div>
             </div>
           </Modal>
-          <div className="flex items-center justify-between">
-            <nav className="text-base text-gray-500 mb-4 mt-4">
-              <ol className="list-reset flex">
-                <li><span className="mx-2">›</span></li>
-                <li>
-                  Dashboard
-                </li>
-                <li><span className="mx-2">›</span></li>
-                <li className="text-gray-700">User</li>
-              </ol>
-            </nav>
-            <div className="flex items-center">
-              <button className="mt-4 ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+          <FileUploadModal
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
+            onUpload={handleUpload}
+          />
+          <div className="flex items-center justify-end mb-6">
+            <div className="flex items-center gap-2">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                <UploadIcon className="w-4 h-4" />
+                Import Users
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
                 onClick={handleAddUser}
               >
                 <PlusIcon className="w-4 h-4" />

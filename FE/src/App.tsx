@@ -4,27 +4,31 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import AppLayout from "./components/layout/AppLayout";
-import Login from "./pages/auth/Login";
-import ConfirmOTP from "./pages/ConfirmOTP";
-import Blog from "./pages/Blog";
-import Calendar from "./pages/Calendar";
-import UserManager from "./pages/user/ManagerUser";
-import AddUser from "./pages/user/AddUser";
-import UpdateUser from "./pages/user/UpdateUser";
-import StudentManager from "./pages/student/ManagerStudent";
-import AddStudent from "./pages/student/AddStudent";
-import UpdateStudents from "./pages/student/UpdateStudent";
-import HealthProfiles from "./pages/healthprofile/HealthProfile";
-import PendingEventManager from "./pages/medicalevents/PendingEvents";
-import ApprovedEventManager from "./pages/medicalevents/ApprovedEvents";
-import { PrivateRoute } from "./pages/auth/PrivateRoute";
-import Unauthorized from "./pages/auth/Unauthorized";
-import CLassSchoolManager from "./pages/class/ManagerClass";
-import AddSchoolClass from "./pages/class/AddSchoolClass";
-import UpdateSchoolClass from "./pages/class/UpdateSchoolClass";
-import EditProfile from "./pages/user/EditProfile";
-import Home from "./pages/Home";
+import AppLayout from "@/components/layout/AppLayout";
+import Login from "@/pages/auth/Login";
+import ConfirmOTP from "@/pages/ConfirmOTP";
+import Blog from "@/pages/Blog";
+import Calendar from "@/pages/Calendar";
+import UserManager from "@/pages/user/ManagerUser";
+import AddUser from "@/pages/user/AddUser";
+import UpdateUser from "@/pages/user/UpdateUser";
+import StudentManager from "@/pages/student/ManagerStudent";
+import AddStudent from "@/pages/student/AddStudent";
+import UpdateStudents from "@/pages/student/UpdateStudent";
+import HealthProfiles from "@/pages/healthprofile/HealthProfile";
+import PendingEventManager from "@/pages/medicalevents/PendingEvents";
+import ApprovedEventManager from "@/pages/medicalevents/ApprovedEvents";
+import { PrivateRoute } from "@/pages/auth/PrivateRoute";
+import Unauthorized from "@/pages/auth/Unauthorized";
+import CLassSchoolManager from "@/pages/class/ManagerClass";
+import AddSchoolClass from "@/pages/class/AddSchoolClass";
+import UpdateSchoolClass from "@/pages/class/UpdateSchoolClass";
+import EditProfile from "@/pages/user/EditProfile";
+import Home from "@/pages/Home";
+import MedicalVaccinationRecord from "@/pages/medicalevents/MedicalVaccinationRecord";
+import MedicalHealthCheckupRecords from "@/pages/medicalevents/MedicalHealthCheckupRecords";
+import ManagerRecord from "@/pages/healthprofile/ManagerRecord";
+import ManagerConselingSchedules from "@/pages/conselingshedules/ManagerConselingSchedules";
 
 function App() {
   return (
@@ -35,7 +39,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/blog" element={<Blog />} />
-          
+
           <Route path="/profile" element={
             <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
               <EditProfile />
@@ -157,9 +161,43 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/parent/health-checkup"
+              element={
+                <PrivateRoute allowedRoles={["Parent"]}>
+                  <ManagerRecord />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/medical-vaccination-record/:eventDate"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <MedicalVaccinationRecord />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical-health-checkup-record/:eventDate"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <MedicalHealthCheckupRecords />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/conseling-schedules"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <ManagerConselingSchedules />
+                </PrivateRoute>
+              }
+            />
           </Route>
         </Routes>
-      </Router>
+      </Router >
     </>
   );
 }

@@ -204,7 +204,7 @@ export default function UpdateUser() {
                     onClick={handleCancel}
                     type="button"
                     disabled={loading}
-                    className="mt-4 w-[10%] ml-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
+                    className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                   >
                     Cancel
                   </button>
