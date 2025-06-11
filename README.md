@@ -151,7 +151,7 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | GET | `/api/nurse/health-checkup-records/by-date` | Lấy hồ sơ kiểm tra theo ngày | Admin, Manager, Nurse |
 | PUT | `/api/nurse/health-checkup-records/{id}` | Cập nhật kết quả kiểm tra | Nurse |
 | GET | `/api/nurse/get-all-conseling-schedules` | Lấy lịch tư vấn | Nurse |
-| PUT | `/api/nurse/accept-conseling-schedules` | Chấp nhận tư vấn | Nurse |
+| PUT | `/api/nurse/conseling-schedules-status` | Chấp nhận hoặc từ chối tư vấn | Nurse |
 | GET | `/api/nurse/vaccination-records` | Lấy tất cả hồ sơ tiêm chủng | Admin, Manager, Nurse |
 | PUT | `/api/nurse/vaccination-records/{id}` | Cập nhật hồ sơ tiêm chủng | Nurse |
 | GET | `/api/nurse/vaccination-records/by-date` | Lấy hồ sơ tiêm chủng theo ngày | Admin, Manager, Nurse |

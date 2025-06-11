@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.Services.Interfaces;
+using SMMS.Domain.Enum;
 using System.Security.Claims;
 
 namespace SMMS.API.Controllers
@@ -133,15 +134,23 @@ namespace SMMS.API.Controllers
 			return Ok(schedules);
 		}
 
-		[HttpPut("accept-conseling-schedules")]
-		public async Task<IActionResult> AcceptConselingSchedule([FromBody] AcceptConselingScheduleRequest request)
+		[HttpPut("conseling-schedules-status")]
+		public async Task<IActionResult> UpdateConselingStatus([FromBody] AcceptConselingScheduleRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 			if (string.IsNullOrEmpty(nurseId))
 			{
 				return Unauthorized("Nurse ID not found in claims.");
 			}
-			var result = await _conselingService.AcceptConselingScheduleAsync(request.ConselingScheduleId, request.ScheduledTime, nurseId);
+			if (request.ConselingScheduleId == null || request.ScheduledTime == default)
+			{
+				return BadRequest("Invalid request data.");
+			}
+			if (request.Status != ApprovalStatus.Approved && request.Status != ApprovalStatus.Rejected)
+			{
+				return BadRequest("Invalid status. Only Accepted or Rejected are allowed.");
+			}
+			var result = await _conselingService.UpdateScheduleStatusAsync(request.ConselingScheduleId, request.Status, request.ScheduledTime, nurseId);
 			if (!result) return BadRequest("Failed to accept counseling schedule. Schedule not found or nurse ID mismatch.");
 			return Ok(true);
 		}

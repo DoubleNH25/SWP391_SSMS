@@ -2,6 +2,7 @@
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
+using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
 
 namespace SMMS.Application.Services.Implements
@@ -42,7 +43,7 @@ namespace SMMS.Application.Services.Implements
 				HealthCheckupId = healthCheckupId,
 				MeetingDate = requestedDate,
 				Note = note,
-				Status = false,
+				Status = ApprovalStatus.Pending,
 				CreatedBy = parentId,
 				CreatedTime = DateTimeOffset.UtcNow
 			};
@@ -51,15 +52,15 @@ namespace SMMS.Application.Services.Implements
 			return true;
 		}
 
-		public async Task<bool> AcceptConselingScheduleAsync(string conselingScheduleId, DateTime scheduledTime, string nurseId)
+		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, DateTime scheduledTime, string nurseId)
 		{
 			var schedule = _repositoryManager.ConselingRepository
 				.FindByCondition(cs => cs.Id == conselingScheduleId && cs.MedicalStaffId == nurseId, true)
 				.FirstOrDefault();
 			if (schedule == null) return false;
 
+			schedule.Status = status;
 			schedule.MeetingDate = scheduledTime;
-			schedule.Status = true;
 			schedule.LastUpdatedBy = nurseId;
 			schedule.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConselingRepository.Update(schedule);
