@@ -1,10 +1,11 @@
+import { Student } from "./Student";
 
 export interface SchoolClass {
   id: string;
   className: string;
   classRoom: string;
   quantity: number;
-  strudent: []
+  students: Student[]
 }
 
 export interface SchoolClassStudent {

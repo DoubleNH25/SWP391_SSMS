@@ -11,6 +11,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthClass } from "@/services/SchoolClassService";
 import { SchoolClass } from "@/types/SchoolClass";
+import { customFormatDateOnly } from "@/types/CalendarEvent";
 
 export default function AddStudent() {
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +97,13 @@ export default function AddStudent() {
     { value: "Female", label: "Female" },
   ];
 
+  function prepareStudentData(data: StudentCreate): StudentCreate {
+    return {
+      ...data,
+      dateOfBirth: customFormatDateOnly(data.dateOfBirth)
+    };
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName
@@ -114,10 +122,13 @@ export default function AddStudent() {
         classId: formData.classId,
         image: formData.image,
       };
-      const success = await FecthCreateStudents(formData.parentId, submitData);
+      const payload = prepareStudentData(submitData);
+      const success = await FecthCreateStudents(formData.parentId, payload);
       if (success) {
-        toast.success('Student created successfully');
         navigate("/student");
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Creation failed');
       }

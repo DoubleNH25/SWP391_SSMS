@@ -3,14 +3,35 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/ui/modal/index";
 import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
-import { MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/types/MedicalEvent";
-import { VaccinationCampaignsUpdateCreateViewModel, VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
-import { CalendarEvent, customFormatDate, customFormatDateOnly, toLocalISOString } from "@/types/CalendarEvent";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { FecthCreateMedicalEvent, FecthDeleteMedicalEvents, FecthMedicalEvent, FecthUpdateMedicalEvent } from '@/services/MedicalEventService';
-import { FecthCreateVaccinationCampaign, FecthDeleteVaccinationCampaign, FecthUpdateVaccinationCampaign, FecthVaccinationCampaign } from '@/services/VaccinationCampaignService';
-import { Option } from '@/components/ui/form/Select';
+import {
+  MedicalEventUpdateCreateViewModel,
+  MedicalEventViewModel,
+} from "@/types/MedicalEvent";
+import {
+  VaccinationCampaignsUpdateCreateViewModel,
+  VaccinationCampaignsViewModel,
+} from "@/types/VaccinationCampaigns";
+import {
+  CalendarEvent,
+  customFormatDate,
+  customFormatDateOnly,
+  customFormatDateForBackend,
+} from "@/types/CalendarEvent";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  FecthCreateMedicalEvent,
+  FecthDeleteMedicalEvents,
+  FecthMedicalEvent,
+  FecthUpdateMedicalEvent,
+} from "@/services/MedicalEventService";
+import {
+  FecthCreateVaccinationCampaign,
+  FecthDeleteVaccinationCampaign,
+  FecthUpdateVaccinationCampaign,
+  FecthVaccinationCampaign,
+} from "@/services/VaccinationCampaignService";
+import { Option } from "@/components/ui/form/Select";
 import { FecthClass } from "@/services/SchoolClassService";
 import MedicalEventForm from "@/components/calendar/MedicalEventForm";
 import VaccinationCampaignForm from "@/components/calendar/VaccinationCampaignForm";
@@ -27,10 +48,14 @@ type FormData =
 const Calendar: React.FC = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(customFormatDateOnly(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    customFormatDateOnly(new Date())
+  );
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     type: "medical",
@@ -38,10 +63,14 @@ const Calendar: React.FC = () => {
   });
   const [viewEventsDate, setViewEventsDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [classOptions, setClassOptions] = useState<{ value: string; label: string }[]>([]);
+  const [classOptions, setClassOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -51,45 +80,52 @@ const Calendar: React.FC = () => {
         FecthVaccinationCampaign(),
       ]);
 
-      const medicalEvents: CalendarEvent[] = (Array.isArray(medicalEventsRaw) ? medicalEventsRaw : []).map(
-        (event: MedicalEventViewModel) => ({
-          id: event.id ?? "",
-          title: event.name ?? "",
-          start: customFormatDate(event.scheduledDate || new Date()),
-          allDay: false,
-          extendedProps: {
-            calendar: event.status,
-            description: event.description || "",
-            eventType: "medical",
-            classIds: event.classIds?.length ? event.classIds as [string] : [""] as [string]
-          },
-        })
-      );
+      const medicalEvents: CalendarEvent[] = (
+        Array.isArray(medicalEventsRaw) ? medicalEventsRaw : []
+      ).map((event: MedicalEventViewModel) => ({
+        id: event.id ?? "",
+        title: event.name ?? "",
+        start: customFormatDate(event.scheduledDate || new Date()),
+        allDay: false,
+        extendedProps: {
+          calendar: event.status,
+          description: event.description || "",
+          eventType: "medical",
+          classIds: event.classIds?.length
+            ? (event.classIds as [string])
+            : ([""] as [string]),
+        },
+      }));
 
-      const vaccinationEvents: CalendarEvent[] = (Array.isArray(vaccinationCampaignsRaw) ? vaccinationCampaignsRaw : []).map(
-        (event: VaccinationCampaignsViewModel) => ({
-          id: event.id ?? "",
-          title: event.name ?? "",
-          start: customFormatDate(event.startDate || new Date()),
-          allDay: false,
-          extendedProps: {
-            calendar: event.status,
-            vaccineType: event.vaccineType || "",
-            exp: customFormatDate(event.exp || new Date()),
-            mfg: customFormatDate(event.mfg || new Date()),
-            vaccineName: event.vaccineName || "",
-            eventType: "vaccination",
-            classIds: event.classIds?.length ? event.classIds as [string] : [""] as [string]
-          },
-        })
-      );
+      const vaccinationEvents: CalendarEvent[] = (
+        Array.isArray(vaccinationCampaignsRaw) ? vaccinationCampaignsRaw : []
+      ).map((event: VaccinationCampaignsViewModel) => ({
+        id: event.id ?? "",
+        title: event.name ?? "",
+        start: customFormatDate(event.startDate || new Date()),
+        allDay: false,
+        extendedProps: {
+          calendar: event.status,
+          vaccineType: event.vaccineType || "",
+          exp: customFormatDate(event.exp || new Date()),
+          mfg: customFormatDate(event.mfg || new Date()),
+          vaccineName: event.vaccineName || "",
+          eventType: "vaccination",
+          classIds: event.classIds?.length
+            ? (event.classIds as [string])
+            : ([""] as [string]),
+        },
+      }));
       setEvents([...medicalEvents, ...vaccinationEvents]);
       setError(null);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      setError(errorMessage.includes('authenticated')
-        ? 'Please log in to view events.'
-        : 'Failed to fetch events. Please try again.');
+      const errorMessage =
+        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
+      setError(
+        errorMessage.includes("authenticated")
+          ? "Vui lòng đăng nhập để xem sự kiện."
+          : "Không thể tải sự kiện. Vui lòng thử lại."
+      );
       setEvents([]);
     } finally {
       setLoading(false);
@@ -104,24 +140,24 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const dropdownContainer = target.closest('[data-dropdown-container]');
+      const dropdownContainer = target.closest("[data-dropdown-container]");
       if (!dropdownContainer && isDropdownOpen) {
         setIsDropdownOpen(false);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isDropdownOpen) {
+      if (event.key === "Escape" && isDropdownOpen) {
         setIsDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isDropdownOpen]);
 
@@ -129,22 +165,22 @@ const Calendar: React.FC = () => {
     setLoading(true);
     try {
       const classRooms = await FecthClass();
-      const options = classRooms.map(classRoom => ({
+      const options = classRooms.map((classRoom) => ({
         value: classRoom.id,
-        label: classRoom.className
+        label: classRoom.className,
       }));
       setClassOptions(options);
-
-
       setError(null);
     } catch (err) {
-      setError((err as Error).message.includes('authenticated')
-        ? 'Please log in to fetch class data.'
-        : 'Failed to fetch class data. Please try again.');
+      setError(
+        (err as Error).message.includes("authenticated")
+          ? "Vui lòng đăng nhập để xem dữ liệu lớp học."
+          : "Không thể tải dữ liệu lớp học. Vui lòng thử lại."
+      );
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const openModal = useCallback(() => setIsOpen(true), []);
   const closeModal = useCallback(() => {
@@ -159,43 +195,40 @@ const Calendar: React.FC = () => {
     });
   }, []);
 
-  const handleDateSelect = useCallback(
-    (date: string) => {
-      const selected = new Date(date);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
+  const handleDateSelect = useCallback((date: string) => {
+    const selected = new Date(date);
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
 
-      if (selected < currentDate) {
-        toast.error("Cannot create events in the past!");
-        return;
+    if (selected < currentDate) {
+      toast.error("Không thể tạo sự kiện trong quá khứ!");
+      return;
+    }
+
+    setSelectedDate(customFormatDateOnly(date));
+    setSelectedClasses([]);
+    setFormData((prev) => {
+      selected.setHours(9, 0);
+      if (prev.type === "medical") {
+        return {
+          type: "medical",
+          data: {
+            ...prev.data,
+            scheduledDate: customFormatDateForBackend(selected),
+            classIds: [""],
+          } as MedicalEventUpdateCreateViewModel,
+        };
+      } else {
+        return {
+          type: "vaccination",
+          data: {
+            ...prev.data,
+            startDate: customFormatDateForBackend(selected),
+          } as VaccinationCampaignsUpdateCreateViewModel,
+        };
       }
-
-      setSelectedDate(customFormatDateOnly(date));
-      setSelectedClasses([]);
-      setFormData((prev) => {
-        selected.setHours(9, 0);
-        if (prev.type === "medical") {
-          return {
-            type: "medical",
-            data: {
-              ...prev.data,
-              scheduledDate: selected.toISOString(),
-              classIds: [""]
-            } as MedicalEventUpdateCreateViewModel,
-          };
-        } else {
-          return {
-            type: "vaccination",
-            data: {
-              ...prev.data,
-              startDate: selected.toISOString(),
-            } as VaccinationCampaignsUpdateCreateViewModel,
-          };
-        }
-      });
-    },
-    []
-  );
+    });
+  }, []);
 
   const handleEventClick = useCallback(
     async (event: CalendarEvent) => {
@@ -213,19 +246,19 @@ const Calendar: React.FC = () => {
       }
 
       if (eventDate < currentDate) {
-        toast.error("Cannot edit past events");
+        toast.error("Không thể chỉnh sửa sự kiện trong quá khứ");
         return;
       }
 
       if (event.extendedProps.calendar !== "Pending") {
-        toast.error("Cannot update or delete this event");
+        toast.error("Không thể cập nhật hoặc xóa sự kiện này");
         return;
       }
 
       setSelectedEvent(event);
 
       // Show loading toast while fetching event details
-      const loadingToastId = toast.loading("Loading event details...");
+      const loadingToastId = toast.loading("Đang tải thông tin sự kiện...");
 
       try {
         // Fetch detailed event data to get classIds
@@ -235,16 +268,20 @@ const Calendar: React.FC = () => {
         if (event.extendedProps.eventType === "medical") {
           // Fetch all medical events and find the specific one
           const allMedicalEvents = await FecthMedicalEvent();
-          eventDetail = allMedicalEvents.find(e => e.id === event.id);
+          eventDetail = allMedicalEvents.find((e) => e.id === event.id);
           if (eventDetail && eventDetail.classIds) {
-            eventClassIds = Array.isArray(eventDetail.classIds) ? eventDetail.classIds : [eventDetail.classIds];
+            eventClassIds = Array.isArray(eventDetail.classIds)
+              ? eventDetail.classIds
+              : [eventDetail.classIds];
           }
         } else {
           // Fetch all vaccination campaigns and find the specific one
           const allVaccinationCampaigns = await FecthVaccinationCampaign();
-          eventDetail = allVaccinationCampaigns.find(e => e.id === event.id);
+          eventDetail = allVaccinationCampaigns.find((e) => e.id === event.id);
           if (eventDetail && eventDetail.classIds) {
-            eventClassIds = Array.isArray(eventDetail.classIds) ? eventDetail.classIds : [eventDetail.classIds];
+            eventClassIds = Array.isArray(eventDetail.classIds)
+              ? eventDetail.classIds
+              : [eventDetail.classIds];
           }
         }
 
@@ -255,25 +292,36 @@ const Calendar: React.FC = () => {
         setFormData(
           event.extendedProps.eventType === "medical"
             ? {
-              type: "medical",
-              data: {
-                name: event.title,
-                description: event.extendedProps.description || "",
-                scheduledDate: new Date(event.start).toISOString(),
-                classIds: eventClassIds.length > 0 ? eventClassIds as [string] : [""] as [string]
-              },
-            } : {
-              type: "vaccination",
-              data: {
-                name: event.title,
-                vaccineName: event.extendedProps.vaccineName || "",
-                vaccineType: event.extendedProps.vaccineType || "",
-                exp: new Date(event.extendedProps.exp || new Date()).toISOString(),
-                mfg: new Date(event.extendedProps.mfg || new Date()).toISOString(),
-                startDate: new Date(event.start).toISOString(),
-                classIds: eventClassIds.length > 0 ? eventClassIds as [string] : [""] as [string]
-              },
-            }
+                type: "medical",
+                data: {
+                  name: event.title,
+                  description: event.extendedProps.description || "",
+                  scheduledDate: new Date(event.start).toISOString(),
+                  classIds:
+                    eventClassIds.length > 0
+                      ? (eventClassIds as [string])
+                      : [""],
+                },
+              }
+            : {
+                type: "vaccination",
+                data: {
+                  name: event.title,
+                  vaccineName: event.extendedProps.vaccineName || "",
+                  vaccineType: event.extendedProps.vaccineType || "",
+                  exp: new Date(
+                    event.extendedProps.exp || new Date()
+                  ).toISOString(),
+                  mfg: new Date(
+                    event.extendedProps.mfg || new Date()
+                  ).toISOString(),
+                  startDate: new Date(event.start).toISOString(),
+                  classIds:
+                    eventClassIds.length > 0
+                      ? (eventClassIds as [string])
+                      : [""],
+                },
+              }
         );
 
         // Dismiss loading toast, clear view events date, and open modal
@@ -283,190 +331,241 @@ const Calendar: React.FC = () => {
       } catch (error) {
         console.error("Error fetching event details:", error);
         toast.dismiss(loadingToastId);
-        toast.error("Failed to load event details");
+        toast.error("Không thể tải thông tin sự kiện");
         // Fallback to basic data without classes
         setSelectedClasses([]);
         setFormData(
           event.extendedProps.eventType === "medical"
             ? {
-              type: "medical",
-              data: {
-                name: event.title,
-                description: event.extendedProps.description || "",
-                scheduledDate: new Date(event.start).toISOString(),
-                classIds: [""]
-              },
-            } : {
-              type: "vaccination",
-              data: {
-                name: event.title,
-                vaccineName: event.extendedProps.vaccineName || "",
-                vaccineType: event.extendedProps.vaccineType || "",
-                exp: new Date(event.extendedProps.exp || new Date()).toISOString(),
-                mfg: new Date(event.extendedProps.mfg || new Date()).toISOString(),
-                startDate: new Date(event.start).toISOString(),
-                classIds: [""]
-              },
-            }
+                type: "medical",
+                data: {
+                  name: event.title,
+                  description: event.extendedProps.description || "",
+                  scheduledDate: new Date(event.start).toISOString(),
+                  classIds: [""],
+                },
+              }
+            : {
+                type: "vaccination",
+                data: {
+                  name: event.title,
+                  vaccineName: event.extendedProps.vaccineName || "",
+                  vaccineType: event.extendedProps.vaccineType || "",
+                  exp: new Date(event.extendedProps.exp || new Date()).toISOString(),
+                  mfg: new Date(event.extendedProps.mfg || new Date()).toISOString(),
+                  startDate: new Date(event.start).toISOString(),
+                  classIds: [""],
+                },
+              }
         );
         toast.dismiss(loadingToastId);
         setViewEventsDate(null); // Clear view events date to show edit form
         openModal();
-      } finally {
-        // No need to setLoading(false) here since we're not using global loading state
       }
     },
     [navigate, openModal]
   );
 
-  const handleMedicalInputChange = useCallback((field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
-    setFormData((prev) => {
-      if (prev.type === "medical") {
-        return {
-          ...prev,
-          data: {
-            ...prev.data,
-            [field]: value,
-          } as MedicalEventUpdateCreateViewModel,
-        };
-      }
-      return prev;
-    });
-  }, []);
+  const handleMedicalInputChange = useCallback(
+    (field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
+      setFormData((prev) => {
+        if (prev.type === "medical") {
+          return {
+            ...prev,
+            data: {
+              ...prev.data,
+              [field]: value,
+            } as MedicalEventUpdateCreateViewModel,
+          };
+        }
+        return prev;
+      });
+    },
+    []
+  );
 
-  const handleVaccinationInputChange = useCallback((field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string) => {
-    setFormData((prev) => {
-      if (prev.type === "vaccination") {
-        return {
-          ...prev,
-          data: {
-            ...prev.data,
-            [field]: value,
-          } as VaccinationCampaignsUpdateCreateViewModel,
-        };
-      }
-      return prev;
-    });
-  }, []);
+  const handleVaccinationInputChange = useCallback(
+    (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string) => {
+      setFormData((prev) => {
+        if (prev.type === "vaccination") {
+          return {
+            ...prev,
+            data: {
+              ...prev.data,
+              [field]: value,
+            } as VaccinationCampaignsUpdateCreateViewModel,
+          };
+        }
+        return prev;
+      });
+    },
+    []
+  );
 
-  function prepareMedicalData(data: MedicalEventUpdateCreateViewModel): MedicalEventUpdateCreateViewModel {
+  function prepareMedicalData(
+    data: MedicalEventUpdateCreateViewModel
+  ): MedicalEventUpdateCreateViewModel {
     return {
       ...data,
-      scheduledDate: toLocalISOString(data.scheduledDate)
+      scheduledDate: customFormatDateForBackend(data.scheduledDate),
     };
   }
 
-  function prepareVaccinationCampaignData(data: VaccinationCampaignsUpdateCreateViewModel): VaccinationCampaignsUpdateCreateViewModel {
+  function prepareVaccinationCampaignData(
+    data: VaccinationCampaignsUpdateCreateViewModel
+  ): VaccinationCampaignsUpdateCreateViewModel {
     return {
       ...data,
-      exp: toLocalISOString(data.exp),
-      mfg: toLocalISOString(data.mfg),
-      startDate: toLocalISOString(data.startDate)
+      exp: customFormatDateForBackend(data.exp),
+      mfg: customFormatDateForBackend(data.mfg),
+      startDate: customFormatDateForBackend(data.startDate),
     };
   }
 
-  const validateFormData = useCallback((type: string, data: MedicalEventUpdateCreateViewModel | VaccinationCampaignsUpdateCreateViewModel): Record<string, string> => {
-    const errors: Record<string, string> = {};
-    if (type === "medical") {
-      // Validate Medical Event fields
-      if (!data.name?.trim()) {
-        errors.name = "Event name is required!";
-      }
-      if (!(data as MedicalEventUpdateCreateViewModel).description?.trim()) {
-        errors.description = "Description is required!";
-      }
-      if (!(data as MedicalEventUpdateCreateViewModel).scheduledDate) {
-        errors.scheduledDate = "Scheduled date is required!";
-      }
-      if (!selectedClasses || selectedClasses.length === 0) {
-        errors.classes = "At least one class must be selected!";
-      }
+  const validateFormData = useCallback(
+    (
+      type: string,
+      data:
+        | MedicalEventUpdateCreateViewModel
+        | VaccinationCampaignsUpdateCreateViewModel
+    ): Record<string, string> => {
+      const errors: Record<string, string> = {};
+      if (type === "medical") {
+        // Validate Medical Event fields
+        if (!data.name?.trim()) {
+          errors.name = "Tên sự kiện là bắt buộc!";
+        }
+        if (!(data as MedicalEventUpdateCreateViewModel).description?.trim()) {
+          errors.description = "Mô tả là bắt buộc!";
+        }
+        if (!(data as MedicalEventUpdateCreateViewModel).scheduledDate) {
+          errors.scheduledDate = "Ngày dự kiến là bắt buộc!";
+        }
+        if (!selectedClasses || selectedClasses.length === 0) {
+          errors.classes = "Phải chọn ít nhất một lớp!";
+        }
 
-      // Validate scheduled date
-      if ((data as MedicalEventUpdateCreateViewModel).scheduledDate) {
-        const scheduledDate = new Date((data as MedicalEventUpdateCreateViewModel).scheduledDate);
-        if (isNaN(scheduledDate.getTime())) {
-          errors.scheduledDate = "Invalid scheduled date!";
-        } else {
-          // Check if date is in the past (only for new events)
-          if (!selectedEvent) {
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-            if (scheduledDate < currentDate) {
-              errors.scheduledDate = "Cannot create events in the past!";
+        // Validate scheduled date
+        if ((data as MedicalEventUpdateCreateViewModel).scheduledDate) {
+          const scheduledDate = new Date(
+            (data as MedicalEventUpdateCreateViewModel).scheduledDate
+          );
+          if (isNaN(scheduledDate.getTime())) {
+            errors.scheduledDate = "Ngày dự kiến không hợp lệ!";
+          } else {
+            // Check if date is in the past (only for new events)
+            if (!selectedEvent) {
+              const currentDate = new Date();
+              currentDate.setHours(0, 0, 0, 0);
+              if (scheduledDate < currentDate) {
+                errors.scheduledDate = "Không thể tạo sự kiện trong quá khứ!";
+              }
             }
           }
         }
-      }
-    } else if (type === "vaccination") {
-      // Validate Vaccination Campaign fields
-      if (!data.name?.trim()) {
-        errors.name = "Campaign name is required!";
-      }
-      if (!(data as VaccinationCampaignsUpdateCreateViewModel).vaccineName?.trim()) {
-        errors.vaccineName = "Vaccine name is required!";
-      }
-      if (!(data as VaccinationCampaignsUpdateCreateViewModel).vaccineType?.trim()) {
-        errors.vaccineType = "Vaccine type is required!";
-      }
-      if (!(data as VaccinationCampaignsUpdateCreateViewModel).startDate) {
-        errors.startDate = "Start date is required!";
-      }
-      if (!(data as VaccinationCampaignsUpdateCreateViewModel).exp) {
-        errors.exp = "Expiration date is required!";
-      }
-      if (!(data as VaccinationCampaignsUpdateCreateViewModel).mfg) {
-        errors.mfg = "Manufacturing date is required!";
-      }
-      if (!selectedClasses || selectedClasses.length === 0) {
-        errors.classes = "At least one class must be selected!";
-      }
-
-      // Validate dates
-      const startDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).startDate);
-      const expDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).exp);
-      const mfgDate = new Date((data as VaccinationCampaignsUpdateCreateViewModel).mfg);
-
-      if ((data as VaccinationCampaignsUpdateCreateViewModel).startDate && isNaN(startDate.getTime())) {
-        errors.startDate = "Invalid start date!";
-      }
-      if ((data as VaccinationCampaignsUpdateCreateViewModel).exp && isNaN(expDate.getTime())) {
-        errors.exp = "Invalid expiration date!";
-      }
-      if ((data as VaccinationCampaignsUpdateCreateViewModel).mfg && isNaN(mfgDate.getTime())) {
-        errors.mfg = "Invalid manufacturing date!";
-      }
-
-      // Check date logic (only if all dates are valid)
-      if ((data as VaccinationCampaignsUpdateCreateViewModel).mfg && (data as VaccinationCampaignsUpdateCreateViewModel).exp && !isNaN(mfgDate.getTime()) && !isNaN(expDate.getTime())) {
-        if (mfgDate >= expDate) {
-          errors.mfg = "Manufacturing date must be before expiration date!";
+      } else if (type === "vaccination") {
+        // Validate Vaccination Campaign fields
+        if (!data.name?.trim()) {
+          errors.name = "Tên chiến dịch là bắt buộc!";
+        }
+        if (
+          !(
+            data as VaccinationCampaignsUpdateCreateViewModel
+          ).vaccineName?.trim()
+        ) {
+          errors.vaccineName = "Tên vaccine là bắt buộc!";
+        }
+        if (
+          !(
+            data as VaccinationCampaignsUpdateCreateViewModel
+          ).vaccineType?.trim()
+        ) {
+          errors.vaccineType = "Loại vaccine là bắt buộc!";
+        }
+        if (!(data as VaccinationCampaignsUpdateCreateViewModel).startDate) {
+          errors.startDate = "Ngày bắt đầu là bắt buộc!";
+        }
+        if (!(data as VaccinationCampaignsUpdateCreateViewModel).exp) {
+          errors.exp = "Ngày hết hạn là bắt buộc!";
+        }
+        if (!(data as VaccinationCampaignsUpdateCreateViewModel).mfg) {
+          errors.mfg = "Ngày sản xuất là bắt buộc!";
+        }
+        if (!selectedClasses || selectedClasses.length === 0) {
+          errors.classes = "Phải chọn ít nhất một lớp!";
         }
 
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
+        // Validate dates
+        const startDate = new Date(
+          (data as VaccinationCampaignsUpdateCreateViewModel).startDate
+        );
+        const expDate = new Date(
+          (data as VaccinationCampaignsUpdateCreateViewModel).exp
+        );
+        const mfgDate = new Date(
+          (data as VaccinationCampaignsUpdateCreateViewModel).mfg
+        );
 
-        if (mfgDate > currentDate) {
-          errors.mfg = "Manufacturing date cannot be in the future!";
+        if (
+          (data as VaccinationCampaignsUpdateCreateViewModel).startDate &&
+          isNaN(startDate.getTime())
+        ) {
+          errors.startDate = "Ngày bắt đầu không hợp lệ!";
+        }
+        if (
+          (data as VaccinationCampaignsUpdateCreateViewModel).exp &&
+          isNaN(expDate.getTime())
+        ) {
+          errors.exp = "Ngày hết hạn không hợp lệ!";
+        }
+        if (
+          (data as VaccinationCampaignsUpdateCreateViewModel).mfg &&
+          isNaN(mfgDate.getTime())
+        ) {
+          errors.mfg = "Ngày sản xuất không hợp lệ!";
         }
 
-        if (expDate <= currentDate) {
-          errors.exp = "Expiration date must be in the future!";
+        // Check date logic (only if all dates are valid)
+        if (
+          (data as VaccinationCampaignsUpdateCreateViewModel).mfg &&
+          (data as VaccinationCampaignsUpdateCreateViewModel).exp &&
+          !isNaN(mfgDate.getTime()) &&
+          !isNaN(expDate.getTime())
+        ) {
+          if (mfgDate >= expDate) {
+            errors.mfg = "Ngày sản xuất phải trước ngày hết hạn!";
+          }
+
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+
+          if (mfgDate > currentDate) {
+            errors.mfg = "Ngày sản xuất không thể trong tương lai!";
+          }
+
+          if (expDate <= currentDate) {
+            errors.exp = "Ngày hết hạn phải trong tương lai!";
+          }
+        }
+
+        // Check if start date is in the past (only for new events)
+        if (
+          !selectedEvent &&
+          (data as VaccinationCampaignsUpdateCreateViewModel).startDate &&
+          !isNaN(startDate.getTime())
+        ) {
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+          if (startDate < currentDate) {
+            errors.startDate = "Không thể tạo sự kiện trong quá khứ!";
+          }
         }
       }
 
-      // Check if start date is in the past (only for new events)
-      if (!selectedEvent && (data as VaccinationCampaignsUpdateCreateViewModel).startDate && !isNaN(startDate.getTime())) {
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-        if (startDate < currentDate) {
-          errors.startDate = "Cannot create events in the past!";
-        }
-      }
-    }
-
-    return errors;
-  }, [selectedClasses, selectedEvent]);
+      return errors;
+    },
+    [selectedClasses, selectedEvent]
+  );
 
   const handleAddOrUpdateEvent = useCallback(async () => {
     if (loading) return;
@@ -478,52 +577,58 @@ const Calendar: React.FC = () => {
         // Update mode - no validation needed
         if (type === "medical") {
           const payload = prepareMedicalData(data);
-          const success = await FecthUpdateMedicalEvent(selectedEvent.id, payload);
+          const success = await FecthUpdateMedicalEvent(
+            selectedEvent.id,
+            payload
+          );
           if (success) {
             setEvents((prev) =>
               prev.map((event) =>
                 event.id === selectedEvent.id
                   ? {
-                    ...event,
-                    title: data.name,
-                    start: customFormatDate(data.scheduledDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      description: data.description || "",
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
+                      ...event,
+                      title: data.name,
+                      start: customFormatDate(data.scheduledDate),
+                      allDay: false,
+                      extendedProps: {
+                        ...event.extendedProps,
+                        description: data.description || "",
+                        calendar: event.extendedProps.calendar,
+                      },
+                    }
                   : event
               )
             );
-            toast.success('Medical event updated successfully');
+            toast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
           }
         } else {
           const payload = prepareVaccinationCampaignData(data);
-          const success = await FecthUpdateVaccinationCampaign(selectedEvent.id, payload);
+          const success = await FecthUpdateVaccinationCampaign(
+            selectedEvent.id,
+            payload
+          );
           if (success) {
             setEvents((prev) =>
               prev.map((event) =>
                 event.id === selectedEvent.id
                   ? {
-                    ...event,
-                    title: data.name,
-                    start: customFormatDate(data.startDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      vaccineName: data.vaccineName || "",
-                      vaccineType: data.vaccineType || "",
-                      exp: customFormatDate(data.exp),
-                      mfg: customFormatDate(data.mfg),
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
+                      ...event,
+                      title: data.name,
+                      start: customFormatDate(data.startDate),
+                      allDay: false,
+                      extendedProps: {
+                        ...event.extendedProps,
+                        vaccineName: data.vaccineName || "",
+                        vaccineType: data.vaccineType || "",
+                        exp: customFormatDate(data.exp),
+                        mfg: customFormatDate(data.mfg),
+                        calendar: event.extendedProps.calendar,
+                      },
+                    }
                   : event
               )
             );
-            toast.success('Vaccination campaign updated successfully');
+            toast.success("Cập nhật chiến dịch tiêm chủng thành công");
           }
         }
       } else {
@@ -550,11 +655,13 @@ const Calendar: React.FC = () => {
                 calendar: response.status || "Pending",
                 description: response.description || "",
                 eventType: "medical",
-                classIds: response.classIds?.length ? response.classIds as [string] : [""] as [string]
+                classIds: response.classIds?.length
+                  ? (response.classIds as [string])
+                  : ([""] as [string]),
               },
             },
           ]);
-          toast.success('Medical event created successfully');
+          toast.success("Tạo lịch kiểm tra sức khỏe thành công");
         } else {
           const payload = prepareVaccinationCampaignData(data);
           const response = await FecthCreateVaccinationCampaign(payload);
@@ -572,17 +679,20 @@ const Calendar: React.FC = () => {
                 exp: customFormatDate(response.exp || new Date()),
                 mfg: customFormatDate(response.mfg || new Date()),
                 eventType: "vaccination",
-                classIds: response.classIds?.length ? response.classIds as [string] : [""] as [string]
+                classIds: response.classIds?.length
+                  ? (response.classIds as [string])
+                  : ([""] as [string]),
               },
             },
           ]);
-          toast.success('Vaccination campaign created successfully');
+          toast.success("Tạo chiến dịch tiêm chủng thành công");
         }
       }
       closeModal();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast.error(`Failed to save the event: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
+      toast.error(`Không thể lưu sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -590,23 +700,27 @@ const Calendar: React.FC = () => {
 
   const handleDeleteEvent = useCallback(async () => {
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
-      toast.error("Cannot delete this event");
+      toast.error("Không thể xóa sự kiện này");
       return;
     }
     if (loading) return;
     setLoading(true);
     try {
-      const success = selectedEvent.extendedProps.eventType === "medical"
-        ? await FecthDeleteMedicalEvents(selectedEvent.id)
-        : await FecthDeleteVaccinationCampaign(selectedEvent.id);
+      const success =
+        selectedEvent.extendedProps.eventType === "medical"
+          ? await FecthDeleteMedicalEvents(selectedEvent.id)
+          : await FecthDeleteVaccinationCampaign(selectedEvent.id);
       if (success) {
-        setEvents((prev) => prev.filter((event) => event.id !== selectedEvent.id));
-        toast.success('Event deleted successfully');
+        setEvents((prev) =>
+          prev.filter((event) => event.id !== selectedEvent.id)
+        );
+        toast.success("Xóa sự kiện thành công");
       }
       closeModal();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast.error(`Failed to delete the event: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
+      toast.error(`Không thể xóa sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -621,12 +735,20 @@ const Calendar: React.FC = () => {
   }, []);
 
   const MedicalEventFormComponent = useMemo(() => {
-    const medicalData = formData.type === "medical" ? formData.data as MedicalEventUpdateCreateViewModel : null;
+    const medicalData =
+      formData.type === "medical"
+        ? (formData.data as MedicalEventUpdateCreateViewModel)
+        : null;
     if (!medicalData) return null;
 
     const handleClassChange = (classIds: string[]) => {
       setSelectedClasses(classIds);
-      handleMedicalInputChange("classIds", classIds.length > 0 ? classIds as unknown as string : [""] as unknown as string);
+      handleMedicalInputChange(
+        "classIds",
+        classIds.length > 0
+          ? (classIds as unknown as string)
+          : ([""] as unknown as string)
+      );
     };
 
     return (
@@ -634,21 +756,39 @@ const Calendar: React.FC = () => {
         medicalData={medicalData}
         classOptions={classOptions}
         selectedClasses={selectedClasses}
-        onInputChange={handleMedicalInputChange as (field: keyof MedicalEventUpdateCreateViewModel, value: string | Date | string[]) => void}
+        onInputChange={
+          handleMedicalInputChange as (
+            field: keyof MedicalEventUpdateCreateViewModel,
+            value: string | Date | string[]
+          ) => void
+        }
         onClassChange={handleClassChange}
         validationErrors={validationErrors}
       />
     );
-  }, [formData, handleMedicalInputChange, classOptions, selectedClasses, validationErrors]);
-
+  }, [
+    formData,
+    handleMedicalInputChange,
+    classOptions,
+    selectedClasses,
+    validationErrors,
+  ]);
 
   const VaccinationCampaignFormComponent = useMemo(() => {
-    const vaccinationData = formData.type === "vaccination" ? formData.data as VaccinationCampaignsUpdateCreateViewModel : null;
+    const vaccinationData =
+      formData.type === "vaccination"
+        ? (formData.data as VaccinationCampaignsUpdateCreateViewModel)
+        : null;
     if (!vaccinationData) return null;
 
     const handleClassChange = (classIds: string[]) => {
       setSelectedClasses(classIds);
-      handleVaccinationInputChange("classIds", classIds.length > 0 ? classIds as unknown as string : [""] as unknown as string);
+      handleVaccinationInputChange(
+        "classIds",
+        classIds.length > 0
+          ? (classIds as unknown as string)
+          : ([""] as unknown as string)
+      );
     };
 
     return (
@@ -656,12 +796,23 @@ const Calendar: React.FC = () => {
         vaccinationData={vaccinationData}
         classOptions={classOptions}
         selectedClasses={selectedClasses}
-        onInputChange={handleVaccinationInputChange as (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string | Date | string[]) => void}
+        onInputChange={
+          handleVaccinationInputChange as (
+            field: keyof VaccinationCampaignsUpdateCreateViewModel,
+            value: string | Date | string[]
+          ) => void
+        }
         onClassChange={handleClassChange}
         validationErrors={validationErrors}
       />
     );
-  }, [formData, handleVaccinationInputChange, classOptions, selectedClasses, validationErrors]);
+  }, [
+    formData,
+    handleVaccinationInputChange,
+    classOptions,
+    selectedClasses,
+    validationErrors,
+  ]);
 
   const ViewEventsModalComponent = useMemo(() => {
     return (
@@ -676,7 +827,14 @@ const Calendar: React.FC = () => {
         classOptions={classOptions}
       />
     );
-  }, [viewEventsDate, classOptions, events, loading, handleEventClick, closeModal]);
+  }, [
+    viewEventsDate,
+    classOptions,
+    events,
+    loading,
+    handleEventClick,
+    closeModal,
+  ]);
 
   const DailyScheduleComponent = useMemo(() => {
     return (
@@ -690,7 +848,14 @@ const Calendar: React.FC = () => {
         classOptions={classOptions}
       />
     );
-  }, [selectedDate, events, loading, handleEventClick, openModal, classOptions]);
+  }, [
+    selectedDate,
+    events,
+    loading,
+    handleEventClick,
+    openModal,
+    classOptions,
+  ]);
 
   const isFormValid = useMemo(() => {
     if (selectedEvent) {
@@ -720,72 +885,82 @@ const Calendar: React.FC = () => {
     return false;
   }, [formData, selectedClasses, selectedEvent]);
 
-  const eventTypeOptions: Option[] = useMemo(() => [
-    { value: "medical", label: "Medical Event" },
-    { value: "vaccination", label: "Vaccination Campaign" },
-  ], []);
+  const eventTypeOptions: Option[] = useMemo(
+    () => [
+      { value: "medical", label: "Kiểm tra sức khỏe" },
+      { value: "vaccination", label: "Chiến dịch tiêm chủng" },
+    ],
+    []
+  );
 
   const handleEventTypeChange = useCallback((value: string) => {
     setSelectedClasses([]);
     setFormData(
       value === "medical"
         ? {
-          type: "medical",
-          data: {
-            name: "",
-            description: "",
-            scheduledDate: new Date().toISOString(),
-            classIds: [""]
-          },
-        } : {
-          type: "vaccination",
-          data: {
-            name: "",
-            vaccineName: "",
-            exp: new Date().toISOString(),
-            mfg: new Date().toISOString(),
-            vaccineType: "",
-            startDate: new Date().toISOString(),
-            classIds: [""]
-          },
-        }
+            type: "medical",
+            data: {
+              name: "",
+              description: "",
+              scheduledDate: new Date().toISOString(),
+              classIds: [""],
+            },
+          }
+        : {
+            type: "vaccination",
+            data: {
+              name: "",
+              vaccineName: "",
+              exp: new Date().toISOString(),
+              mfg: new Date().toISOString(),
+              vaccineType: "",
+              startDate: new Date().toISOString(),
+              classIds: [""],
+            },
+          }
     );
   }, []);
 
   return (
     <div className="p-4">
       <PageHeader
-        title="Lịch sự kiện y tế"
+        title="Lịch kiểm tra sức khỏe và tiêm chủng"
         icon={<CalendarDays className="w-6 h-6 text-purple-600" />}
-        description="Quản lý và theo dõi các sự kiện y tế, tiêm chủng trong trường"
+        description="Quản lý và theo dõi các hoạt động kiểm tra sức khỏe và tiêm chủng trong trường"
       />
-      <ToastContainer position="top-right" autoClose={3000} className="z-9999" />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        className="z-9999"
+      />
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-gray-500">Đang tải...</div>
       ) : error ? (
-        <div role="alert" className="text-center text-red-500 p-4 bg-red-100 rounded">
+        <div
+          role="alert"
+          className="text-center text-red-500 p-4 bg-red-100 rounded"
+        >
           <p>{error}</p>
-          {error.includes('authenticated') ? (
+          {error.includes("authenticated") ? (
             <button
-              onClick={() => window.location.href = '/login'}
-              aria-label="Log in to view events"
+              onClick={() => (window.location.href = "/login")}
+              aria-label="Đăng nhập để xem sự kiện"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Log In
+              Đăng nhập
             </button>
           ) : (
             <button
               onClick={fetchEvents}
-              aria-label="Retry fetching events"
+              aria-label="Thử lại"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retry
+              Thử lại
             </button>
           )}
         </div>
       ) : (
         <>
-
           <div className="flex flex-col lg:flex-row gap-2">
             <CalendarGrid
               currentDate={currentDate}
@@ -808,28 +983,38 @@ const Calendar: React.FC = () => {
             <div className="lg:w-1/3">{DailyScheduleComponent}</div>
           </div>
 
-          <Modal isOpen={isOpen} onClose={closeModal}
+          <Modal
+            isOpen={isOpen}
+            onClose={closeModal}
             className={`${formData.type === "medical" ? "" : "max-w-3xl"} 
-          max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}>
+          max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}
+          >
             {viewEventsDate ? (
               ViewEventsModalComponent
             ) : (
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedEvent ? "Edit Event" : "Create New Event"}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {selectedEvent ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
+                </h3>
                 <div className="mb-4">
-                  <Label className="block text-sm font-semibold text-gray-700 mb-1">Event Type *</Label>
+                  <Label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Loại sự kiện *
+                  </Label>
                   <Select
                     options={eventTypeOptions}
-                    placeholder="Select event type"
+                    placeholder="Chọn loại sự kiện"
                     onChange={handleEventTypeChange}
                     defaultValue={formData.type}
                     disabled={selectedEvent !== null}
                   />
                 </div>
-                {formData.type === "medical" ? MedicalEventFormComponent : VaccinationCampaignFormComponent}
+                {formData.type === "medical"
+                  ? MedicalEventFormComponent
+                  : VaccinationCampaignFormComponent}
                 <div
-                  className={`flex mt-6 pt-4 border-t border-gray-200 ${selectedEvent ? "justify-between" : "justify-end"
-                    }`}
+                  className={`flex mt-6 pt-4 border-t border-gray-200 ${
+                    selectedEvent ? "justify-between" : "justify-end"
+                  }`}
                 >
                   {selectedEvent && (
                     <div>
@@ -838,7 +1023,7 @@ const Calendar: React.FC = () => {
                         disabled={loading}
                         className="px-4 py-2 text-red-600 hover:bg-red-100 rounded-lg bg-red-50 disabled:opacity-50"
                       >
-                        Delete Event
+                        Xóa sự kiện
                       </button>
                     </div>
                   )}
@@ -848,14 +1033,14 @@ const Calendar: React.FC = () => {
                       disabled={loading}
                       className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
-                      Cancel
+                      Hủy
                     </button>
                     <button
                       onClick={handleAddOrUpdateEvent}
                       disabled={loading || !isFormValid}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {selectedEvent ? "Update Event" : "Create Event"}
+                      {selectedEvent ? "Cập nhật" : "Tạo mới"}
                     </button>
                   </div>
                 </div>

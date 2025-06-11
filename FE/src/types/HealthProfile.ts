@@ -36,4 +36,3 @@ export interface HealthProfileUpdate {
   abnormalNote: string;
   vaccinationHistory: string;
 }
-

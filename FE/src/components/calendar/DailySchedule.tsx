@@ -1,4 +1,4 @@
-import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
+import { CalendarEvent, eventCategories, customFormatDateForBackend } from "@/types/CalendarEvent";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
 import { toast } from 'react-toastify';
@@ -65,7 +65,7 @@ const DailySchedule = ({
           ...prev,
           data: {
             ...prev.data,
-            scheduledDate: newDate.toISOString(),
+            scheduledDate: customFormatDateForBackend(newDate),
           } as MedicalEventUpdateCreateViewModel,
         };
       } else {
@@ -73,7 +73,7 @@ const DailySchedule = ({
           ...prev,
           data: {
             ...prev.data,
-            startDate: newDate.toISOString(),
+            startDate: customFormatDateForBackend(newDate),
           } as VaccinationCampaignsUpdateCreateViewModel,
         };
       }
@@ -86,14 +86,14 @@ const DailySchedule = ({
     <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold text-gray-900">
-          Schedule for {new Date(selectedDate).toLocaleDateString()}
+          Lịch cho {new Date(selectedDate).toLocaleDateString()}
         </h3>
         <button
           onClick={handleAddEvent}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
           disabled={loading}
         >
-          Add Event
+          Thêm sự kiện
         </button>
       </div>
 
@@ -110,29 +110,29 @@ const DailySchedule = ({
                 <div className="flex justify-between">
                   <div className="font-medium text-base">{event.title}</div>
                   <div>
-                    <span className="text-xs">Type: {event.extendedProps.eventType}</span>
+                    <span className="text-xs">Loại: {event.extendedProps.eventType === "medical" ? "Kiểm tra sức khỏe" : "Chiến dịch tiêm chủng"}</span>
                   </div>
                 </div>
 
                 <div className="text-sm mt-1 ml-2">
                   {event.extendedProps.eventType === "medical"
-                    ? event.extendedProps.description || "No description"
-                    : `Vaccine: ${event.extendedProps.vaccineName || "No vaccine name"}`}
+                    ? event.extendedProps.description || "Không có mô tả"
+                    : `Vaccine: ${event.extendedProps.vaccineName || "Không có tên vaccine"}`}
                 </div>
 
                 {event.extendedProps.eventType === "vaccination" && (
                   <div className="text-sm">
-                    <div className="mt-1 ml-2">Vaccine Type: {event.extendedProps.vaccineType}</div>
-                    <div className="mt-1 ml-2">Mfg: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
-                    <div className="mt-1 ml-2">Exp: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
+                    <div className="mt-1 ml-2">Loại vaccine: {event.extendedProps.vaccineType}</div>
+                    <div className="mt-1 ml-2">Ngày sản xuất: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
+                    <div className="mt-1 ml-2">Ngày hết hạn: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
                   </div>
                 )}
 
                 <div className="text-sm mt-1 ml-2">
-                  <span>Time:</span> {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span>Thời gian:</span> {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
                 <div className="text-sm mt-1 ml-2">
-                  <span>Class: </span>
+                  <span>Lớp: </span>
                   {(() => {
                     const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
                     return validClassIds.length > 0 ? (
@@ -147,7 +147,7 @@ const DailySchedule = ({
                       })
                     ) : (
                       <span className="text-gray-500">
-                        No classes assigned
+                        Không có lớp nào
                       </span>
                     );
                   })()}
@@ -156,7 +156,7 @@ const DailySchedule = ({
             );
           })
         ) : (
-          <div className="text-gray-500 text-sm">No events scheduled for this date.</div>
+          <div className="text-gray-500 text-sm">Không có sự kiện nào cho ngày này.</div>
         )}
       </div>
     </div>

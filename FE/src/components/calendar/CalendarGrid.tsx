@@ -25,11 +25,11 @@ const CalendarGrid = ({
   classOptions
 }: CalendarGridProps) => {
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+    "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
   ];
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -101,7 +101,7 @@ const CalendarGrid = ({
           onClick={onToday}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
         >
-          Today
+          Hôm nay
         </button>
       </div>
 
@@ -200,7 +200,7 @@ const CalendarGrid = ({
                                       })
                                     ) : (
                                       <span className="text-gray-500">
-                                        No classes assigned
+                                        Không có lớp nào
                                       </span>
                                     );
                                   })()}</p>
@@ -220,14 +220,14 @@ const CalendarGrid = ({
                           >
                             <div className="flex-1 min-w-0">
                               <div className="font-semibold text-[10px] uppercase tracking-wide mb-1 text-center">
-                                {event.extendedProps.eventType === "medical" ? "Medical" : "Vaccination"}
+                                {event.extendedProps.eventType === "medical" ? "Kiểm tra sức khỏe" : "Chiến dịch tiêm chủng"}
                               </div>
                               <div className="font-medium truncate text-sm mb-1">{event.title}</div>
                               <div className="text-xs truncate opacity-75">
                                 {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -{' '}
                                 {event.extendedProps.eventType === "medical"
-                                  ? event.extendedProps.description || "No description"
-                                  : event.extendedProps.vaccineName || "No vaccine name"}
+                                  ? event.extendedProps.description || "Không có mô tả"
+                                  : event.extendedProps.vaccineName || "Không có tên vaccine"}
                               </div>
                             </div>
                           </div>

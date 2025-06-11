@@ -71,8 +71,10 @@ export default function AddUser() {
     try {
       const success = await FecthCreateUsers(formData);
       if (success) {
-        toast.success('User created successfully');
         navigate("/user");
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Creation failed');
       }

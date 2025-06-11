@@ -15,7 +15,7 @@ import { FecthStudentById } from "@/services/UserService";
 import Label from "@/components/ui/form/Label";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
-import { Search, Eye, Ear, Calendar, User, Heart, CheckCircle, Clock } from 'lucide-react';
+import { Search, Eye, Ear, User, Heart, CheckCircle, Clock } from 'lucide-react';
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function MedicalHealthCheckupRecords() {
@@ -144,6 +144,11 @@ export default function MedicalHealthCheckupRecords() {
                     (r) => r.studentId === selectedStudent.id
                 );
                 if (!record) {
+                    toast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
+                    return;
+                }
+                if (!record.healthCheckUpId) {
+                    toast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
                     return;
                 }
                 const result = await FecthUpdateHealthCheckupRecord(

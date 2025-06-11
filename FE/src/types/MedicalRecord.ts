@@ -15,12 +15,12 @@ export interface VaccinationRecord {
 }
 
 export interface MedicalHealthCheckupRecord {
-    healthCheckUpId: string;
+    healthCheckUpId: string | null;
     healthActivityId: string;
     studentId: string;
     studentName: string;
     nurseId: string;
-    nurseName: string;
+    nurseName: string | null;
     vision: string;
     hearing: string;
     dental: string;
@@ -28,7 +28,7 @@ export interface MedicalHealthCheckupRecord {
     abnormalNote: string;
     time: string;
     recordDate: string;
-    isLate: boolean;
+    isLatest: boolean;
 }
 
 export interface HealthCheckupRecord {

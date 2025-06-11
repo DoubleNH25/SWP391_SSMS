@@ -17,7 +17,7 @@ const ClassSelector = ({
   classOptions, 
   selectedClasses, 
   onClassChange, 
-  placeholder = "Select classes or blocks" 
+  placeholder = "Chọn lớp hoặc khối" 
 }: ClassSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,7 +161,7 @@ const ClassSelector = ({
         selectedClasses.includes(classOption.value)
       );
       
-      if (!searchTerm || "OTHER".toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (!searchTerm || "Khác".toLowerCase().includes(searchTerm.toLowerCase())) {
         hierarchicalOptions.push(
           <div
             key="block-other"
@@ -174,7 +174,7 @@ const ClassSelector = ({
               onChange={() => {}}
               className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <span className="font-semibold text-sm text-gray-900">OTHER</span>
+            <span className="font-semibold text-sm text-gray-900">Khác</span>
           </div>
         );
       }
@@ -201,14 +201,14 @@ const ClassSelector = ({
     }
     
     return hierarchicalOptions.length > 0 ? hierarchicalOptions : (
-      <div className="px-4 py-2 text-gray-500">No options found</div>
+      <div className="px-4 py-2 text-gray-500">Không có lớp nào</div>
     );
   };
 
   return (
     <div>
       <Label className="block text-sm font-semibold text-gray-700 mb-1">
-        Classes <span className="text-red-500">*</span>
+        Lớp <span className="text-red-500">*</span>
       </Label>
       
       <div className="relative" data-dropdown-container>
@@ -218,7 +218,7 @@ const ClassSelector = ({
         >
           <span className="block truncate text-gray-400">
             {selectedClasses.length > 0 
-              ? `${selectedClasses.length} classes selected` 
+              ? `${selectedClasses.length} lớp đã chọn` 
               : placeholder
             }
           </span>
@@ -259,13 +259,13 @@ const ClassSelector = ({
       {selectedClasses.length > 0 && (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center mb-2">
-            <Label className="text-sm font-medium text-gray-700">Selected Classes ({selectedClasses.length})</Label>
+            <Label className="text-sm font-medium text-gray-700">Lớp đã chọn ({selectedClasses.length})</Label>
             <button
               type="button"
               onClick={() => onClassChange([])}
               className="text-xs text-red-600 hover:text-red-800"
             >
-              Clear all
+              Xóa tất cả
             </button>
           </div>
           <div className="flex flex-wrap gap-2">

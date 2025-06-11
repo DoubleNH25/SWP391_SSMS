@@ -2,16 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MedicalEventViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
 import { FecthApprovedRejectedMedicalEvents } from "@/services/MedicalEventService";
-import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthApprovedRejectedVaccinationCampaigns } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/ui/PageHeader";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Calendar } from "lucide-react";  
 
 export default function ApprovedEventManager() {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export default function ApprovedEventManager() {
   const [selectedView, setSelectedView] = useState<"MedicalEvents" | "VaccinationCampaigns">("MedicalEvents");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(8);
   const [currentPage, setCurrentPage] = useState(1);
   const [classOptions, setClassOptions] = useState<{ value: string; label: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,7 +88,11 @@ export default function ApprovedEventManager() {
     }
   };
 
-  const handleGetMedicalRecord = useCallback(async (medicalEventDate: string) => {
+  const handleGetMedicalRecord = useCallback(async (medicalEventDate: string, status: string) => {
+    if (status === "Rejected") {
+      toast.error("Sự kiện đã bị từ chối, không thể xem danh sách");
+      return;
+    }
     if (selectedView === "MedicalEvents") {
       navigate(`/medical-health-checkup-record/${medicalEventDate}`);
     } else {
@@ -117,9 +120,9 @@ export default function ApprovedEventManager() {
       setError(null);
     } catch (err) {
       if (err instanceof Error && err.message.includes('authenticated')) {
-        setError(`Please log in to view events.`);
+        setError(`Vui lòng đăng nhập để xem các sự kiện.`);
       } else {
-        setError('Failed to fetch data. Please try again.');
+        setError('Không thể lấy dữ liệu. Vui lòng thử lại sau.');
       }
     } finally {
       setLoading(false);
@@ -135,13 +138,13 @@ export default function ApprovedEventManager() {
       }));
       setClassOptions(options);
     } catch (err) {
-      console.error('Failed to fetch class data:', err);
+      console.error('Không thể lấy dữ liệu lớp:', err);
     }
   }, []);
 
   const viewOptions = useMemo(() => [
-    { value: "MedicalEvents", label: "Medical Events" },
-    { value: "VaccinationCampaigns", label: "Vaccination Campaigns" },
+    { value: "MedicalEvents", label: "Kiểm tra sức khỏe" },
+    { value: "VaccinationCampaigns", label: "Chiến dịch tiêm chủng" },
   ], []);
 
   const handleSelectChange = (value: string) => {
@@ -158,6 +161,11 @@ export default function ApprovedEventManager() {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const handleSort = () => {
+    setSortOrder(prevSortOrder => prevSortOrder === "asc" ? "desc" : "asc");
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -195,7 +203,7 @@ export default function ApprovedEventManager() {
                 aria-label="Log in to view approved events"
                 className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
               >
-                Log In
+                Đăng nhập
               </button>
             ) : (
               <button
@@ -203,7 +211,7 @@ export default function ApprovedEventManager() {
                 aria-label="Retry fetching approved events"
                 className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
               >
-                Retry
+                Thử lại
               </button>
             )}
           </div>
@@ -232,27 +240,45 @@ export default function ApprovedEventManager() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
               <div className="flex flex-col gap-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Search Filters</h2>
-                  {(searchTerm || searchDate) && (
+                  <h2 className="text-lg font-semibold text-gray-900">Bộ lọc tìm kiếm</h2>
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSearchDate("");
-                        setCurrentPage(1);
-                      }}
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      onClick={handleSort}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      title={sortOrder === "asc" ? "Sắp xếp tăng dần" : "Sắp xếp giảm dần"}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Clear Filters
+                      <span>Sắp xếp theo ngày</span>
+                      {sortOrder === "asc" ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      )}
                     </button>
-                  )}
+                    {(searchTerm || searchDate) && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm("");
+                          setSearchDate("");
+                          setCurrentPage(1);
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Xóa bộ lọc
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <Label className="block text-sm font-medium text-gray-700">
-                      Search by {selectedView === "MedicalEvents" ? "Name or Description" : "Name, Vaccine Name, or Type"}
+                      Tìm kiếm theo {selectedView === "MedicalEvents" ? "Tên hoặc Mô tả" : "Tên, Tên vaccine, hoặc Loại vaccine"}
                     </Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -263,8 +289,8 @@ export default function ApprovedEventManager() {
                       <input
                         type="text"
                         placeholder={selectedView === "MedicalEvents"
-                          ? "Enter name or description..."
-                          : "Enter name, vaccine name, or type..."
+                          ? "Nhập tên hoặc mô tả..."
+                          : "Nhập tên, tên vaccine, hoặc loại vaccine..."
                         }
                         value={searchTerm}
                         onChange={(e) => {
@@ -290,7 +316,7 @@ export default function ApprovedEventManager() {
                   </div>
                   <div className="space-y-2">
                     <Label className="block text-sm font-medium text-gray-700">
-                      Filter by Date
+                      Lọc theo ngày
                     </Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -329,9 +355,9 @@ export default function ApprovedEventManager() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>
-                      Showing results for {searchTerm && <span className="font-medium">"{searchTerm}"</span>}
-                      {searchTerm && searchDate && " and "}
-                      {searchDate && <span className="font-medium">date: {new Date(searchDate).toLocaleDateString()}</span>}
+                      Hiển thị kết quả cho {searchTerm && <span className="font-medium">"{searchTerm}"</span>}
+                      {searchTerm && searchDate && " và "}
+                      {searchDate && <span className="font-medium">ngày: {new Date(searchDate).toLocaleDateString()}</span>}
                     </span>
                   </div>
                 )}
@@ -340,201 +366,90 @@ export default function ApprovedEventManager() {
 
             {/* Data Table */}
             <div className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
-              {selectedView === "MedicalEvents" ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[25%]">
-                          Name
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[30%]">
-                          Description
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[15%]">
-                          <button
-                            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                            className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
-                          >
-                            Ngày tháng
-                            <svg className={`w-4 h-4 transition-transform group-hover:text-blue-600 ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 tracking-wider w-[20%]">
-                          Classes
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-medium text-gray-600 tracking-wider w-[10%]">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {paginatedData.length > 0 ? (
-                        paginatedData.map((item, index) => {
-                          const medicalEvent = item as MedicalEventViewModel;
-                          return (
-                            <tr key={index} className={`hover:bg-gray-50 transition-colors ${item.status === "Rejected"
-                              ? "cursor-not-allowed"
-                              : "cursor-pointer"}`}
-                              onClick={() => item.status === "Rejected" ? null : handleGetMedicalRecord(new Date((item as MedicalEventViewModel).scheduledDate).toISOString())}>
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                {medicalEvent.name}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {medicalEvent.description}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {new Date(medicalEvent.scheduledDate).toLocaleDateString()}
-                              </td>
-                              <td className="px-6 py-4">
-                                {(() => {
-                                  const validClassIds = item.classIds?.filter(id => id && id.trim() !== "") || [];
-                                  return validClassIds.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {validClassIds.map((classId, classIndex) => {
-                                        const classOption = classOptions.find(option => option.value === classId);
-                                        const className = classOption ? classOption.label : `Class ${classId}`;
-                                        return (
-                                          <span key={classIndex} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                            {className}
-                                          </span>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <span className="text-gray-400 text-sm italic">No classes assigned</span>
-                                  );
-                                })()}
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled
-                                  className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2`}
-                                >
-                                  {item.status as string}
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center">
-                            <div className="flex flex-col items-center">
-                              <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                              </svg>
-                              <p className="text-gray-500 font-medium">No approved medical events available</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[20%]">Name</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[15%]">Vaccine Name</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[15%]">Vaccine Type</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">EXP</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">MFG</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[12%]">
-                          <button
-                            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                            className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
-                          >
-                            Date
-                            <svg className={`w-4 h-4 transition-transform group-hover:text-blue-600 ${sortOrder === "asc" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-[14%]">Classes</th>
-                        <th className="px-6 py-4 text-center text-xs font-medium text-gray-600 tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {paginatedData.length > 0 ? (
-                        paginatedData.map((item, index) => (
-                          <tr key={index} className={`hover:bg-gray-50 transition-colors ${item.status === "Rejected"
-                            ? "cursor-not-allowed"
-                            : "cursor-pointer"}`}
-                            onClick={() => item.status === "Rejected" ? null : handleGetMedicalRecord(new Date((item as VaccinationCampaignsViewModel).startDate).toISOString())}>
-                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                              {(item as VaccinationCampaignsViewModel).name}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {(item as VaccinationCampaignsViewModel).vaccineName}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {(item as VaccinationCampaignsViewModel).vaccineType}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {new Date((item as VaccinationCampaignsViewModel).exp).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {new Date((item as VaccinationCampaignsViewModel).mfg).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {new Date((item as VaccinationCampaignsViewModel).startDate).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4">
-                              {(() => {
-                                const campaign = item as VaccinationCampaignsViewModel;
-                                const validClassIds = campaign.classIds?.filter(id => id && id.trim() !== "") || [];
-                                return validClassIds.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {validClassIds.map((classId, classIndex) => {
-                                      const classOption = classOptions.find(option => option.value === classId);
-                                      const className = classOption ? classOption.label : `Class ${classId}`;
-                                      return (
-                                        <span key={classIndex} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                          {className}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400 text-sm italic">No classes assigned</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((item, index) => {
+                    const isMedicalEvent = selectedView === "MedicalEvents";
+                    const event = isMedicalEvent ? item as MedicalEventViewModel : item as VaccinationCampaignsViewModel;
+
+                    return (
+                      <div
+                        key={index}
+                        className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                        onClick={() => handleGetMedicalRecord(
+                          new Date(isMedicalEvent ? (event as MedicalEventViewModel).scheduledDate : (event as VaccinationCampaignsViewModel).startDate).toISOString(),
+                          item.status
+                        )}
+                      >
+                        <div className="mb-4 flex justify-between items-start">
+                          <div className="w-[66%]">
+                            <h2 className="text-xl font-semibold text-gray-800">{event.name}</h2>
+                            {isMedicalEvent ? (
+                              <p className="text-sm mt-2 text-gray-600">{(event as MedicalEventViewModel).description}</p>
+                            ) : (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm text-gray-600">Vaccine: {(event as VaccinationCampaignsViewModel).vaccineName}</p>
+                                <p className="text-sm text-gray-600">Loại: {(event as VaccinationCampaignsViewModel).vaccineType}</p>
+                              </div>
+                            )}
+                          </div>
+                          <span className={`px-3 py-1  text-center rounded-full text-xs font-medium ${item.status === "Approved"
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                            }`}>
+                            {item.status === "Approved" ? "Đã duyệt" : "Từ chối"}
+                          </span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <Calendar className="w-4 h-4 text-blue-500" />
+                            <span>Ngày dự kiến: {new Date(isMedicalEvent ? (event as MedicalEventViewModel).scheduledDate : (event as VaccinationCampaignsViewModel).startDate).toLocaleDateString()}</span>
+                          </div>
+
+                          {!isMedicalEvent && (
+                            <>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                <Calendar className="w-4 h-4 text-blue-500" />
+                                <span>Hạn vaccine: {new Date((event as VaccinationCampaignsViewModel).exp).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                <Calendar className="w-4 h-4 text-blue-500" />
+                                <span>Ngày sản xuất: {new Date((event as VaccinationCampaignsViewModel).mfg).toLocaleDateString()}</span>
+                              </div>
+                            </>
+                          )}
+
+                          <div className="pt-4 border-t border-gray-100">
+                            <div className="flex flex-wrap gap-1.5">
+                              {event.classIds?.filter(id => id && id.trim() !== "").map((classId, classIndex) => {
+                                const classOption = classOptions.find(option => option.value === classId);
+                                const className = classOption ? classOption.label : `Lớp ${classId}`;
+                                return (
+                                  <span key={classIndex} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                    {className}
+                                  </span>
                                 );
-                              })()}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled
-                                className={`${item.status === "Approved" ? "text-green-800 bg-green-100 hover:bg-green-200" : "text-red-800 bg-red-100"} px-3 py-1.5 text-xs font-medium border-2`}
-                              >
-                                {item.status as string}
-                              </Button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center">
-                            <div className="flex flex-col items-center">
-                              <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                              </svg>
-                              <p className="text-gray-500 font-medium">No approved vaccination campaigns available</p>
+                              })}
                             </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-full px-6 py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <p className="text-gray-500 font-medium">
+                        Không có {selectedView === "MedicalEvents" ? "sự kiện y tế đã duyệt" : "chiến dịch tiêm chủng đã duyệt"} nào
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Pagination */}
@@ -543,20 +458,20 @@ export default function ApprovedEventManager() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6">
                     <p className="text-sm text-gray-600">
-                      Showing <span className="text-gray-900">{startIndex + 1}</span> to{" "}
-                      <span className="text-gray-900">{Math.min(endIndex, totalItems)}</span> of{" "}
-                      <span className="text-gray-900">{totalItems}</span> results
+                      Hiển thị <span className="text-gray-900">{startIndex + 1}</span> đến{" "}
+                      <span className="text-gray-900">{Math.min(endIndex, totalItems)}</span> trong tổng số{" "}
+                      <span className="text-gray-900">{totalItems}</span> kết quả
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Show:</span>
+                      <span className="text-sm text-gray-600">Hiển thị:</span>
                       <select
                         className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                         value={itemsPerPage}
                         onChange={handleItemsPerPageChange}
                       >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
+                        <option value="8">8</option>
+                        <option value="16">16</option>
+                        <option value="24">24</option>
                       </select>
                     </div>
                   </div>

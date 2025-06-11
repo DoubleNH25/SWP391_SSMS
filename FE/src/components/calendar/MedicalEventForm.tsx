@@ -38,13 +38,13 @@ const MedicalEventForm = ({
         <div className="w-1/2">
           <div className="w-full mt-[2px]">
             <Label className="block text-sm font-semibold text-gray-700 mb-1">
-              Event Name <span className="text-red-500">*</span>
+              Tên sự kiện <span className="text-red-500">*</span>
             </Label>
             <Input
               type="text"
               value={medicalData.name || ""}
               onChange={(e) => onInputChange("name", e.target.value)}
-              placeholder="Enter event name"
+              placeholder="Nhập tên sự kiện"
               className={`w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${validationErrors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
@@ -59,7 +59,7 @@ const MedicalEventForm = ({
             classOptions={classOptions}
             selectedClasses={selectedClasses}
             onClassChange={handleClassChange}
-            placeholder="Select classes or blocks"
+            placeholder="Chọn lớp hoặc khối"
           />
           {validationErrors.classes && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.classes}</p>
@@ -69,12 +69,12 @@ const MedicalEventForm = ({
 
       <div className="w-full mt-3">
         <Label className="block text-sm font-semibold text-gray-700 mb-1">
-          Description <span className="text-red-500">*</span>
+          Mô tả <span className="text-red-500">*</span>
         </Label>
         <textarea
           value={medicalData.description || ""}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onInputChange("description", e.target.value)}
-          placeholder="Enter description"
+          placeholder="Nhập mô tả"
           rows={3}
           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${validationErrors.description ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -88,7 +88,7 @@ const MedicalEventForm = ({
         <div>
           <DatePicker
             id="date-picker-medical"
-            label="Scheduled Date *"
+            label="Ngày dự kiến *"
             defaultDate={medicalData.scheduledDate || new Date()}
             onChange={(date) => onInputChange("scheduledDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
             minDate="today"
@@ -100,7 +100,7 @@ const MedicalEventForm = ({
         </div>
         <div>
           <Label className="block text-sm font-semibold text-gray-700 mb-1">
-            Scheduled Time <span className="text-red-500">*</span>
+            Thời gian <span className="text-red-500">*</span>
           </Label>
           <Input
             type="time"

@@ -41,8 +41,10 @@ export default function AddSchoolClass() {
       };
       const success = await FecthCreateSchoolClass(submitData);
       if (success) {
-        toast.success('Class created successfully');
         navigate("/class");
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Creation failed');
       }

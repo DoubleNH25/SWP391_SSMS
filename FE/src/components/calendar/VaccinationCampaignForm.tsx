@@ -38,13 +38,13 @@ const VaccinationCampaignForm = ({
         <div className="w-1/2">
           <div className="w-full mt-[2px]">
             <Label className="block text-sm font-semibold text-gray-700 mb-1">
-              Campaign Name <span className="text-red-500">*</span>
+              Tên chiến dịch <span className="text-red-500">*</span>
             </Label>
             <Input
               type="text"
               value={vaccinationData.name || ""}
               onChange={(e) => onInputChange("name", e.target.value)}
-              placeholder="Enter campaign name"
+              placeholder="Nhập tên chiến dịch"
               className={`w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 validationErrors.name ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -55,13 +55,13 @@ const VaccinationCampaignForm = ({
           </div>
           <div className="w-full mt-3">
             <Label className="block text-sm font-semibold text-gray-700 mb-1">
-              Vaccine Name <span className="text-red-500">*</span>
+              Tên vaccine <span className="text-red-500">*</span>
             </Label>
             <Input
               type="text"
               value={vaccinationData.vaccineName || ""}
               onChange={(e) => onInputChange("vaccineName", e.target.value)}
-              placeholder="Enter vaccine name"
+              placeholder="Nhập tên vaccine"
               className={`w-full px-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 validationErrors.vaccineName ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -72,13 +72,13 @@ const VaccinationCampaignForm = ({
           </div>
           <div className="w-full mt-3">
             <Label className="block text-sm font-semibold text-gray-700 mb-1">
-              Vaccine Type <span className="text-red-500">*</span>
+              Loại vaccine <span className="text-red-500">*</span>
             </Label>
             <Input
               type="text"
               value={vaccinationData.vaccineType || ""}
               onChange={(e) => onInputChange("vaccineType", e.target.value)}
-              placeholder="Enter vaccine type"
+              placeholder="Nhập loại vaccine"
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 validationErrors.vaccineType ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -93,7 +93,7 @@ const VaccinationCampaignForm = ({
             <div className="w-1/2">
               <DatePicker
                 id="date-picker-mfg"
-                label="Manufacturing Date *"
+                label="Ngày sản xuất *"
                 defaultDate={vaccinationData.mfg || new Date()}
                 onChange={(date) => onInputChange("mfg", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
                 minDate="1900-01-01"
@@ -106,7 +106,7 @@ const VaccinationCampaignForm = ({
             <div className="w-1/2">
               <DatePicker
                 id="date-picker-exp"
-                label="Expiration Date *"
+                label="Ngày hết hạn *"
                 defaultDate={vaccinationData.exp || new Date()}
                 onChange={(date) => onInputChange("exp", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
                 minDate="today"
@@ -121,7 +121,7 @@ const VaccinationCampaignForm = ({
             <div className="w-full">
               <DatePicker
                 id="date-picker-start"
-                label="Start Date *"
+                label="Ngày bắt đầu *"
                 defaultDate={vaccinationData.startDate || new Date()}
                 onChange={(date) => onInputChange("startDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
                 minDate="today"
@@ -133,7 +133,7 @@ const VaccinationCampaignForm = ({
             </div>
             <div className="w-full mt-[2px]">
               <Label className="block text-sm font-semibold text-gray-700 mb-1">
-                Start Time <span className="text-red-500">*</span>
+                Thời gian <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="time"
@@ -153,7 +153,7 @@ const VaccinationCampaignForm = ({
               classOptions={classOptions}
               selectedClasses={selectedClasses}
               onClassChange={handleClassChange}
-              placeholder="Select classes or blocks"
+              placeholder="Chọn lớp hoặc khối"
             />
             {validationErrors.classes && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.classes}</p>
