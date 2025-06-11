@@ -3,7 +3,7 @@ import { FecthConselingSchedules, FecthUpdateConselingSchedules } from "@/servic
 import { ConselingSchedulesAND, ConselingSchedulesANDUpdate } from "@/types/ConselingSchedules";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { customFormatDateOnly } from "@/types/CalendarEvent";
+import { customFormatDateOnly, customFormatDateForBackend, toLocalISOString } from "@/types/CalendarEvent";
 import { FecthUserById } from "@/services/UserService";
 import { Modal } from "@/components/ui/modal";
 import Label from "@/components/ui/form/Label";
@@ -49,7 +49,7 @@ export default function ManagerConselingSchedules() {
 
             const formattedData = {
                 conselingScheduleId: formData.conselingScheduleId,
-                scheduledTime: date.toISOString()
+                scheduledTime: customFormatDateForBackend(date)
             };
             await FecthUpdateConselingSchedules(formattedData);
             toast.success('Cập nhật lịch tư vấn thành công!');
@@ -68,8 +68,8 @@ export default function ManagerConselingSchedules() {
     const handleItemClick = (item: ConselingSchedulesAND) => {
         setSelectedItem(item);
         setFormData({
-            conselingScheduleId: item.studentId,
-            scheduledTime: new Date().toISOString().slice(0, 16) // Format for datetime-local input
+            conselingScheduleId: item.id,
+            scheduledTime: toLocalISOString(new Date()).slice(0, 16) // Format for datetime-local input
         });
         setIsModalOpen(true);
     };
@@ -170,7 +170,7 @@ export default function ManagerConselingSchedules() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4">
             <ToastContainer
                 position="top-right"
                 autoClose={3000}
@@ -341,7 +341,7 @@ export default function ManagerConselingSchedules() {
                                     </Label>
                                     <Input
                                         type="datetime-local"
-                                        min={new Date().toISOString().slice(0, 16)}
+                                        min={toLocalISOString(new Date()).slice(0, 16)}
                                         value={formData.scheduledTime}
                                         onChange={(e) => setFormData(prev => ({
                                             ...prev,

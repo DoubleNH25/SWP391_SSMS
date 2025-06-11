@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { customFormatDateOnly } from "@/types/CalendarEvent";
 
 export default function UpdateStudents() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -118,6 +119,13 @@ export default function UpdateStudents() {
     };
   }, [studentId, loadUser, handleGetClass]);
 
+  function prepareStudentUpdateData(data: StudentUpdate): StudentUpdate {
+    return {
+      ...data,
+      dateOfBirth: customFormatDateOnly(data.dateOfBirth)
+    };
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -133,10 +141,14 @@ export default function UpdateStudents() {
         setError("Student ID is required.");
         return;
       }
-      const success = await FecthUpdateStudents(studentId, formData);
+      const payload = prepareStudentUpdateData(formData);
+      console.log("payload", payload);
+      const success = await FecthUpdateStudents(studentId, payload);
       if (success) {
-        toast.success('Student updated successfully');
         navigate('/student');
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Update failed');
       }

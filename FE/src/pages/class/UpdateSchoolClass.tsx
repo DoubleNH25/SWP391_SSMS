@@ -75,8 +75,10 @@ export default function UpdateSchoolClass() {
       }
       const success = await FecthUpdateSchoolClass(schoolClassId, formData);
       if (success) {
-        toast.success('Class updated successfully');
         navigate('/class');
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Update failed');
       }

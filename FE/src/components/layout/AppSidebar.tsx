@@ -16,11 +16,12 @@ const navItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
     name: "Dashboard",
-    allowedRoles: ["Admin", "Manager"],
+    allowedRoles: ["Admin", "Manager" , "Nurse"],
     subItems: [
       { name: "User", path: "/user", pro: false, allowedRoles: ["Admin"] },
-      { name: "Student", path: "/student", pro: false, allowedRoles: ["Admin", "Manager"] },
+      { name: "Student", path: "/student", pro: false, allowedRoles: ["Admin", "Manager", "Nurse"] },
       { name: "Class", path: "/class", pro: false, allowedRoles: ["Admin"] },
+      { name: "Medical", path: "/medical/manager-medical", pro: false, allowedRoles: ["Admin", "Manager", "Nurse"] },
     ],
   },
   { icon: <DocsIcon />, name: "Blog", path: "/blog", allowedRoles: ["Admin", "Manager", "Nurse", "Parent"] },

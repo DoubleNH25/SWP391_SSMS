@@ -1,4 +1,4 @@
-import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
+import { CalendarEvent, eventCategories, customFormatDateForBackend } from "@/types/CalendarEvent";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
 import { toast } from 'react-toastify';
@@ -57,7 +57,7 @@ const ViewEventsModal = ({
           ...prev,
           data: {
             ...prev.data,
-            scheduledDate: newDate.toISOString(),
+            scheduledDate: customFormatDateForBackend(newDate),
           } as MedicalEventUpdateCreateViewModel,
         };
       } else {
@@ -65,7 +65,7 @@ const ViewEventsModal = ({
           ...prev,
           data: {
             ...prev.data,
-            startDate: newDate.toISOString(),
+            startDate: customFormatDateForBackend(newDate),
           } as VaccinationCampaignsUpdateCreateViewModel,
         };
       }
@@ -77,7 +77,7 @@ const ViewEventsModal = ({
   return (
     <div>
       <h3 className="text-xl font-bold text-gray-900 mb-2">
-        Schedule for {new Date(viewEventsDate).toLocaleDateString()}
+        Lịch cho {new Date(viewEventsDate).toLocaleDateString()}
       </h3>
       
       <div className="space-y-3 max-h-[400px] overflow-y-auto">
@@ -93,29 +93,29 @@ const ViewEventsModal = ({
                 <div className="flex justify-between">
                   <div className="font-medium text-base">{event.title}</div>
                   <div>
-                    <span className="text-sm">Type: {event.extendedProps.eventType}</span>
+                    <span className="text-sm">Loại: {event.extendedProps.eventType === "medical" ? "Kiểm tra sức khỏe" : "Chiến dịch tiêm chủng"}</span>
                   </div>
                 </div>
                 
                 <div className="text-sm ml-2">
                   {event.extendedProps.eventType === "medical"
-                    ? event.extendedProps.description || "No description"
-                    : `Vaccine: ${event.extendedProps.vaccineName || "No vaccine name"}`}
+                    ? event.extendedProps.description || "Không có mô tả"
+                    : `Vaccine: ${event.extendedProps.vaccineName || "Không có tên vaccine"}`}
                 </div>
                 
                 {event.extendedProps.eventType === "vaccination" && (
                   <div className="text-sm mt-1 ml-2">
-                    <div className="mt-1">Type: {event.extendedProps.vaccineType}</div>
-                    <div className="mt-1">Mfg: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
-                    <div className="mt-1">Exp: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
+                    <div className="mt-1">Loại vaccine: {event.extendedProps.vaccineType}</div>
+                    <div className="mt-1">Ngày sản xuất: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
+                    <div className="mt-1">Ngày hết hạn: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
                   </div>
                 )}
                 
                 <div className="text-sm mt-1 ml-2">
-                  <span>Time:</span> {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span>Thời gian:</span> {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
                 <div className="text-sm mt-1 ml-2">
-                  <span>Class: </span>
+                  <span>Lớp: </span>
                   {(() => {
                     const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
                     return validClassIds.length > 0 ? (
@@ -130,7 +130,7 @@ const ViewEventsModal = ({
                       })
                     ) : (
                       <span className="text-gray-500">
-                        No classes assigned
+                        Không có lớp nào
                       </span>
                     );
                   })()}
@@ -139,7 +139,7 @@ const ViewEventsModal = ({
             );
           })
         ) : (
-          <div className="text-gray-500 text-sm">No events scheduled for this date.</div>
+          <div className="text-gray-500 text-sm">Không có sự kiện nào cho ngày này.</div>
         )}
       </div>
       
@@ -149,14 +149,14 @@ const ViewEventsModal = ({
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
           disabled={loading}
         >
-          Add New Event
+          Thêm sự kiện
         </button>
         <button
           onClick={onClose}
           disabled={loading}
           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
         >
-          Close
+          Đóng
         </button>
       </div>
     </div>

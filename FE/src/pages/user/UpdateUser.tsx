@@ -75,8 +75,10 @@ export default function UpdateUser() {
       }
       const success = await FecthUpdateUsers(userId as string, formData);
       if (success) {
-        toast.success('User updated successfully');
         navigate('/user');
+        setTimeout(() => {
+          toast.success("Cập nhật thành công");
+        }, 100);
       } else {
         throw new Error('Update failed');
       }

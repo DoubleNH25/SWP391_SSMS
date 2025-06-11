@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
 import PageHeader from "@/components/ui/PageHeader";
 import { FecthMedicalVaccinationRecord, FecthUpdateVaccinationRecord } from "@/services/MedicalRecordService";
+import { customFormatDateForBackend } from "@/types/CalendarEvent";
 import { FecthStudentById } from "@/services/UserService";
 import type { MedicalVaccinationRecord, VaccinationRecord } from "@/types/MedicalRecord";
 import { Student } from "@/types/Student";
-import { Search, Syringe, Calendar, User,CheckCircle, Clock, Heart } from 'lucide-react';
+import { Search, User,CheckCircle, Clock, Heart } from 'lucide-react';
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -76,7 +77,7 @@ export default function MedicalVaccinationRecord() {
             if (!record) {
                 return;
             }
-            vaccinationData.vaccinatedAt = new Date().toISOString();
+            vaccinationData.vaccinatedAt = customFormatDateForBackend(new Date());
             const result = await FecthUpdateVaccinationRecord(record.id, vaccinationData);
             if (result) {
                 toast.success("Cập nhật thành công");

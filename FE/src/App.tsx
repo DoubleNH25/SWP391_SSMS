@@ -29,6 +29,11 @@ import MedicalVaccinationRecord from "@/pages/medicalevents/MedicalVaccinationRe
 import MedicalHealthCheckupRecords from "@/pages/medicalevents/MedicalHealthCheckupRecords";
 import ManagerRecord from "@/pages/healthprofile/ManagerRecord";
 import ManagerConselingSchedules from "@/pages/conselingshedules/ManagerConselingSchedules";
+import ManagerHealthProfile from "./pages/healthprofile/UpdateCreateHealthProfile";
+import ManagerMedical from "./pages/medical/ManagerMedical";
+import UpdateMedical from "./pages/medical/UpdateMedical";
+import CreateMedical from "./pages/medical/CreateMedical";
+import HealthCheckupRecords from "./pages/healthprofile/HealthCheckupRecords";
 
 function App() {
   return (
@@ -104,7 +109,7 @@ function App() {
             <Route
               path="/student"
               element={
-                <PrivateRoute allowedRoles={["Admin", "Manager"]}>
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <StudentManager />
                 </PrivateRoute>
               }
@@ -192,6 +197,46 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <ManagerConselingSchedules />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/healthprofile/manager-health-profile/:studentId"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}>
+                  <ManagerHealthProfile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical/manager-medical"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <ManagerMedical />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical/update-medical/:medicalId"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <UpdateMedical />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical/create-medical"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <CreateMedical />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/student/:studentId/health-checkup-records"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}>
+                  <HealthCheckupRecords />
                 </PrivateRoute>
               }
             />

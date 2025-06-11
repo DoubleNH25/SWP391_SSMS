@@ -6,6 +6,7 @@ export interface ConselingSchedules {
 }
 
 export interface ConselingSchedulesAND {
+    id: string;
     studentId: string;
     studentName: string;
     parentName: string;
