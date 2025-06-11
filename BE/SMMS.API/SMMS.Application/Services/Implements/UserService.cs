@@ -379,7 +379,7 @@ namespace SMMS.Application.Services.Implements
 			student.LastUpdatedBy = userId;
 			student.LastUpdatedTime = DateTimeOffset.UtcNow;
 
-			_repositoryManager.StudentRepository.Update(student);
+			//_repositoryManager.StudentRepository.Update(student);
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
