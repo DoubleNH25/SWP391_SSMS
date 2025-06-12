@@ -3,16 +3,20 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router";
 import { DecodeJWT } from "@/utils/DecodeJWT";
-import { UserIcon } from "@/components/icons/index"
+import { UserIcon } from "@/components/icons/index";
 import { FecthUsersProfile } from "@/services/UserService";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<{ name: string; email: string, image: string | null | File }>({
+  const [userName, setUserName] = useState<{
+    name: string;
+    email: string;
+    image: string | null | File;
+  }>({
     name: "Guest",
     email: "",
-    image: null
+    image: null,
   });
 
   useEffect(() => {
@@ -26,18 +30,21 @@ export default function UserDropdown() {
       setUserName({
         name: user.fullName,
         email: user.email,
-        image: user.image
+        image: user.image,
       });
     }
-  }
+  };
 
   const handleChangeUserName = async () => {
     const payload = DecodeJWT();
     if (payload) {
       setUserName({
-        name: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ?? "",
+        name:
+          payload[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+          ] ?? "",
         email: payload.email ?? "",
-        image: null
+        image: null,
       });
     }
   };
@@ -46,7 +53,7 @@ export default function UserDropdown() {
     e.preventDefault();
     localStorage.removeItem("token");
     navigate("/login");
-  }
+  };
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -109,7 +116,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Edit profile
+              Chỉnh sửa hồ sơ
             </DropdownItem>
           </li>
           <li>
@@ -134,7 +141,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Account settings
+              Cài đặt tài khoản
             </DropdownItem>
           </li>
           <li>
@@ -159,7 +166,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Support
+              Hỗ trợ
             </DropdownItem>
           </li>
         </ul>
@@ -183,7 +190,7 @@ export default function UserDropdown() {
               fill=""
             />
           </svg>
-          Sign out
+          Đăng xuất
         </Link>
       </Dropdown>
     </div>
