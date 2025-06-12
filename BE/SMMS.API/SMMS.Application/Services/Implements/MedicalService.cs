@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
@@ -10,18 +11,20 @@ namespace SMMS.Application.Services.Implements
 {
     public class MedicalService : IMedicalService
     {
-        private readonly IRepositoryManager _repositoryManager;
+		private readonly IRepositoryManager _repositoryManager;
+		private readonly INotificationService _notificationService;
 
-        public MedicalService(IRepositoryManager repositoryManager)
-        {
-            _repositoryManager = repositoryManager;
-        }
+		public MedicalService(IRepositoryManager repositoryManager, INotificationService notificationService)
+		{
+			_repositoryManager = repositoryManager;
+			_notificationService = notificationService;
+		}
 
 
-        //-----------------------------------------Medical Stock------------------------------------------------
+		//-----------------------------------------Medical Stock------------------------------------------------
 
 
-        public async Task<bool> CreateMedicalStockAsync(string userId, CreateMedicalStockRequest request)
+		public async Task<bool> CreateMedicalStockAsync(string userId, CreateMedicalStockRequest request)
         {
             try
             {
@@ -179,7 +182,21 @@ namespace SMMS.Application.Services.Implements
                 _repositoryManager.MedicalIncidentRepository.Create(medicalIncident);
                 await _repositoryManager.SaveAsync();
 
-                return true;
+				// Notify Parent///////////////////////////
+				var student = await _repositoryManager.StudentRepository
+					.FindByCondition(s => s.Id == request.StudentId && s.DeletedTime == null, false)
+					.FirstOrDefaultAsync();
+				if (student != null)
+				{
+					await _notificationService.CreateNotificationAsync(
+						student.ParentId,
+						"New Medical Incident",
+						$"An incident involving {student.FullName} has been reported."
+						, medicalIncident.Id
+					);
+				}
+
+				return true;
             }
             catch (Exception ex)
             {
@@ -744,9 +761,23 @@ namespace SMMS.Application.Services.Implements
                 medicalRequest.LastUpdatedTime = DateTimeOffset.Now;
 
                 _repositoryManager.MedicalRequestRepository.Update(medicalRequest);
-                await _repositoryManager.SaveAsync();
 
-                return true;
+				// Notify Parent/////////////////////////////////////
+				var student = await _repositoryManager.StudentRepository
+					.FindByCondition(s => s.Id == medicalRequest.StudentId && s.DeletedTime == null, false)
+					.FirstOrDefaultAsync();
+				if (student != null)
+				{
+					await _notificationService.CreateNotificationAsync(
+						student.ParentId,
+						"Medication Administered",
+						$"{student.FullName} has been given {medicalRequest.MedicalName}."
+						, medicalRequest.Id
+					);
+				}
+
+				await _repositoryManager.SaveAsync();
+				return true;
             }
             catch (Exception ex)
             {

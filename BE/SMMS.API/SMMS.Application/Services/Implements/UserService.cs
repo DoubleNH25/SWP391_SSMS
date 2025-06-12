@@ -487,5 +487,63 @@ namespace SMMS.Application.Services.Implements
 				})
 				.ToListAsync();
 		}
+
+		public async Task<StudentResponse> GetStudentByStudentCodeAsync(string studentCode)
+		{
+			var student = await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.StudentCode == studentCode && s.DeletedTime == null, false)
+				.Include(s => s.SchoolClass)
+				.Include(s => s.HealthProfiles)
+				.Include(s => s.HealthCheckupRecords)
+				.Select(s => new StudentResponse
+				{
+					Id = s.Id,
+					StudentCode = s.StudentCode,
+					FullName = s.FullName,
+					Gender = s.Gender,
+					DateOfBirth = s.DateOfBirth,
+					ClassId = s.ClassId,
+					StudentClass = s.SchoolClass != null ? new SchoolClassResponse
+					{
+						Id = s.SchoolClass.Id,
+						ClassName = s.SchoolClass.ClassName,
+						ClassRoom = s.SchoolClass.ClassRoom,
+						Quantity = s.SchoolClass.Quantity
+					} : null,
+					Image = s.Image,
+					HealthProfile = s.HealthProfiles
+						.Where(hp => hp.DeletedTime == null)
+						.Select(hp => new HealthProfileResponse
+						{
+							Id = hp.Id,
+							StudentId = hp.StudentId,
+							Vision = hp.Vision,
+							Hearing = hp.Hearing,
+							Dental = hp.Dental,
+							BMI = hp.BMI,
+							AbnormalNote = hp.AbnormalNote,
+							VaccinationHistory = hp.VaccinationHistory
+						}).FirstOrDefault(),
+					HealthCheckupRecords = s.HealthCheckupRecords
+						.Where(hcr => hcr.DeletedTime == null)
+						.Select(hcr => new HealthCheckUpResponse
+						{
+							HealthActivityId = hcr.HealthActivityId,
+							StudentId = hcr.StudentId,
+							StudentName = hcr.Student.FullName,
+							NurseId = hcr.LastUpdatedBy,
+							Vision = hcr.Vision,
+							Hearing = hcr.Hearing,
+							Dental = hcr.Dental,
+							BMI = hcr.BMI,
+							AbnormalNote = hcr.AbnormalNote,
+							Time = hcr.RecordDate,
+							RecordDate = hcr.RecordDate,
+							IsLatest = hcr.IsLatest
+						}).ToList()
+				}).FirstOrDefaultAsync();
+
+			return student;
+		}
 	}
 }

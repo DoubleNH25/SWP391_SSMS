@@ -122,6 +122,15 @@ namespace SMMS.API.Controllers
 			return Ok(students);
 		}
 
+		[HttpGet("students/code/{studentCode}")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetStudentByStudentCode(string studentCode)
+		{
+			var student = await _userService.GetStudentByStudentCodeAsync(studentCode);
+			if (student == null) return NotFound("Student not found.");
+			return Ok(student);
+		}
+
 		[HttpPost("students")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> CreateStudent([FromForm] StudentRequest request, string parentId)
@@ -159,6 +168,14 @@ namespace SMMS.API.Controllers
 		{
 			var parents = await _userService.GetAllParentsAsync();
 			return Ok(parents);
+		}
+		[HttpGet("parents/{parentId}/students")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetStudentsByParentId(string parentId)
+		{
+			var students = await _userService.GetMyStudentsAsync(parentId);
+			if (students == null || !students.Any()) return NotFound("No students found for the given parent ID.");
+			return Ok(students);
 		}
 	}
 }

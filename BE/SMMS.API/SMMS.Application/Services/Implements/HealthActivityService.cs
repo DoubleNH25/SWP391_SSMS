@@ -14,10 +14,12 @@ namespace SMMS.Application.Services.Implements
 	public class HealthActivityService : IHealthActivityService
 	{
 		private readonly IRepositoryManager _repositoryManager;
+		private readonly INotificationService _notificationService;
 
-		public HealthActivityService(IRepositoryManager repositoryManager)
+		public HealthActivityService(IRepositoryManager repositoryManager, INotificationService notificationService)
 		{
 			_repositoryManager = repositoryManager;
+			_notificationService = notificationService;
 		}
 
 		public async Task<HealthActivityResponse> CreateHealthActivityAsync(HealthActivityRequest request, string nurseId)
@@ -50,6 +52,22 @@ namespace SMMS.Application.Services.Implements
 			};
 			_repositoryManager.HealthActivityRepository.Create(healthActivity);
 			await _repositoryManager.SaveAsync();
+
+			//Notification for Admin/////////////////////////////////////////////////////////
+			var admins = await _repositoryManager.UserRepository
+			.FindByCondition(u => u.Role.RoleName == "Admin" && u.DeletedTime == null, false)
+			.ToListAsync();
+			foreach (var admin in admins)
+			{
+				await _notificationService.CreateNotificationAsync(
+					admin.Id,
+					"New Health Activity Needs Approval",
+					$"Activity: {healthActivity.Name} created by Nurse requires your approval.",
+					healthActivity.Id
+				);
+			}
+			////////////////////////////////////////////////////////////////////////////////
+			
 			return new HealthActivityResponse
 			{
 				Id = healthActivity.Id,
@@ -159,6 +177,32 @@ namespace SMMS.Application.Services.Implements
 			{
 				healthActivity.Status = ApprovalStatus.Approved;
 				await CreateActivityConsentsAsync(healthActivity);
+
+				// Notify Nurse////////////////////////
+				await _notificationService.CreateNotificationAsync(
+					healthActivity.UserId,
+					"Health Activity Approved",
+					$"Your activity: {healthActivity.Name} has been approved.",
+					healthActivity.Id
+				);
+
+				// Notify Parents/////////////////////
+				var classIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList();
+				var students = await _repositoryManager.StudentRepository
+					.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
+					.ToListAsync();
+				var parentIds = students.Select(s => s.ParentId).Distinct().ToList();
+				foreach (var student in students)
+				{
+					await _notificationService.CreateNotificationAsync(
+						student.ParentId,
+						"New Health Activity for Your Child",
+						$"Activity: {healthActivity.Name} for your child: {student.FullName}. Please confirm participation.",
+						healthActivity.Id
+					);
+				}
+
+
 			}
 			else if (action == "reject")
 			{

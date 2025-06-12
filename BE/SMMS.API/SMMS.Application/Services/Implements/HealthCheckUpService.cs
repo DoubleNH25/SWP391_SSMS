@@ -9,10 +9,12 @@ namespace SMMS.Application.Services.Implements
 	public class HealthCheckupService : IHealthCheckupService
 	{
 		private readonly IRepositoryManager _repositoryManager;
+		private readonly INotificationService _notificationService;
 
-		public HealthCheckupService(IRepositoryManager repositoryManager)
+		public HealthCheckupService(IRepositoryManager repositoryManager, INotificationService notificationService)
 		{
 			_repositoryManager = repositoryManager;
+			_notificationService = notificationService;
 		}
 		public async Task<List<HealthCheckUpResponse>> GetCheckingByParent(string parentId)
 		{
@@ -87,15 +89,31 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager.HealthCheckRepository.Update(record);
 
 			await UpdateHealthProfileAsync(record);
+
+			// Notify Parent///////////////////////////////////////////////////////
+			var student = await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == record.StudentId && s.DeletedTime == null, false)
+				.FirstOrDefaultAsync();
+			if (student != null)
+			{
+				await _notificationService.CreateNotificationAsync(
+					student.ParentId,
+					"New Health Checkup Record",
+					$"A new health checkup record for {student.FullName} is available."
+					, record.Id
+				);
+			}
+
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
 
 		public async Task UpdateHealthProfileAsync(HealthCheckupRecord record)
 		{
-			var oldProfiles = _repositoryManager.HealthProfileRepository
+			var oldProfiles = await Task.Run(() => _repositoryManager.HealthProfileRepository
 				.FindByCondition(hp => hp.StudentId == record.StudentId && hp.DeletedTime == null, true)
-				.ToList();
+				.ToList());
+
 			foreach (var oldProfile in oldProfiles)
 			{
 				oldProfile.DeletedBy = "System";

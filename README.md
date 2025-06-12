@@ -28,7 +28,7 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
 | GET | `/api/users` | Lấy tất cả người dùng | Admin |
-| GET | `/api/users/{id}` | Lấy người dùng theo ID | Admin |
+| GET | `/api/users/{id}` | Lấy người dùng theo ID | Admin, Manager, Nurse |
 | POST | `/api/users` | Tạo người dùng mới | Admin |
 | PUT | `/api/users/{id}` | Cập nhật người dùng | Admin |
 | DELETE | `/api/users/{id}` | Xóa người dùng | Admin |
@@ -37,10 +37,12 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | POST | `/api/users/import-students` | Nhập học sinh từ Excel | Admin, Manager |
 | GET | `/api/users/students` | Lấy tất cả học sinh | Admin, Manager, Nurse |
 | GET | `/api/users/students/{studentId}` | Lấy học sinh theo ID | Admin, Manager, Nurse |
+| GET | `/api/users/students/code/{studentCode}` | Lấy học sinh theo mã học sinh | Admin, Manager, Nurse |
 | POST | `/api/users/students` | Tạo học sinh bởi admin | Admin |
 | PUT | `/api/users/students/{studentId}` | Cập nhật học sinh | Parent, Admin |
 | DELETE | `/api/users/students/{studentId}` | Xóa học sinh | Admin, Manager |
 | GET | `/api/users/parents/get-all-parent` | Lấy tất cả phụ huynh | Admin, Manager, Nurse |
+| GET | `/api/users/parents/{parentId}/students` | Lấy học sinh theo ID phụ huynh | Admin, Manager, Nurse |
 
 ### Roles
 | Method | Endpoint | Description | Roles |
@@ -164,11 +166,13 @@ Most endpoints require JWT authentication via the `Authorization` header.
 |--------|----------|-------------|-------|
 | GET | `/api/parents/students` | Lấy danh sách học sinh của phụ huynh | Parent |
 | GET | `/api/parents/get-all-student-health-checkup` | Lấy đợt kiểm tra sức khỏe học sinh | Parent |
+| GET | `/api/parents/get-all-vaccination-records` | Lấy hồ sơ tiêm chủng của con | Parent |
 | GET | `/api/parents/get-all-conseling-schedules` | Lấy lịch tư vấn học sinh | Parent |
 | POST | `/api/parents/conseling-schedules` | Yêu cầu tư vấn | Parent |
 | PUT | `/api/parents/students/{studentId}/health-profile` | Cập nhật hồ sơ sức khỏe học sinh | Parent |
 | GET | `/api/parents/activity-consents/my-children` | Lấy đồng thuận hoạt động cho con | Parent |
 | PUT | `/api/parents/activity-consents/{id}/status` | Xác nhận đồng thuận | Parent |
+| GET | `/api/parents/activity-consents/HealthActivity-or-VaccinationCampaign` | Lấy đồng thuận theo ID hoạt động | Parent |
 
 ---
 
@@ -193,6 +197,19 @@ Most endpoints require JWT authentication via the `Authorization` header.
 | Method | Endpoint | Description | Roles |
 |--------|----------|-------------|-------|
 | GET | `/WeatherForecast` | Lấy dự báo thời tiết mẫu | Public |
+
+---
+
+## 10. Notifications
+
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/notifications` | Lấy tất cả thông báo của người dùng | Authenticated |
+| GET | `/api/notifications/unread` | Lấy thông báo chưa đọc | Authenticated |
+| GET | `/api/notifications/read` | Lấy thông báo đã đọc | Authenticated |
+| PUT | `/api/notifications/{id}/read` | Đánh dấu thông báo đã đọc | Authenticated |
+| PUT | `/api/notifications/mark-all-read` | Đánh dấu tất cả thông báo đã đọc | Authenticated |
+| DELETE | `/api/notifications/delete-read` | Xóa tất cả thông báo đã đọc | Authenticated |
 
 ---
 

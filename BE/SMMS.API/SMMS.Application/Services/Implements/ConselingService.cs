@@ -10,10 +10,12 @@ namespace SMMS.Application.Services.Implements
 	public class ConselingService : IConselingService
 	{
 		private readonly IRepositoryManager _repositoryManager;
+		private readonly INotificationService _notificationService;
 
-		public ConselingService(IRepositoryManager repositoryManager)
+		public ConselingService(IRepositoryManager repositoryManager, INotificationService notificationService)
 		{
 			_repositoryManager = repositoryManager;
+			_notificationService = notificationService;
 		}
 
 		public async Task<bool> RequestConselingScheduleAsync(string studentId, string healthCheckupId, DateTime requestedDate, string parentId, string note)
@@ -48,6 +50,15 @@ namespace SMMS.Application.Services.Implements
 				CreatedTime = DateTimeOffset.UtcNow
 			};
 			_repositoryManager.ConselingRepository.Create(schedule);
+
+			// Notify Nurse//////////////////////////////
+			await _notificationService.CreateNotificationAsync(
+				schedule.MedicalStaffId,
+				"New Counseling Schedule Request",
+				$"Parent of {student.StudentCode}-{student.FullName} has requested a counseling session."
+				,schedule.Id
+			);
+
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
@@ -64,6 +75,17 @@ namespace SMMS.Application.Services.Implements
 			schedule.LastUpdatedBy = nurseId;
 			schedule.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConselingRepository.Update(schedule);
+
+			// Notify Parent//////////////////////////////////////////
+			var message = status == ApprovalStatus.Approved
+				? $"Your counseling request has been approved. Scheduled for: {scheduledTime}."
+				: "Your counseling request has been rejected.";
+			await _notificationService.CreateNotificationAsync(
+				schedule.ParentId,
+				$"Counseling Schedule {status}",
+				message, schedule.Id
+			);
+
 			await _repositoryManager.SaveAsync();
 			return true;
 		}

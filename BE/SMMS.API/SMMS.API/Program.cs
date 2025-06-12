@@ -83,6 +83,7 @@ builder.Services.AddScoped<IHealthCheckupService, HealthCheckupService>();
 builder.Services.AddScoped<IConselingService, ConselingService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IMedicalService, MedicalService>();
