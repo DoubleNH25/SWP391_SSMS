@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SMMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateMigration : Migration
+    public partial class mi : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -42,7 +42,8 @@ namespace SMMS.Infrastructure.Migrations
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DetailInformation = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -412,7 +413,7 @@ namespace SMMS.Infrastructure.Migrations
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     IncidentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -452,6 +453,9 @@ namespace SMMS.Infrastructure.Migrations
                     EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Dosage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastCompletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCompletedToday = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -684,10 +688,10 @@ namespace SMMS.Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "RoleName" },
                 values: new object[,]
                 {
-                    { "4d07fa7f-4d9a-4f85-a301-cab23e66ca8a", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5896), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5897), new TimeSpan(0, 0, 0, 0, 0)), "Nurse" },
-                    { "a2e1f677-b7e7-4e11-b414-1512af9def4b", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5845), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5846), new TimeSpan(0, 0, 0, 0, 0)), "Manager" },
-                    { "de99dad4-8b7a-44b8-b4b9-f8e54fb91e6c", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5829), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Admin" },
-                    { "eca3116c-dbd1-4e91-a03a-044a1d0de7c9", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5950), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 78, DateTimeKind.Unspecified).AddTicks(5951), new TimeSpan(0, 0, 0, 0, 0)), "Parent" }
+                    { "477b9ec4-497d-4297-b459-96b72e8c2764", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2133), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2134), new TimeSpan(0, 0, 0, 0, 0)), "Manager" },
+                    { "7664f2af-14e2-4d21-8c01-4ecb03339d7c", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2163), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2164), new TimeSpan(0, 0, 0, 0, 0)), "Nurse" },
+                    { "b935d43e-51cb-4e86-8fb0-9e4ee5b95d8b", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2121), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Admin" },
+                    { "f348f728-6770-4b2d-b246-90125a3b377e", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2170), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 480, DateTimeKind.Unspecified).AddTicks(2170), new TimeSpan(0, 0, 0, 0, 0)), "Parent" }
                 });
 
             migrationBuilder.InsertData(
@@ -695,8 +699,8 @@ namespace SMMS.Infrastructure.Migrations
                 columns: new[] { "Id", "ClassName", "ClassRoom", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "Quantity" },
                 values: new object[,]
                 {
-                    { "56ed3a71-79ec-4156-b6a3-2403f3e4b603", "Class 10A", "Room 101", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(212), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 30 },
-                    { "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "Class 10B", "Room 102", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(218), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 28 }
+                    { "2615e689-6456-4496-89cb-a3f35c723905", "Class 10A", "Room 101", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8145), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 30 },
+                    { "c587e514-cf8a-4385-bac1-6f786ff80044", "Class 10B", "Room 102", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8155), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), 28 }
                 });
 
             migrationBuilder.InsertData(
@@ -704,49 +708,49 @@ namespace SMMS.Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Email", "FullName", "Image", "LastUpdatedBy", "LastUpdatedTime", "Password", "Phone", "RoleId" },
                 values: new object[,]
                 {
-                    { "53e4564c-0e72-4772-addf-c7642db2a5f3", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 677, DateTimeKind.Unspecified).AddTicks(7300), new TimeSpan(0, 0, 0, 0, 0)), null, null, "manager@gmail.com", "FireFly", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$co/Ct3wcpcKEHRo1smFfvuCwWyCHni312Rm0q6YIdHYKVFoaJQ1lu", "0987651234", "a2e1f677-b7e7-4e11-b414-1512af9def4b" },
-                    { "94389e8e-a398-4e89-8962-897ac3d03609", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 873, DateTimeKind.Unspecified).AddTicks(9344), new TimeSpan(0, 0, 0, 0, 0)), null, null, "parent@gmail.com", "KietBap", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$8Nob.GbYaPikot72dM2O6u8UG9GuCVgZhr3zVbbdPCIrt5I4IWcra", "0987051234", "eca3116c-dbd1-4e91-a03a-044a1d0de7c9" },
-                    { "b5c344e4-029e-4227-beea-0a8b7bfacd95", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 479, DateTimeKind.Unspecified).AddTicks(6933), new TimeSpan(0, 0, 0, 0, 0)), null, null, "nurse@gmail.com", "Jack97", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$jlL.cG7zVHC7HJAJU1zVxeIhoII4YmJAw735jFyxDLZ.gsd6ovfWm", "0912345678", "4d07fa7f-4d9a-4f85-a301-cab23e66ca8a" },
-                    { "f593f5b2-8234-416c-8cdd-a486be2f743a", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 291, DateTimeKind.Unspecified).AddTicks(6517), new TimeSpan(0, 0, 0, 0, 0)), null, null, "admin@gmail.com", "KICM vippro", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$.KMgDX4IfULg5H/kqSNF6.ZFIPpahbPHLG/D7KRAiHkIEPeZyi6TC", "0987654321", "de99dad4-8b7a-44b8-b4b9-f8e54fb91e6c" }
+                    { "05e016cf-08d0-4ae8-9d89-4bf5b79fd55b", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 610, DateTimeKind.Unspecified).AddTicks(6659), new TimeSpan(0, 0, 0, 0, 0)), null, null, "admin@gmail.com", "KICM vippro", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$Lrwk58MvKuP6oJDS2zFU7u7G5W6pch223Fm3PS5yXgak/gqLywaLa", "0987654321", "b935d43e-51cb-4e86-8fb0-9e4ee5b95d8b" },
+                    { "45ff7159-abda-4372-af09-14f69a9308b2", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 739, DateTimeKind.Unspecified).AddTicks(1742), new TimeSpan(0, 0, 0, 0, 0)), null, null, "nurse@gmail.com", "Jack97", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$mJbEqoimlp/kqlbTsPIML.pQoUhg8.s/HKBO.F82LAf85uq2RAIW2", "0912345678", "7664f2af-14e2-4d21-8c01-4ecb03339d7c" },
+                    { "5e868c14-f1e1-449d-9437-3fe9908495b9", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(6816), new TimeSpan(0, 0, 0, 0, 0)), null, null, "parent@gmail.com", "KietBap", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$BY2SrfA5cNSg9tOgNYP0IeobkvXXVj/HH7J9IgXMEXxD.5ip6vNG2", "0987051234", "f348f728-6770-4b2d-b246-90125a3b377e" },
+                    { "e2ab49ac-e68b-44fe-8aa0-800d4deeed23", "SeedData", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 865, DateTimeKind.Unspecified).AddTicks(9648), new TimeSpan(0, 0, 0, 0, 0)), null, null, "manager@gmail.com", "FireFly", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "$2a$11$pGNJeqT9w12JODRXCTp0GOxU9CjaYsXmnmjHoUZofCEjeJKbuPTVy", "0987651234", "477b9ec4-497d-4297-b459-96b72e8c2764" }
                 });
 
             migrationBuilder.InsertData(
                 table: "HealthActivity",
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Description", "LastUpdatedBy", "LastUpdatedTime", "Name", "ScheduledDate", "Status", "UserId" },
-                values: new object[] { "7aab09da-b367-4d59-ac41-73453808efc6", "b5c344e4-029e-4227-beea-0a8b7bfacd95", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(482), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Yearly health check for students", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Annual Health Check", new DateTime(2024, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "b5c344e4-029e-4227-beea-0a8b7bfacd95" });
+                values: new object[] { "1048b985-8714-4dc4-a3e1-918fce2596e6", "45ff7159-abda-4372-af09-14f69a9308b2", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8495), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Yearly health check for students", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Annual Health Check", new DateTime(2024, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "45ff7159-abda-4372-af09-14f69a9308b2" });
 
             migrationBuilder.InsertData(
                 table: "Student",
                 columns: new[] { "Id", "ClassId", "CreatedBy", "CreatedTime", "DateOfBirth", "DeletedBy", "DeletedTime", "FullName", "Gender", "Image", "LastUpdatedBy", "LastUpdatedTime", "ParentId" },
                 values: new object[,]
                 {
-                    { "357e080e-8ffa-4f54-8fb7-807e29c573f5", "56ed3a71-79ec-4156-b6a3-2403f3e4b603", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(311), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Nguyen Van A", "Male", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "94389e8e-a398-4e89-8962-897ac3d03609" },
-                    { "6b524770-a631-4f19-b68f-3269977fd64a", "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(315), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Tran Thi B", "Female", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "94389e8e-a398-4e89-8962-897ac3d03609" }
+                    { "12fd56cd-4e1f-499c-8000-aff28f3313b7", "c587e514-cf8a-4385-bac1-6f786ff80044", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8329), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Tran Thi B", "Female", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "5e868c14-f1e1-449d-9437-3fe9908495b9" },
+                    { "c7d4614b-058e-47bd-b151-854c21205bdb", "2615e689-6456-4496-89cb-a3f35c723905", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8321), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2010, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Nguyen Van A", "Male", null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "5e868c14-f1e1-449d-9437-3fe9908495b9" }
                 });
 
             migrationBuilder.InsertData(
                 table: "VaccinationCampaign",
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "EXP", "LastUpdatedBy", "LastUpdatedTime", "MFG", "Name", "StartDate", "Status", "UserId", "VaccineName", "VaccineType" },
-                values: new object[] { "0484b4d6-44c0-4fe8-979e-af03d3c5433f", "b5c344e4-029e-4227-beea-0a8b7bfacd95", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(798), new TimeSpan(0, 0, 0, 0, 0)), null, null, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Flu Vaccination", new DateTime(2024, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "b5c344e4-029e-4227-beea-0a8b7bfacd95", "Flu Vaccine", "Flu" });
+                values: new object[] { "487e6492-dd1c-4593-bf94-af07b290f7a4", "45ff7159-abda-4372-af09-14f69a9308b2", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(9194), new TimeSpan(0, 0, 0, 0, 0)), null, null, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Flu Vaccination", new DateTime(2024, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "45ff7159-abda-4372-af09-14f69a9308b2", "Flu Vaccine", "Flu" });
 
             migrationBuilder.InsertData(
                 table: "HealthActivityClasses",
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "HealthActivityId", "LastUpdatedBy", "LastUpdatedTime", "SchoolClassId" },
-                values: new object[] { "159a0cf8-662d-4efb-9218-bcd9cc1d7cf5", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(622), new TimeSpan(0, 0, 0, 0, 0)), null, null, "7aab09da-b367-4d59-ac41-73453808efc6", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "56ed3a71-79ec-4156-b6a3-2403f3e4b603" });
+                values: new object[] { "a34ea6cd-e1e2-4eeb-b4e7-ab1e7fd6d838", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8607), new TimeSpan(0, 0, 0, 0, 0)), null, null, "1048b985-8714-4dc4-a3e1-918fce2596e6", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "2615e689-6456-4496-89cb-a3f35c723905" });
 
             migrationBuilder.InsertData(
                 table: "HealthProfile",
                 columns: new[] { "Id", "AbnormalNote", "BMI", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "Dental", "Hearing", "LastUpdatedBy", "LastUpdatedTime", "StudentId", "VaccinationHistory", "Vision" },
                 values: new object[,]
                 {
-                    { "0db6e4d5-f85a-42f5-a4a9-28693325bcf8", "None", 20.5, "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(366), new TimeSpan(0, 0, 0, 0, 0)), null, null, "No cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "357e080e-8ffa-4f54-8fb7-807e29c573f5", "Fully vaccinated", "20/20" },
-                    { "eb41da02-3801-4e1f-b44e-dbef4408e9e9", "Monitor dental health", 19.800000000000001, "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(372), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Minor cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "6b524770-a631-4f19-b68f-3269977fd64a", "Fully vaccinated", "20/25" }
+                    { "27357abf-a81e-40e9-a076-8064d4c0d9f0", "Monitor dental health", 19.800000000000001, "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8416), new TimeSpan(0, 0, 0, 0, 0)), null, null, "Minor cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "12fd56cd-4e1f-499c-8000-aff28f3313b7", "Fully vaccinated", "20/25" },
+                    { "df0d47e0-84da-48f7-b5be-469bbdf572f8", "None", 20.5, "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(8402), new TimeSpan(0, 0, 0, 0, 0)), null, null, "No cavities", "Normal", null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "c7d4614b-058e-47bd-b151-854c21205bdb", "Fully vaccinated", "20/20" }
                 });
 
             migrationBuilder.InsertData(
                 table: "VaccinationCampaignClasses",
                 columns: new[] { "Id", "CreatedBy", "CreatedTime", "DeletedBy", "DeletedTime", "LastUpdatedBy", "LastUpdatedTime", "SchoolClassId", "VaccinationCampaignId" },
-                values: new object[] { "7579f8ed-c028-4e59-b7a9-517cfaad9622", "System", new DateTimeOffset(new DateTime(2025, 6, 6, 10, 50, 7, 874, DateTimeKind.Unspecified).AddTicks(839), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "f7bd68cf-a9eb-48b3-b04f-c5b5d8486c2d", "0484b4d6-44c0-4fe8-979e-af03d3c5433f" });
+                values: new object[] { "66477b53-aead-4300-bb2b-a22a5cbf322e", "System", new DateTimeOffset(new DateTime(2025, 6, 12, 3, 27, 11, 995, DateTimeKind.Unspecified).AddTicks(9247), new TimeSpan(0, 0, 0, 0, 0)), null, null, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "c587e514-cf8a-4385-bac1-6f786ff80044", "487e6492-dd1c-4593-bf94-af07b290f7a4" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityConsent_HealthActivityId",
