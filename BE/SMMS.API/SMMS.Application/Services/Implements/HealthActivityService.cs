@@ -97,7 +97,7 @@ namespace SMMS.Application.Services.Implements
 					HealthActivityId = healthActivity.Id,
 					VaccinationCampaignId = null,
 					Status = ApprovalStatus.Pending,
-					Comments = "none",
+					Comments = healthActivity.Description,
 					ScheduleTime = healthActivity.ScheduledDate,
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow,

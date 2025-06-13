@@ -159,7 +159,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("activity-consents/health-activities/{healthActivityId}")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetActivityConsentsForHealthActivity(string healthActivityId)
 		{
 			var consents = await _consentService.GetConsentsByHAIdAsync(healthActivityId);
@@ -167,7 +167,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("activity-consents/vaccination-campaigns/{vaccinationCampaignId}")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetActivityConsentsForVaccinationCampaign(string vaccinationCampaignId)
 		{
 			var consents = await _consentService.GetConsentsByVCIdAsync(vaccinationCampaignId);

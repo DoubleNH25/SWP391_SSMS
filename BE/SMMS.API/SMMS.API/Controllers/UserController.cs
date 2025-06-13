@@ -29,7 +29,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetUserById(string id)
 		{
 			var user = await _userService.GetUserByIdAsync(id);
@@ -113,7 +113,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("students/{studentId}")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetStudentsById(string studentId)
 		{
 			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

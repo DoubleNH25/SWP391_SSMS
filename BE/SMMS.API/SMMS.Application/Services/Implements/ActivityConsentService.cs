@@ -135,6 +135,7 @@ namespace SMMS.Application.Services.Implements
 					ScheduleTime = ac.ScheduleTime,
 					ResponsibleUserId = ac.ActivityType == "HealthActivity" ? ac.HealthActivity.UserId : ac.VaccinationCampaign.UserId,
 					ResponsibleUserName = ac.ActivityType == "HealthActivity" ? ac.HealthActivity.User.FullName : ac.VaccinationCampaign.User.FullName,
+					Description = ac.Comments
 				}).ToListAsync();
 			return consents;
 		}
@@ -157,6 +158,7 @@ namespace SMMS.Application.Services.Implements
 					ScheduleTime = ac.ScheduleTime,
 					ResponsibleUserId = ac.HealthActivity.UserId,
 					ResponsibleUserName = ac.HealthActivity.User.FullName,
+					Description = ac.Comments
 				}).ToListAsync();
 			return consents;
 		}
@@ -179,6 +181,7 @@ namespace SMMS.Application.Services.Implements
 					ScheduleTime = ac.ScheduleTime,
 					ResponsibleUserId = ac.VaccinationCampaign.UserId,
 					ResponsibleUserName = ac.VaccinationCampaign.User.FullName,
+					Description = ac.Comments
 				}).ToListAsync();
 			return consents;
 		}
@@ -203,6 +206,7 @@ namespace SMMS.Application.Services.Implements
 						ScheduleTime = ac.ScheduleTime,
 						ResponsibleUserId = ac.HealthActivity.UserId,
 						ResponsibleUserName = ac.HealthActivity.User.FullName,
+						Description = ac.Comments
 					}).ToListAsync();
 			}
 			else if (activityType == "VaccinationCampaign")
@@ -223,6 +227,7 @@ namespace SMMS.Application.Services.Implements
 						ScheduleTime = ac.ScheduleTime,
 						ResponsibleUserId = ac.VaccinationCampaign.UserId,
 						ResponsibleUserName = ac.VaccinationCampaign.User.FullName,
+						Description = ac.Comments
 					}).ToListAsync();
 			}
 			else
