@@ -1,3 +1,4 @@
+import { ActivityMedicalEventViewModel } from "@/types/ActivityMedicalEvent";
 import { MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/types/MedicalEvent";
 import ApiClient from "@/utils/ApiBase";
 

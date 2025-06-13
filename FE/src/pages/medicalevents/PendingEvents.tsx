@@ -54,9 +54,9 @@ export default function PendingEventManager() {
     vaccinationCampaigns.filter((campaign) => campaign.status === "Pending")
       .length;
 
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(7);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsVaccinationCampaignsPerPage] = useState(5);
+  const [itemsVaccinationCampaignsPerPage] = useState(7);
   const [currentVaccinationCampaignsPage] = useState(1);
 
   const totalMedicalEventPages =

@@ -46,6 +46,7 @@ export interface ParentViewModel extends User{
 
 export interface Student {
   id: string;
+  studentCode: string;
   fullName: string;
   gender: string;
   dateOfBirth: string;

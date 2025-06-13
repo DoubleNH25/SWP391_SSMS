@@ -5,7 +5,7 @@ export async function FecthNotification(): Promise<NotificationViewModel[]> {
   try {
     const response = await ApiClient<NotificationViewModel[]>({
       method: 'GET',
-      endpoint: '/parents/activity-consents/my-children',
+      endpoint: '/notifications',
     });
     return response?.data || [];
   } catch (err) {
@@ -14,9 +14,10 @@ export async function FecthNotification(): Promise<NotificationViewModel[]> {
   }
 }
 
-export async function FecthConfirmNotification(activityId: string, status: string): Promise<boolean> {
-  if (!activityId) {
-    throw new Error('Activity ID is required');
+
+export async function FecthReadNotification(id: string): Promise<boolean> {
+  if (!id) {
+    throw new Error('Notification ID is required');
   }
   if (!localStorage.getItem('token')) {
     throw new Error('User is not authenticated');
@@ -24,32 +25,44 @@ export async function FecthConfirmNotification(activityId: string, status: strin
   try {
     await ApiClient<boolean>({
       method: 'PUT',
-      endpoint: `/parents/activity-consents/${activityId}/confirm`,
-      data: status
+      endpoint: `/notifications/${id}/read`,
     });
     return true;
   } catch (err) {
-    console.error('Failed to confirm notifications:', err);
-    throw new Error('Unable to confirm notification. Please try again.');
+    console.error('Failed to read notification:', err);
+    throw new Error('Unable to read notification. Please try again.');
   }
 }
 
-export async function FecthRejectNotification(activityId: string, status: string): Promise<boolean> {
-  if (!activityId) {
-    throw new Error('Activity ID is required');
-  }
+export async function FecthReadAllNotification(): Promise<boolean> {
   if (!localStorage.getItem('token')) {
     throw new Error('User is not authenticated');
   }
   try {
     await ApiClient<boolean>({
       method: 'PUT',
-      endpoint: `/parents/activity-consents/${activityId}/confirm`,
-      data: status
+      endpoint: `/notifications/mark-all-read`,
     });
     return true;
   } catch (err) {
-    console.error('Failed to reject notifications:', err);
-    throw new Error('Unable to opt out of notification. Please try again.');
+    console.error('Failed to read all notifications:', err);
+    throw new Error('Unable to read all notifications. Please try again.');
+  }
+}
+
+
+export async function FecthDeleteNotification(): Promise<boolean> {
+  if (!localStorage.getItem('token')) {
+    throw new Error('User is not authenticated');
+  }
+  try {
+    await ApiClient<boolean>({
+      method: 'PUT',
+      endpoint: `/notifications/mark-all-read`,
+    });
+    return true;
+  } catch (err) {
+    console.error('Failed to read all notifications:', err);
+    throw new Error('Unable to read all notifications. Please try again.');
   }
 }
