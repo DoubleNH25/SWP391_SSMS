@@ -20,6 +20,7 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager = repositoryManager;
 			_notificationService = notificationService;
 		}
+
 		public async Task<VaccinationCampaignResponse> CreateVaccinationCampaignAsync(VaccinationCampaignRequest request, string nurseId)
 		{
 			var existingClassIds = _repositoryManager.ClassRepository
@@ -105,23 +106,6 @@ namespace SMMS.Application.Services.Implements
 					$"Your campaign: {vaccination.Name} has been approved."
 					, vaccination.Id
 				);
-
-				// Notify Parents/////////////////////
-				var classIds = vaccination.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList();
-				var students = await _repositoryManager.StudentRepository
-					.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
-					.ToListAsync();
-				var parentIds = students.Select(s => s.ParentId).Distinct().ToList();
-				foreach (var student in students)
-				{
-					await _notificationService.CreateNotificationAsync(
-						student.ParentId,
-						"New Vaccination Campaign for Your Child",
-						$"Campaign: {vaccination.Name}. Please confirm participation."
-						, vaccination.Id
-					);
-				}
-
 			}
 			else if (action == "reject")
 			{
@@ -156,11 +140,21 @@ namespace SMMS.Application.Services.Implements
 					VaccinationCampaignId = campaign.Id,
 					HealthActivityId = null,
 					Status = ApprovalStatus.Pending,
+					Comments = campaign.VaccineName,
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow,
 					ActivityType = "VaccinationCampaign"
 				};
 				_repositoryManager.ConsentRepository.Create(consent);
+				await _repositoryManager.SaveAsync();
+
+				// Create notification for each consent/////////////////////////////////////
+				await _notificationService.CreateNotificationAsync(
+						student.ParentId,
+						"New Vaccination Campaign for Your Child",
+						$"Campaign: {campaign.Name}. Please confirm participation."
+						, campaign.Id
+					);
 			}
 		}
 

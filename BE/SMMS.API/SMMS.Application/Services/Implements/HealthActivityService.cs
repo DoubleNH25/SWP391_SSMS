@@ -8,6 +8,7 @@ using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
+using SMMS.Infrastructure.Implements;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -84,9 +85,9 @@ namespace SMMS.Application.Services.Implements
 		private async Task CreateActivityConsentsAsync(HealthActivity healthActivity)
 		{
 			var classIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList();
-			var students = await Task.Run(() => _repositoryManager.StudentRepository
-				.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
-				.ToList());
+			var students = await _repositoryManager.StudentRepository
+			   .FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
+			   .ToListAsync();
 
 			foreach (var student in students)
 			{
@@ -104,8 +105,17 @@ namespace SMMS.Application.Services.Implements
 					ActivityType = "HealthActivity"
 				};
 				_repositoryManager.ConsentRepository.Create(consent);
+				await _repositoryManager.SaveAsync();
+
+				// Create notification for each consent/////////////////////////////////////
+				await _notificationService.CreateNotificationAsync(
+					student.ParentId,
+							"New Health Activity for Your Child",
+							$"Activity: {healthActivity.Name} for your child: {student.FullName}. Please confirm participation.",
+					consent.Id
+
+				);
 			}
-			await _repositoryManager.SaveAsync();
 		}
 
 		public async Task<List<HealthActivityResponse>> GetPendingHealthActivitiesAsync()
@@ -185,24 +195,6 @@ namespace SMMS.Application.Services.Implements
 					$"Your activity: {healthActivity.Name} has been approved.",
 					healthActivity.Id
 				);
-
-				// Notify Parents/////////////////////
-				var classIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList();
-				var students = await _repositoryManager.StudentRepository
-					.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
-					.ToListAsync();
-				var parentIds = students.Select(s => s.ParentId).Distinct().ToList();
-				foreach (var student in students)
-				{
-					await _notificationService.CreateNotificationAsync(
-						student.ParentId,
-						"New Health Activity for Your Child",
-						$"Activity: {healthActivity.Name} for your child: {student.FullName}. Please confirm participation.",
-						healthActivity.Id
-					);
-				}
-
-
 			}
 			else if (action == "reject")
 			{
@@ -258,7 +250,6 @@ namespace SMMS.Application.Services.Implements
 			{
 				return false;
 			}
-
 			activity.DeletedBy = userId;
 			activity.DeletedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.HealthActivityRepository.Update(activity);
