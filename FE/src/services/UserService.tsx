@@ -203,6 +203,36 @@ export async function FecthParents(): Promise<ParentViewModel[]> {
   }
 }
 
+export async function FecthStudentsByParentId(parentId: string): Promise<Student[]> {
+  if (!parentId) {
+    console.error("Parent ID is required to get students.");
+    return [];
+  }
+  try {
+    const response = await ApiClient<Student[]>({
+      method: 'GET',
+      endpoint: `/users/parents/${parentId}/students`,
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error("Failed to get students by parent ID:", err);
+    return [];
+  }
+}
+
+export async function FecthStudentByCode(studentCode : string): Promise<Student | null> {
+  try {
+    const response = await ApiClient<Student>({
+      method: 'GET',
+      endpoint: `/users/students/code/${studentCode}`,
+    });
+    return response?.data || null;
+  } catch (err) {
+    console.error("Failed to get student by code:", err);
+    return null;
+  }
+}
+
 //========================================API PROFILE===========================================/
 
 export async function FecthUsersProfile(): Promise<UserProfile | null> {
@@ -232,3 +262,5 @@ export async function FecthUpdateProfile(userProfile: UserProfileUpdateViewModel
     throw new Error("Failed to update profile.");
   }
 }
+
+

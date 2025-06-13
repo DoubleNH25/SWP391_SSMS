@@ -79,9 +79,6 @@ export default function CreateMedical() {
                 ...formData,
                 expiryDate: customFormatDateForBackend(formData.expiryDate)
             };
-            console.log('Sending data to backend:', submitData);
-            console.log('Original date:', formData.expiryDate);
-            console.log('Formatted date:', submitData.expiryDate);
             await FecthCreateMedical(submitData);
             toast.success("Thêm thuốc thành công");
             navigate("/medical/manager-medical");

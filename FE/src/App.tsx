@@ -34,6 +34,9 @@ import ManagerMedical from "./pages/medical/ManagerMedical";
 import UpdateMedical from "./pages/medical/UpdateMedical";
 import CreateMedical from "./pages/medical/CreateMedical";
 import HealthCheckupRecords from "./pages/healthprofile/HealthCheckupRecords";
+import MedicalRequest from "./pages/medicalrequest/MedicalRequest";
+import CreateMedicalRequest from "./pages/medicalrequest/CreateMedicalRequest";
+import ManagerActivityMedical from "./pages/acivitymedical/ManagerActivityMedical";
 
 function App() {
   return (
@@ -45,10 +48,15 @@ function App() {
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/blog" element={<Blog />} />
 
-          <Route path="/profile" element={
-            <PrivateRoute allowedRoles={['Admin', 'Manager', 'Nurse', 'Parent']}>
-              <EditProfile />
-            </PrivateRoute>}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute
+                allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+              >
+                <EditProfile />
+              </PrivateRoute>
+            }
           />
 
           <Route
@@ -90,20 +98,29 @@ function App() {
               }
             />
             {/**Class*/}
-            <Route path="/class" element={
-              <PrivateRoute allowedRoles={['Admin']}>
-                <CLassSchoolManager />
-              </PrivateRoute>}
+            <Route
+              path="/class"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <CLassSchoolManager />
+                </PrivateRoute>
+              }
             />
-            <Route path="/class/add-class" element={
-              <PrivateRoute allowedRoles={['Admin']}>
-                <AddSchoolClass />
-              </PrivateRoute>}
+            <Route
+              path="/class/add-class"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <AddSchoolClass />
+                </PrivateRoute>
+              }
             />
-            <Route path="/class/update-class/:schoolClassId" element={
-              <PrivateRoute allowedRoles={['Admin']}>
-                <UpdateSchoolClass />
-              </PrivateRoute>}
+            <Route
+              path="/class/update-class/:schoolClassId"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <UpdateSchoolClass />
+                </PrivateRoute>
+              }
             />
             {/*Student*/}
             <Route
@@ -203,7 +220,9 @@ function App() {
             <Route
               path="/healthprofile/manager-health-profile/:studentId"
               element={
-                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}>
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
                   <ManagerHealthProfile />
                 </PrivateRoute>
               }
@@ -235,14 +254,56 @@ function App() {
             <Route
               path="/student/:studentId/health-checkup-records"
               element={
-                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}>
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
                   <HealthCheckupRecords />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical/medical-request"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <MedicalRequest />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medical/create-medical-request/:studentId"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <CreateMedicalRequest />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/activity-medical"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <ManagerActivityMedical />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/activity-medical/:eventId"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <ManagerActivityMedical />
                 </PrivateRoute>
               }
             />
           </Route>
         </Routes>
-      </Router >
+      </Router>
     </>
   );
 }

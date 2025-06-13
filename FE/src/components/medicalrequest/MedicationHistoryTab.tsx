@@ -1,0 +1,342 @@
+import React from "react";
+import {
+  Clock,
+  User,
+  Pill,
+  FileText,
+  Search,
+  CheckCircle,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Input from "@/components/ui/form/InputField";
+
+interface MedicationHistoryRecord {
+  id: number;
+  studentName: string;
+  medicationName: string;
+  dosage: string;
+  administeredTime: string;
+  administeredBy: string;
+  note: string;
+  status: string;
+}
+
+interface MedicationHistoryTabProps {
+  medicationHistory: MedicationHistoryRecord[];
+  historySearchTerm: string;
+  setHistorySearchTerm: (term: string) => void;
+  historyCurrentPage: number;
+  setHistoryCurrentPage: (page: number) => void;
+  historyItemsPerPage: number;
+  setHistoryItemsPerPage: (items: number) => void;
+  historySortOrder: "asc" | "desc";
+  setHistorySortOrder: (order: "asc" | "desc") => void;
+  onClearFilters: () => void;
+  onSort: () => void;
+  onItemsPerPageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
+  medicationHistory,
+  historySearchTerm,
+  setHistorySearchTerm,
+  historyCurrentPage,
+  setHistoryCurrentPage,
+  historyItemsPerPage,
+  historySortOrder,
+  onClearFilters,
+  onSort,
+  onItemsPerPageChange,
+}) => {
+  // Filter and paginate medication history
+  const filteredHistory = medicationHistory.filter((record) => {
+    const matchesSearch =
+      record.studentName
+        .toLowerCase()
+        .includes(historySearchTerm.toLowerCase()) ||
+      record.medicationName
+        .toLowerCase()
+        .includes(historySearchTerm.toLowerCase()) ||
+      record.administeredBy
+        .toLowerCase()
+        .includes(historySearchTerm.toLowerCase()) ||
+      record.note.toLowerCase().includes(historySearchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  // Sort filtered history
+  const sortedHistory = [...filteredHistory].sort((a, b) => {
+    const dateA = new Date(a.administeredTime).getTime();
+    const dateB = new Date(b.administeredTime).getTime();
+    return historySortOrder === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
+  // Pagination calculations
+  const historyTotalItems = sortedHistory.length;
+  const historyTotalPages =
+    Math.ceil(historyTotalItems / historyItemsPerPage) || 1;
+  const historyStartIndex = (historyCurrentPage - 1) * historyItemsPerPage;
+  const historyEndIndex = historyStartIndex + historyItemsPerPage;
+  const paginatedHistory = sortedHistory.slice(
+    historyStartIndex,
+    historyEndIndex
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Filter Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Bộ lọc tìm kiếm
+            </h2>
+            {historySearchTerm && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Xóa bộ lọc
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm theo tên học sinh, thuốc, người thực hiện hoặc ghi chú..."
+                value={historySearchTerm}
+                onChange={(e) => {
+                  setHistorySearchTerm(e.target.value);
+                  setHistoryCurrentPage(1);
+                }}
+                className="pl-10"
+              />
+            </div>
+            <Button
+              onClick={onSort}
+              variant="outline"
+              className="flex items-center gap-2 bg-gray-100 py-[22px] rounded-lg"
+            >
+              <Clock className="w-4 h-4" />
+              <span>Sắp xếp theo thời gian</span>
+              {historySortOrder === "asc" ? (
+                <span className="text-xs">↑</span>
+              ) : (
+                <span className="text-xs">↓</span>
+              )}
+            </Button>
+          </div>
+          {historySearchTerm && (
+            <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
+              <Search className="w-4 h-4" />
+              <span>
+                Hiển thị {historyTotalItems} kết quả cho{" "}
+                <span className="font-medium">"{historySearchTerm}"</span>
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Lịch sử cho thuốc
+          </h2>
+          <div className="text-sm text-gray-500">
+            Tổng: {historyTotalItems} lần cho thuốc
+          </div>
+        </div>
+
+        {paginatedHistory.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {paginatedHistory.map((record) => (
+              <div
+                key={record.id}
+                className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 p-4 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {record.studentName}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {record.medicationName}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                    {record.status}
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Pill className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">Liều lượng:</span>
+                    <span className="font-medium text-gray-900">
+                      {record.dosage}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">Thời gian:</span>
+                    <span className="font-medium text-gray-900">
+                      {record.administeredTime}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      Người thực hiện:
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {record.administeredBy}
+                    </span>
+                  </div>
+                  {record.note && record.note !== "Không có ghi chú" && (
+                    <div className="flex items-start space-x-2">
+                      <FileText className="w-4 h-4 text-gray-400 mt-0.5" />
+                      <div>
+                        <span className="text-gray-600">Ghi chú:</span>
+                        <p className="font-medium text-gray-900 mt-1">
+                          {record.note}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Chưa có lịch sử cho thuốc
+            </h3>
+            <p className="text-gray-600">
+              Lịch sử cho thuốc sẽ hiển thị ở đây sau khi bạn xác nhận cho
+              thuốc cho học sinh.
+            </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {historyTotalItems > 0 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-700">
+              Hiển thị{" "}
+              <span className="font-medium">{historyStartIndex + 1}</span>{" "}
+              đến{" "}
+              <span className="font-medium">
+                {Math.min(
+                  historyCurrentPage * historyItemsPerPage,
+                  historyTotalItems
+                )}
+              </span>{" "}
+              của <span className="font-medium">{historyTotalItems}</span>{" "}
+              kết quả
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Hiển thị</span>
+                <select
+                  value={historyItemsPerPage}
+                  onChange={onItemsPerPageChange}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="6">6</option>
+                  <option value="12">12</option>
+                  <option value="18">18</option>
+                </select>
+                <span className="text-sm text-gray-700">mục</span>
+              </div>
+
+              <nav
+                className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                aria-label="Pagination"
+              >
+                <Button
+                  onClick={() =>
+                    setHistoryCurrentPage(historyCurrentPage - 1)
+                  }
+                  disabled={historyCurrentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Trang trước</span>
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Button>
+
+                {Array.from(
+                  { length: historyTotalPages },
+                  (_, i) => i + 1
+                ).map((page) => (
+                  <Button
+                    key={page}
+                    onClick={() => setHistoryCurrentPage(page)}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                      historyCurrentPage === page
+                        ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                        : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                    }`}
+                  >
+                    {page}
+                  </Button>
+                ))}
+
+                <Button
+                  onClick={() =>
+                    setHistoryCurrentPage(historyCurrentPage + 1)
+                  }
+                  disabled={historyCurrentPage === historyTotalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Trang sau</span>
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Button>
+              </nav>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MedicationHistoryTab;

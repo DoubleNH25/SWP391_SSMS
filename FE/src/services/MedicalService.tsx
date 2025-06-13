@@ -2,7 +2,7 @@ import { MedicalCreateViewModel, MedicalUpdateViewModel, MedicalViewModel } from
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateMedical(medical: MedicalCreateViewModel): Promise<boolean> {
-    if (!medical || !medical.name || !medical.quantity || !medical.expiryDate) {
+    if (!medical.name || !medical.quantity || !medical.expiryDate) {
         throw new Error("Please enter complete medical information");
     }
     try {

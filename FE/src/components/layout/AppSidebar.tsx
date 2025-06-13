@@ -102,7 +102,19 @@ const navItems: NavItem[] = [
     icon: <TimeIcon />,
     name: "Lịch tư vấn",
     path: "/conseling-schedules",
-    allowedRoles: ["Admin", "Manager", "Nurse"],
+    allowedRoles: ["Nurse"],
+  },
+  {
+    icon: <DocsIcon />,
+    name: "Yêu cầu thuốc",
+    path: "/medical/medical-request",
+    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
+  },
+  {
+    icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
+    name: "Xác nhận hoạt động y tế",
+    path: "/activity-medical",
+    allowedRoles: ["Parent"],
   },
 ];
 

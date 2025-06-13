@@ -1,162 +1,126 @@
 import { useCallback, useState, memo, useEffect, useMemo } from "react";
-import {
-  FecthConfirmNotification,
-  FecthNotification,
-} from "@/services/NotificationService";
-import { NotificationViewModel } from "@/types/Notification";
+import { useNavigate } from "react-router-dom";
 import NotificationAnimation from "@/components/icons/notification.gif";
 import NotificationIcon from "@/components/icons/notification.svg";
 import {
   Bell,
-  CheckCircle,
-  AlertTriangle,
   Clock,
-  Heart,
-  Syringe,
+  CheckCheck,
+  Trash2,
+  X,
+  MoreHorizontal,
 } from "lucide-react";
-import { Modal } from "../ui/modal";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { DecodeJWT } from "@/utils/DecodeJWT";
-
-type ActivityType =
-  | "Pending"
-  | "Approved"
-  | "HealthActivity"
-  | "VaccinationCampaign";
-type ActionType = "Approved" | "Rejected" | null;
-type StatusType = "Pending" | "Approved" | "Rejected";
+import { NotificationViewModel } from "@/types/Notification";
+import {
+  FecthNotification,
+  FecthReadNotification,
+  FecthDeleteNotification,
+} from "@/services/NotificationService";
 
 const NotificationDropdown: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [, setNotifying] = useState(false);
   const [notificationData, setNotificationData] = useState<
     NotificationViewModel[]
   >([]);
   const [error, setError] = useState<string | null>(null);
-  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedNotification, setSelectedNotification] =
-    useState<NotificationViewModel | null>(null);
-  const [actionType, setActionType] = useState<ActionType>(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [expandedNotification, setExpandedNotification] = useState<
+    string | null
+  >(null);
 
   const fetchData = useCallback(async () => {
-    const role =
-      DecodeJWT()?.[
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-      ];
-    if (role !== "Parent") return;
     if (isLoading) return;
     setIsLoading(true);
+    setError(null); // Clear previous errors
     try {
       const response = await FecthNotification();
-      if (response) {
+      if (response && Array.isArray(response)) {
         setNotificationData(response);
-        if (response.some((item) => item.status === "Pending")) {
-          setNotifying(true);
-        }
       } else {
-        setError("Invalid data.");
+        setError("Dữ liệu không hợp lệ.");
         setNotificationData([]);
       }
-      setError(null);
     } catch (err) {
       console.error("Failed to load notifications:", err);
-      setError("Failed to load notifications. Please try again.");
-      toast.error("Failed to load notifications. Please try again.");
+      setError("Không thể tải thông báo. Vui lòng thử lại.");
+      toast.error("Không thể tải thông báo. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
-
-  const handleOpenActionModal = useCallback((userId: string) => {
-    setSelectedId(userId);
-    setIsActionModalOpen(true);
   }, []);
 
-  const handleCloseActionModal = useCallback(() => {
-    setIsActionModalOpen(false);
-    setSelectedId(null);
+  const handleToggleExpanded = useCallback((notificationId: string) => {
+    setExpandedNotification((prev) =>
+      prev === notificationId ? null : notificationId
+    );
   }, []);
 
-  const handleOpenEditModal = useCallback(
-    (notification: NotificationViewModel) => {
-      setSelectedNotification(notification);
-      setIsEditModalOpen(true);
-    },
-    []
-  );
-
-  const handleCloseEditModal = useCallback(() => {
-    setIsEditModalOpen(false);
-    setSelectedNotification(null);
-  }, []);
-
-  const handleOpenConfirmModal = useCallback((action: ActionType) => {
-    setActionType(action);
-    setIsConfirmModalOpen(true);
-  }, []);
-
-  const handleCloseConfirmModal = useCallback(() => {
-    setIsConfirmModalOpen(false);
-    setActionType(null);
-  }, []);
-
-  const handleConfirmAction = useCallback(async () => {
-    if (!selectedId || !actionType) return;
-
-    try {
-      setConfirmLoading(true);
-      const status = actionType === "Approved";
-      const success = await FecthConfirmNotification(
-        selectedId,
-        status.toString()
-      );
-
-      if (success) {
-        toast.success(
-          `Activity ${
-            actionType === "Approved" ? "approved" : "rejected"
-          } successfully`
-        );
-        await fetchData();
-      } else {
-        toast.error(
-          `Failed to ${
-            actionType === "Approved" ? "approve" : "reject"
-          } activity`
-        );
+  const handleNotificationClick = useCallback(
+    async (notification: NotificationViewModel) => {
+      if (!notification.isRead) {
+        try {
+          await FecthReadNotification(notification.id);
+          fetchData(); // Call fetchData directly without await to avoid blocking
+        } catch (err) {
+          console.error("Failed to mark notification as read:", err);
+        }
       }
 
-      handleCloseConfirmModal();
-      handleCloseActionModal();
+      if (notification.eventId) {
+        setIsOpen(false);
+        try {
+          if (
+            notification.title.toLowerCase().includes("health") ||
+            notification.message.toLowerCase().includes("health") ||
+            notification.title.toLowerCase().includes("sức khỏe")
+          ) {
+            navigate(`/activity-medical/${notification.eventId}`);
+          } else if (
+            notification.title.toLowerCase().includes("vaccination") ||
+            notification.message.toLowerCase().includes("vaccination") ||
+            notification.title.toLowerCase().includes("tiêm chủng")
+          ) {
+            navigate(`/vaccinations/${notification.eventId}`);
+          } else if (
+            notification.title.toLowerCase().includes("medical") ||
+            notification.message.toLowerCase().includes("medical") ||
+            notification.title.toLowerCase().includes("y tế")
+          ) {
+            navigate(`/medical-events/${notification.eventId}`);
+          } else {
+            navigate(`/events/${notification.eventId}`);
+          }
+
+          toast.success("Đang chuyển đến trang chi tiết...");
+        } catch (err) {
+          console.error("Navigation error:", err);
+          toast.error("Không thể chuyển đến trang chi tiết.");
+        }
+      } else {
+        toast.info("Không có liên kết chi tiết cho thông báo này.");
+      }
+    },
+    [navigate, setIsOpen] // Remove fetchData dependency
+  );
+
+  const handleDeleteReadNotifications = useCallback(async () => {
+    try {
+      setActionLoading("delete");
+      await FecthDeleteNotification();
+      fetchData(); // Call fetchData directly without await to avoid blocking
+      toast.success("Read notifications deleted.");
     } catch (err) {
-      console.error(
-        `Failed to ${
-          actionType === "Approved" ? "approve" : "Rejected"
-        } activity:`,
-        err
-      );
-      toast.error(
-        `Failed to ${
-          actionType === "Approved" ? "approve" : "Rejected"
-        } activity. Please try again.`
-      );
+      console.error("Failed to delete read notifications:", err);
+      toast.error("Failed to delete read notifications.");
     } finally {
-      setConfirmLoading(false);
+      setActionLoading(null);
     }
-  }, [
-    selectedId,
-    actionType,
-    fetchData,
-    handleCloseConfirmModal,
-    handleCloseActionModal,
-  ]);
+  }, []); // Remove fetchData dependency
 
   const isToday = useCallback((date: string) => {
     const today = new Date();
@@ -171,78 +135,18 @@ const NotificationDropdown: React.FC = () => {
     return notifDate.toDateString() === yesterday.toDateString();
   }, []);
 
-  const getActivityIcon = useCallback(
-    (activityType: ActivityType, status: StatusType) => {
-      if (status === "Pending") {
-        return <AlertTriangle className="w-5 h-5" />;
-      }
-      switch (activityType) {
-        case "HealthActivity":
-          return <Heart className="w-5 h-5" />;
-        case "VaccinationCampaign":
-          return <Syringe className="w-5 h-5" />;
-        case "Approved":
-          return <CheckCircle className="w-5 h-5" />;
-        default:
-          return <Bell className="w-5 h-5" />;
-      }
-    },
-    []
-  );
-
-  const getActivityConfig = useCallback(
-    (status: StatusType, scheduleTime: string) => {
-      if (!isToday(scheduleTime) && !isYesterday(scheduleTime)) {
-        return {
-          bgColor: "bg-gradient-to-r from-gray-50 to-gray-100",
-          borderColor: "border-l-gray-400",
-          iconColor: "text-gray-600",
-          textColor: "text-gray-800",
-          actionColor: "text-gray-600 hover:text-gray-800",
-        };
-      }
-      if (status === "Pending") {
-        return {
-          bgColor: "bg-gradient-to-r from-yellow-50 to-yellow-100",
-          borderColor: "border-l-yellow-400",
-          iconColor: "text-yellow-600",
-          textColor: "text-yellow-800",
-          actionColor: "text-yellow-600 hover:text-yellow-800",
-        };
-      }
-      if (status === "Rejected") {
-        return {
-          bgColor: "bg-gradient-to-r from-red-50 to-red-100",
-          borderColor: "border-l-red-400",
-          iconColor: "text-red-600",
-          textColor: "text-red-800",
-          actionColor: "text-red-600 hover:text-red-800",
-        };
-      }
-      return {
-        bgColor: "bg-gradient-to-r from-green-50 to-green-100",
-        borderColor: "border-l-green-400",
-        iconColor: "text-green-600",
-        textColor: "text-green-800",
-        actionColor: "text-green-600 hover:text-green-800",
-      };
-    },
-    [isToday, isYesterday]
-  );
-
   const groupedNotifications = useMemo(() => {
-    // Limit notifications if showAllNotifications is false
     const limitedData = showAllNotifications
       ? notificationData
       : notificationData.slice(0, 5);
 
     return limitedData.reduce((acc, notification) => {
-      const date = new Date(notification.scheduleTime);
+      const date = new Date(notification.createdTime);
       let groupKey: string;
 
-      if (isToday(notification.scheduleTime)) {
+      if (isToday(notification.createdTime)) {
         groupKey = "Hôm nay";
-      } else if (isYesterday(notification.scheduleTime)) {
+      } else if (isYesterday(notification.createdTime)) {
         groupKey = "Hôm qua";
       } else {
         groupKey = date.toLocaleDateString();
@@ -256,15 +160,13 @@ const NotificationDropdown: React.FC = () => {
     }, {} as Record<string, NotificationViewModel[]>);
   }, [notificationData, isToday, isYesterday, showAllNotifications]);
 
-  const unApproveCount = useMemo(
-    () => notificationData.filter((n) => n.status === "Pending").length,
+  const unreadCount = useMemo(
+    () => notificationData.filter((n) => !n.isRead).length,
     [notificationData]
   );
 
   const toggle = useCallback(() => {
     setIsOpen((prev) => !prev);
-    setNotifying(false);
-    // Reset to show limited notifications when closing
     if (!isOpen) {
       setShowAllNotifications(false);
     }
@@ -276,9 +178,9 @@ const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 5 * 60 * 1000); // Refresh every 5 minutes
+    const intervalId = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
-  }, [fetchData]);
+  }, []); // Remove fetchData dependency to prevent infinite loop
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -297,289 +199,19 @@ const NotificationDropdown: React.FC = () => {
   return (
     <div className="py-8">
       <ToastContainer position="top-right" autoClose={3000} />
-      <Modal
-        isOpen={isActionModalOpen}
-        onClose={handleCloseActionModal}
-        showCloseButton={true}
-        isFullscreen={false}
-        className="max-w-lg p-6"
-      >
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Chi tiết hoạt động
-          </h2>
-          {(() => {
-            const notification = notificationData.find(
-              (n) => n.id === selectedId
-            );
-            return notification ? (
-              <div className="mt-4 text-left space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        Học sinh:
-                      </span>
-                      <p className="text-gray-900">
-                        {notification.studentName}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        Hoạt động:
-                      </span>
-                      <p className="text-gray-900">
-                        {notification.activityName}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Loại:</span>
-                      <p className="text-gray-900">
-                        {notification.activityType}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        Trạng thái:
-                      </span>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        {notification.status === "Pending"
-                          ? "Chờ duyệt"
-                          : notification.status === "Approved"
-                          ? "Đã duyệt"
-                          : "Từ chối"}
-                      </span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="font-medium text-gray-600">
-                        Lịch trình:
-                      </span>
-                      <p className="text-gray-900">
-                        {new Date(notification.scheduleTime).toLocaleString(
-                          "vi-VN"
-                        )}
-                      </p>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="font-medium text-gray-600">
-                        Người phụ trách:
-                      </span>
-                      <p className="text-gray-900">
-                        {notification.responsibleUserName}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-center text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                  <p className="font-medium text-blue-800">Cần thực hiện</p>
-                  <p>
-                    Vui lòng chọn hành động cho hoạt động này. Quyết định của
-                    bạn sẽ quyết định việc con bạn có thể tham gia hay không.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="mt-2 text-gray-600">
-                Vui lòng chọn hành động cho hoạt động này.
-              </p>
-            );
-          })()}
-          <div className="mt-6 flex justify-center gap-4">
-            <button
-              onClick={() => handleOpenConfirmModal("Rejected")}
-              className="rounded bg-red-200 px-8 py-2 text-red-800 hover:bg-red-300"
-              disabled={confirmLoading}
-            >
-              Từ chối
-            </button>
-            <button
-              onClick={() => handleOpenConfirmModal("Approved")}
-              className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:bg-blue-300"
-              disabled={confirmLoading}
-            >
-              Phê duyệt
-            </button>
-          </div>
-        </div>
-      </Modal>
-      <Modal
-        isOpen={isConfirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        showCloseButton={true}
-        isFullscreen={false}
-        className="max-w-sm p-6"
-      >
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {actionType === "Approved"
-              ? "Xác nhận phê duyệt"
-              : "Xác nhận từ chối"}
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Bạn có chắc chắn muốn{" "}
-            {actionType === "Approved" ? "phê duyệt" : "từ chối"} hoạt động này?
-            Hành động này không thể hoàn tác.
-          </p>
-          <div className="mt-6 flex justify-center gap-4">
-            <button
-              onClick={handleCloseConfirmModal}
-              className="rounded bg-gray-200 px-8 py-2 text-gray-800 hover:bg-gray-300"
-              disabled={confirmLoading}
-            >
-              Hủy
-            </button>
-            <button
-              onClick={handleConfirmAction}
-              className={`rounded px-6 py-2 text-white ${
-                actionType === "Approved"
-                  ? "bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300"
-                  : "bg-red-500 hover:bg-red-600 disabled:bg-red-300"
-              }`}
-              disabled={confirmLoading}
-            >
-              {confirmLoading ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {actionType === "Approved"
-                    ? "Đang phê duyệt..."
-                    : "Đang từ chối..."}
-                </div>
-              ) : actionType === "Approved" ? (
-                "Phê duyệt"
-              ) : (
-                "Từ chối"
-              )}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Edit Modal for Approved/Rejected notifications */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={handleCloseEditModal}
-        showCloseButton={true}
-        isFullscreen={false}
-        className="max-w-lg p-6"
-      >
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Chi tiết hoạt động
-          </h2>
-          {selectedNotification && (
-            <div className="mt-4 text-left space-y-3">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">Học sinh:</span>
-                    <p className="text-gray-900">
-                      {selectedNotification.studentName}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Hoạt động:
-                    </span>
-                    <p className="text-gray-900">
-                      {selectedNotification.activityName}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Loại:</span>
-                    <p className="text-gray-900">
-                      {selectedNotification.activityType}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Trạng thái:
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedNotification.status === "Approved"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {selectedNotification.status === "Approved"
-                        ? "Đã duyệt"
-                        : "Từ chối"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Lịch trình:
-                    </span>
-                    <p className="text-gray-900">
-                      {new Date(
-                        selectedNotification.scheduleTime
-                      ).toLocaleString("vi-VN")}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Người phụ trách:
-                    </span>
-                    <p className="text-gray-900">
-                      {selectedNotification.responsibleUserName}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="text-center text-sm text-gray-600">
-                Hoạt động này đã được{" "}
-                {selectedNotification.status === "Approved"
-                  ? "phê duyệt"
-                  : "từ chối"}
-                .
-                {selectedNotification.status === "Approved"
-                  ? " Con bạn có thể tham gia hoạt động này."
-                  : " Con bạn sẽ không tham gia hoạt động này."}
-              </div>
-            </div>
-          )}
-          <div className="mt-6">
-            <button
-              onClick={handleCloseEditModal}
-              className="rounded bg-gray-200 px-8 py-2 text-gray-800 hover:bg-gray-300"
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      </Modal>
 
       <button
         onClick={toggle}
         className="relative flex h-11 w-11 items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50"
         aria-label="Toggle Notifications"
       >
-        {unApproveCount > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white ring-2 ring-white">
-            {unApproveCount > 9 ? "9+" : unApproveCount}
+            {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
         <img
-          src={unApproveCount > 0 ? NotificationAnimation : NotificationIcon}
+          src={unreadCount > 0 ? NotificationAnimation : NotificationIcon}
           className="w-5 h-5"
           alt="Notification icon"
         />
@@ -597,69 +229,80 @@ const NotificationDropdown: React.FC = () => {
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-2xl font-semibold text-gray-800">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex-1">
+              <h5 className="text-2xl font-bold text-gray-900 mb-1">
                 Thông báo
               </h5>
-              <p className="text-blue-500 text-sm">
-                {unApproveCount} chờ phê duyệt
+              <div className="flex items-center space-x-4 text-sm">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    notificationData.length === 0
+                      ? "bg-gray-300 text-gray-800"
+                      : unreadCount > 0
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {notificationData.length === 0
+                    ? "Không có thông báo"
+                    : unreadCount > 0
+                    ? `${unreadCount} chưa đọc`
+                    : "Tất cả đã đọc"}
+                </span>
                 {notificationData.length > 5 && !showAllNotifications && (
-                  <span className="text-gray-500">
-                    {" "}
-                    • Hiển thị 5 trong {notificationData.length}
+                  <span className="text-gray-500 text-xs">
+                    Hiển thị 5 trong {notificationData.length}
                   </span>
                 )}
-              </p>
+              </div>
             </div>
-            <button
-              onClick={toggle}
-              className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-full"
-              aria-label="Close Notifications"
-            >
-              <svg
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+
+            <div className="flex items-center space-x-2 absolute top-10 right-3">
+              {notificationData.some((n) => n.isRead) && (
+                <button
+                  onClick={handleDeleteReadNotifications}
+                  disabled={actionLoading === "delete"}
+                  className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-red-50 to-pink-50 text-red-600 hover:from-red-100 hover:to-pink-100 hover:text-red-700 disabled:opacity-50 transition-all duration-200 shadow-sm border border-red-200"
+                  title="Xóa thông báo đã đọc"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="text-xs font-medium">Dọn dẹp</span>
+                </button>
+              )}
+
+              <button
+                onClick={toggle}
+                className="p-2 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 hover:from-gray-100 hover:to-gray-200 hover:text-gray-700 transition-all duration-200 shadow-sm border border-gray-200"
+                aria-label="Đóng thông báo"
               >
-                <path
-                  d="M18 6L6 18"
-                  stroke="#4B5563"
-                  strokeWidth="1.25"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M6 6L18 18"
-                  stroke="#4B5563"
-                  strokeWidth="1.25"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="mt-8">
-            {error && (
-              <div className="p-4 bg-red-100 text-red-500 text-sm mb-4 rounded-lg">
-                {error}
+            {error && !isLoading && (
+              <div className="p-4 bg-red-100 text-red-500 text-sm mb-4 rounded-lg border border-red-200">
+                <div className="flex items-center mb-2">
+                  <X className="w-4 h-4 mr-2" />
+                  <span className="font-medium">Lỗi tải dữ liệu</span>
+                </div>
+                <p className="mb-3">{error}</p>
                 <button
                   onClick={fetchData}
-                  className="ml-2 underline text-red-700 hover:text-red-900"
+                  className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  Thử lại
+                  {isLoading ? "Đang thử lại..." : "Thử lại"}
                 </button>
               </div>
             )}
 
             {isLoading && notificationData.length === 0 ? (
-              <div className="flex justify-center items-center p-12">
+              <div className="flex flex-col justify-center items-center p-12">
                 <svg
-                  className="animate-spin h-8 w-8 text-blue-500"
+                  className="animate-spin h-8 w-8 text-blue-500 mb-4"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -678,9 +321,39 @@ const NotificationDropdown: React.FC = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
+                <p className="text-gray-500 text-sm">Đang tải thông báo...</p>
               </div>
             ) : (
-              <div className="bg-gray-50">
+              <div className="bg-gray-50 relative">
+                {/* Loading overlay when refreshing data */}
+                {isLoading && notificationData.length > 0 && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                    <div className="flex flex-col items-center">
+                      <svg
+                        className="animate-spin h-6 w-6 text-blue-500 mb-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <p className="text-gray-600 text-xs">Đang cập nhật...</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="divide-y divide-gray-100">
                   {Object.keys(groupedNotifications).length > 0 ? (
                     Object.entries(groupedNotifications).map(
@@ -695,98 +368,230 @@ const NotificationDropdown: React.FC = () => {
                             </div>
                             <div className="flex-1 h-px bg-gray-200 ml-4"></div>
                           </div>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {groupNotifications.map((notification) => {
-                              const config = getActivityConfig(
-                                notification.status,
-                                notification.scheduleTime
-                              );
+                              const isExpanded =
+                                expandedNotification === notification.id;
+                              const isUnread = !notification.isRead;
+
                               return (
                                 <div
                                   key={notification.id}
-                                  className={`relative group ${config.bgColor} ${config.borderColor} border-l-4 rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:scale-[1.02]`}
+                                  className={`relative overflow-hidden rounded-lg border transition-all duration-300 cursor-pointer ${
+                                    isUnread
+                                      ? "bg-white border-white shadow-lg ring-white hover:shadow-2xl"
+                                      : "bg-gray-200 border-gray-100 opacity-90 shadow-lg hover:shadow-xl"
+                                  }`}
+                                  onClick={() =>
+                                    notification.eventId &&
+                                    handleNotificationClick(notification)
+                                  }
                                 >
-                                  <div className="flex items-start space-x-4">
-                                    <div
-                                      className={`flex-shrink-0 p-2 rounded-lg bg-white/70 ${config.iconColor}`}
-                                    >
-                                      {getActivityIcon(
-                                        notification.activityType as ActivityType,
-                                        notification.status
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                          <div className="flex justify-between">
-                                            <p
-                                              className={`text-sm font-medium ${config.textColor} leading-relaxed`}
+                                  {isUnread && (
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b"></div>
+                                  )}
+
+                                  <div className="p-4">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex items-start space-x-3 flex-1">
+                                        <div
+                                          className={`flex-shrink-0 p-2 rounded-full ${
+                                            isUnread
+                                              ? "bg-blue-100 shadow-sm"
+                                              : "bg-gray-400"
+                                          }`}
+                                        >
+                                          <Bell
+                                            className={`w-4 h-4 ${
+                                              isUnread
+                                                ? "text-blue-700"
+                                                : "text-white"
+                                            }`}
+                                          />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center justify-between">
+                                            <h3
+                                              className={`text-sm font-semibold truncate ${
+                                                isUnread
+                                                  ? "text-black"
+                                                  : "text-black-300"
+                                              }`}
                                             >
-                                              {notification.studentName && (
-                                                <span className="font-semibold text-indigo-700 mr-1">
-                                                  {notification.studentName}
-                                                </span>
-                                              )}
-                                            </p>
-                                            <p
-                                              className={`text-sm font-medium ${config.textColor} leading-relaxed`}
-                                            >
-                                              {notification.activityName}
-                                            </p>
-                                          </div>
-                                          <div className="flex justify-between items-center">
-                                            <div className="flex mt-2 space-x-3">
-                                              <p className="text-xs text-gray-500 flex items-center">
-                                                <Clock className="w-3 h-3 mr-1" />
-                                                {new Date(
-                                                  notification.scheduleTime
-                                                ).toLocaleString("vi-VN")}
-                                              </p>
-                                              {notification.status ===
-                                              "Pending" ? (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                  Chờ duyệt
-                                                </span>
-                                              ) : notification.status ===
-                                                "Approved" ? (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                  Đã duyệt
-                                                </span>
-                                              ) : (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                  Từ chối
-                                                </span>
-                                              )}
-                                            </div>
-                                            <div>
-                                              <span
-                                                onClick={() => {
-                                                  if (
-                                                    notification.status ===
-                                                    "Pending"
-                                                  ) {
-                                                    handleOpenActionModal(
-                                                      notification.id
-                                                    );
-                                                  } else {
-                                                    handleOpenEditModal(
-                                                      notification
-                                                    );
-                                                  }
+                                              {notification.title}
+                                            </h3>
+
+                                            <div className="flex items-center space-x-2 ml-2">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleToggleExpanded(
+                                                    notification.id
+                                                  );
                                                 }}
-                                                className="text-xs text-blue-700 decoration-1 hover:text-blue-900 hover:font-bold underline cursor-pointer"
-                                                aria-label="View details"
+                                                className={`p-1 rounded-full transition-colors ${
+                                                  isUnread
+                                                    ? "hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                                                    : "hover:bg-gray-500 text-black-300 hover:text-black-200"
+                                                }`}
+                                                title={
+                                                  isExpanded
+                                                    ? "Thu gọn"
+                                                    : "Xem chi tiết"
+                                                }
                                               >
-                                                {notification.status ===
-                                                "Pending"
-                                                  ? "Thực hiện"
-                                                  : "Xem chi tiết"}
-                                              </span>
+                                                <MoreHorizontal
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    isExpanded
+                                                      ? "rotate-90"
+                                                      : ""
+                                                  }`}
+                                                />
+                                              </button>
                                             </div>
+                                          </div>
+
+                                          <p
+                                            className={`text-sm mt-1 ${
+                                              isExpanded ? "" : "line-clamp-2"
+                                            } ${
+                                              isUnread
+                                                ? "text-gray-800"
+                                                : "text-black-400"
+                                            }`}
+                                          >
+                                            {notification.message}
+                                          </p>
+
+                                          <div className="flex items-center justify-between mt-2">
+                                            <div
+                                              className={`flex items-center text-xs ${
+                                                isUnread
+                                                  ? "text-gray-600"
+                                                  : "text-black-400"
+                                              }`}
+                                            >
+                                              <Clock className="w-3 h-3 mr-1" />
+                                              {new Date(
+                                                notification.createdTime
+                                              ).toLocaleString("vi-VN")}
+                                            </div>
+
+                                            {notification.eventId && (
+                                              <div
+                                                className={`text-xs font-medium cursor-pointer ${
+                                                  isUnread
+                                                    ? "text-blue-700"
+                                                    : "text-black-400"
+                                                }`}
+                                              >
+                                                Click để thực hiện thao tác
+                                              </div>
+                                            )}
                                           </div>
                                         </div>
                                       </div>
                                     </div>
+
+                                    {isExpanded && (
+                                      <div
+                                        className={`mt-4 pt-4 border-t ${
+                                          isUnread
+                                            ? "border-gray-500"
+                                            : "border-gray-500"
+                                        }`}
+                                      >
+                                        <div
+                                          className={`rounded-lg p-3 ${
+                                            isUnread
+                                              ? "bg-gray-200"
+                                              : "bg-gray-700"
+                                          }`}
+                                        >
+                                          <h4
+                                            className={`text-xs font-medium mb-2 ${
+                                              isUnread
+                                                ? "text-gray-800"
+                                                : "text-gray-300"
+                                            }`}
+                                          >
+                                            Chi tiết thông báo
+                                          </h4>
+                                          <div className="space-y-2 text-sm">
+                                            <div>
+                                              <span
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
+                                              >
+                                                Tiêu đề:
+                                              </span>
+                                              <p
+                                                className={`mt-1 ${
+                                                  isUnread
+                                                    ? "text-black"
+                                                    : "text-gray-300"
+                                                }`}
+                                              >
+                                                {notification.title}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <span
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
+                                              >
+                                                Nội dung đầy đủ:
+                                              </span>
+                                              <p
+                                                className={`mt-1 whitespace-pre-wrap ${
+                                                  isUnread
+                                                    ? "text-gray-800"
+                                                    : "text-gray-300"
+                                                }`}
+                                              >
+                                                {notification.message}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <span
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
+                                              >
+                                                Thời gian tạo:
+                                              </span>
+                                              <p
+                                                className={`mt-1 ${
+                                                  isUnread
+                                                    ? "text-gray-800"
+                                                    : "text-gray-300"
+                                                }`}
+                                              >
+                                                {new Date(
+                                                  notification.createdTime
+                                                ).toLocaleString("vi-VN", {
+                                                  weekday: "long",
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -795,29 +600,40 @@ const NotificationDropdown: React.FC = () => {
                         </div>
                       )
                     )
-                  ) : (
-                    <div className="p-12 text-center">
-                      <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <Bell className="w-8 h-8 text-gray-400" />
+                  ) : !isLoading && notificationData.length === 0 ? (
+                    <div className="py-16 text-center">
+                      <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center shadow-lg border">
+                        <Bell className="w-12 h-12 text-gray-500" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">
-                        Đã cập nhật hết!
+                      <h3 className="text-xl font-bold text-gray-700 mb-3">
+                        Không có thông báo
                       </h3>
-                      <p className="text-gray-400">
-                        Hiện tại không có thông báo mới.
+                      <p className="text-gray-500 max-w-sm mx-auto leading-relaxed">
+                        Bạn đã xem hết tất cả thông báo. Chúng tôi sẽ thông báo
+                        khi có tin tức mới.
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 {notificationData.length > 5 && (
-                  <button
-                    onClick={handleViewAllToggle}
-                    className="mt-3 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-100"
-                  >
-                    {showAllNotifications
-                      ? `Hiển thị ít hơn (${notificationData.length - 5} ẩn)`
-                      : `Xem tất cả (${notificationData.length - 5} thêm)`}
-                  </button>
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={handleViewAllToggle}
+                      className="w-full rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-4 py-3 text-center text-sm font-medium text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200"
+                    >
+                      {showAllNotifications ? (
+                        <span className="flex items-center justify-center">
+                          <MoreHorizontal className="w-4 h-4 mr-2 rotate-90" />
+                          Hiển thị ít hơn ({notificationData.length - 5} ẩn)
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          <MoreHorizontal className="w-4 h-4 mr-2" />
+                          Xem tất cả ({notificationData.length - 5} thêm)
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
             )}
