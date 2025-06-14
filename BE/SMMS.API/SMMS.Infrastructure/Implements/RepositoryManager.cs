@@ -17,6 +17,7 @@ namespace SMMS.Infrastructure.Implements
 		private IHealthProfileRepository _healthProfileRepository;
 		private IMedicalIncidentRepository _medicalIncidentRepository;
 		private IMedicalRequestRepository _medicalRequestRepository;
+		private IMedicationRequestAdministrationRepository _medicationRequestAdministrationRepository;
 		private IMedicalStockRepository _medicalStockRepository;
 		private IMedicalUsageRepository _medicalUsageRepository;
 		private INotificationRepository _notificationRepository;
@@ -43,6 +44,7 @@ namespace SMMS.Infrastructure.Implements
 			_healthProfileRepository = new HealthProfileRepository(context);
 			_medicalIncidentRepository = new MedicalIncidentRepository(context);
 			_medicalRequestRepository = new MedicalRequestRepository(context);
+			_medicationRequestAdministrationRepository = new MedicationRequestAdministrationRepository(context);
 			_medicalStockRepository = new MedicalStockRepository(context);
 			_medicalUsageRepository = new MedicalUsageRepository(context);
 			_notificationRepository = new NotificationRepository(context);
@@ -74,6 +76,8 @@ namespace SMMS.Infrastructure.Implements
 		public IMedicalIncidentRepository MedicalIncidentRepository { get { return _medicalIncidentRepository; } }
 
 		public IMedicalRequestRepository MedicalRequestRepository { get { return _medicalRequestRepository; } }
+
+		public IMedicationRequestAdministrationRepository MedicationRequestAdministrationRepository { get { return _medicationRequestAdministrationRepository; } }
 
 		public IMedicalStockRepository MedicalStockRepository { get { return _medicalStockRepository; } }
 

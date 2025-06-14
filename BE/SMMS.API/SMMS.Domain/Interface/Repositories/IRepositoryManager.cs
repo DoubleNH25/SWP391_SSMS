@@ -13,6 +13,7 @@ namespace SMMS.Domain.Interface.Repositories
 		IHealthProfileRepository HealthProfileRepository { get; }
 		IMedicalIncidentRepository MedicalIncidentRepository { get; }
 		IMedicalRequestRepository MedicalRequestRepository { get; }
+		IMedicationRequestAdministrationRepository MedicationRequestAdministrationRepository { get; }
 		IMedicalStockRepository MedicalStockRepository { get; }
 		IMedicalUsageRepository MedicalUsageRepository { get; }
 		INotificationRepository NotificationRepository { get; }

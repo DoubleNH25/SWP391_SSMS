@@ -19,6 +19,7 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<HealthProfile> HealthProfile { get; set; }
         public virtual DbSet<MedicalIncident> MedicalIncident { get; set; }
         public virtual DbSet<MedicalRequest> MedicalRequest { get; set; }
+        public virtual DbSet<MedicationRequestAdministration> MedicationRequestAdministration { get; set; }
         public virtual DbSet<MedicalStock> MedicalStock { get; set; }
         public virtual DbSet<MedicalUsage> MedicalUsage { get; set; }
         public virtual DbSet<Notification> Notification { get; set; }
@@ -194,6 +195,19 @@ namespace SMMS.Infrastructure.Context
                 hcr.HasOne(ur => ur.Student)
                     .WithMany(r => r.MedicalRequests)
                     .HasForeignKey(ur => ur.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // MedicationRequestAdministration - MedicalRequest, User (N-1)
+            modelBuilder.Entity<MedicationRequestAdministration>(mra =>
+            {
+                mra.HasOne(ur => ur.MedicalRequest)
+                    .WithMany(u => u.MedicationRequestAdministrations)
+                    .HasForeignKey(ur => ur.MedicalRequestId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                mra.HasOne(ur => ur.Administrator)
+                    .WithMany()
+                    .HasForeignKey(ur => ur.AdministeredBy)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
