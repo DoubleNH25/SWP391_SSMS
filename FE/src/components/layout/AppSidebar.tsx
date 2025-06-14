@@ -116,6 +116,12 @@ const navItems: NavItem[] = [
     path: "/activity-medical",
     allowedRoles: ["Parent"],
   },
+  {
+    icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
+    name: "Quản lý đơn thuốc",
+    path: "/medical/manager-medical-request",
+    allowedRoles: ["Admin", "Manager", "Nurse"],
+  },
 ];
 
 const AppSidebar: React.FC = () => {

@@ -47,29 +47,29 @@ export default function ManagerRecord() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const notify = {
-    success: (message: string) =>
-      toast.success(message, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      }),
-    error: (message: string) =>
-      toast.error(message, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      }),
+  // Toast utility function
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const toastOptions = {
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    };
+
+    switch (type) {
+      case 'success':
+        toast.success(message, toastOptions);
+        break;
+      case 'error':
+        toast.error(message, toastOptions);
+        break;
+      case 'info':
+        toast.info(message, toastOptions);
+        break;
+      default:
+        toast(message, toastOptions);
+    }
   };
 
   const handleSubmit = useCallback(
@@ -80,18 +80,18 @@ export default function ManagerRecord() {
         !formData.healthCheckupId ||
         !formData.requestDate
       ) {
-        notify.error("Vui lòng điền đầy đủ thông tin");
+        showToast("Vui lòng điền đầy đủ thông tin", 'error');
         return;
       }
 
       try {
         setIsSubmitting(true);
         await FecthCreateConselingSchedule(formData);
-        notify.success("Đặt lịch tư vấn thành công");
+        showToast("Đặt lịch tư vấn thành công", 'success');
         setShowConsultForm(null);
         clearForm();
       } catch (error) {
-        notify.error("Đặt lịch tư vấn thất bại");
+        showToast("Đặt lịch tư vấn thất bại", 'error');
         setError(error as string);
       } finally {
         setIsSubmitting(false);
@@ -128,7 +128,7 @@ export default function ManagerRecord() {
       setHealthCheckup(data);
     } catch (error) {
       setError(error as string);
-      notify.error("Không thể tải dữ liệu hồ sơ sức khỏe");
+      showToast("Không thể tải dữ liệu hồ sơ sức khỏe", 'error');
     } finally {
       setIsLoading(false);
     }
