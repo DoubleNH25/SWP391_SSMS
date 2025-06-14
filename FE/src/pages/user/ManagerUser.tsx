@@ -118,7 +118,7 @@ export default function UserManager() {
         icon={<UserCog className="w-6 h-6 text-blue-600" />}
         description="Quản lý thông tin người dùng trong hệ thống"
       />
-      <ToastContainer position="top-right" autoClose={3000} />
+
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (

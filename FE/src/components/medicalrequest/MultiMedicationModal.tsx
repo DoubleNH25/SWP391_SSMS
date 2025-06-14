@@ -1,0 +1,548 @@
+import React, { useState } from "react";
+import { Plus, X, Trash2 } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import Input from "@/components/ui/form/InputField";
+import Select from "@/components/ui/form/Select";
+import DatePicker from "@/components/ui/form/DateField";
+import Label from "@/components/ui/form/Label";
+import { Student } from "@/types/Student";
+import { toast } from "react-toastify";
+
+interface Medication {
+  id: string;
+  medicationName: string;
+  form: string;
+  dosage: string;
+  route: string;
+  frequency: number;
+  totalQuantity: string;
+  timeToAdminister: string[];
+  startDate: string;
+  endDate: string;
+  note: string;
+}
+
+interface MultiMedicationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedStudent: Student | null;
+  onSubmit: (medications: Medication[]) => void;
+}
+
+const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
+  isOpen,
+  onClose,
+  selectedStudent,
+  onSubmit,
+}) => {
+  const [medications, setMedications] = useState<Medication[]>([
+    {
+      id: "1",
+      medicationName: "",
+      form: "Viên nén",
+      dosage: "",
+      route: "Uống",
+      frequency: 1,
+      totalQuantity: "",
+      timeToAdminister: [""],
+      startDate: "",
+      endDate: "",
+      note: "",
+    },
+  ]);
+
+  const addMedication = () => {
+    const newMedication: Medication = {
+      id: Date.now().toString(),
+      medicationName: "",
+      form: "Viên nén",
+      dosage: "",
+      route: "Uống",
+      frequency: 1,
+      totalQuantity: "",
+      timeToAdminister: [""],
+      startDate: "",
+      endDate: "",
+      note: "",
+    };
+    setMedications([...medications, newMedication]);
+  };
+
+  const removeMedication = (id: string) => {
+    if (medications.length > 1) {
+      setMedications(medications.filter((med) => med.id !== id));
+    }
+  };
+
+  const updateMedication = (
+    id: string,
+    field: keyof Medication,
+    value: any
+  ) => {
+    setMedications(
+      medications.map((med) =>
+        med.id === id ? { ...med, [field]: value } : med
+      )
+    );
+  };
+
+  const addTimeSlot = (medicationId: string) => {
+    setMedications(
+      medications.map((med) =>
+        med.id === medicationId
+          ? { ...med, timeToAdminister: [...med.timeToAdminister, ""] }
+          : med
+      )
+    );
+  };
+
+  const updateTimeSlot = (
+    medicationId: string,
+    index: number,
+    value: string
+  ) => {
+    setMedications(
+      medications.map((med) =>
+        med.id === medicationId
+          ? {
+              ...med,
+              timeToAdminister: med.timeToAdminister.map((time, i) =>
+                i === index ? value : time
+              ),
+            }
+          : med
+      )
+    );
+  };
+
+  const removeTimeSlot = (medicationId: string, index: number) => {
+    setMedications(
+      medications.map((med) =>
+        med.id === medicationId
+          ? {
+              ...med,
+              timeToAdminister: med.timeToAdminister.filter(
+                (_, i) => i !== index
+              ),
+            }
+          : med
+      )
+    );
+  };
+
+  const handleSubmit = () => {
+    // Validate medications
+    const validMedications = medications.filter(
+      (med) =>
+        med.medicationName.trim() !== "" &&
+        med.dosage.trim() !== "" &&
+        med.totalQuantity.trim() !== "" &&
+        med.startDate !== "" &&
+        med.endDate !== ""
+    );
+
+    if (validMedications.length === 0) {
+      toast.error("Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    onSubmit(validMedications);
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setMedications([
+      {
+        id: "1",
+        medicationName: "",
+        form: "Viên nén",
+        dosage: "",
+        route: "Uống",
+        frequency: 1,
+        totalQuantity: "",
+        timeToAdminister: [""],
+        startDate: "",
+        endDate: "",
+        note: "",
+      },
+    ]);
+    onClose();
+  };
+
+  const medicationForms = [
+    "Viên nén",
+    "Siro",
+    "Thuốc nhỏ mắt",
+    "Kem bôi",
+    "Viên con nhộng",
+    "Thuốc tiêm",
+    "Thuốc mỡ",
+    "Thuốc đặt",
+    "Thuốc hít",
+    "Vắc-xin",
+    "Khác",
+  ];
+  const routes = ["Uống", "Chích", "Ngậm", "Bôi ngoài da", "Nhỏ mắt", "Khác"];
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      showCloseButton={false}
+      className="max-w-6xl w-full overflow-y-auto max-h-[95vh]"
+    >
+      <div className="bg-white">
+        {/* Header */}
+        <div className="px-8 border-b-2  border-gray-100">
+          <div className="flex justify-between items-start gap-6">
+            <div className="flex-1">
+              {selectedStudent && (
+                <div className="space-y-1 mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Tạo đơn thuốc - Học sinh: {selectedStudent.fullName} -{" "}
+                    {selectedStudent.studentCode}
+                  </h2>
+                  <p className="text-gray-500 text-sm">Lớp: {selectedStudent.studentClass.className}</p>
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={addMedication}
+              className="absolute top-[2rem] right-6 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm thuốc
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-2 space-y-8 max-h-[65vh] overflow-y-auto">
+          {medications.map((medication, index) => (
+            <div
+              key={medication.id}
+              className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              {/* Medication Header */}
+              <div className="px-8 py-5 bg-gray-50 border-b border-gray-100">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-blue-600">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Thuốc {index + 1}
+                    </h3>
+                  </div>
+                  {medications.length > 1 && (
+                    <Button
+                      onClick={() => removeMedication(medication.id)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg transition-colors"
+                      variant="outline"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Medication Content */}
+              <div className="p-8 space-y-8">
+                {/* Basic Information */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700 border-b-2 border-gray-100 pb-3">
+                    Thông tin cơ bản
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="">
+                      <Label htmlFor={`medicationName-${medication.id}`}>
+                        Tên thuốc <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id={`medicationName-${medication.id}`}
+                        type="text"
+                        value={medication.medicationName}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "medicationName",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Nhập tên thuốc"
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="">
+                      <Label htmlFor={`form-${medication.id}`}>
+                        Dạng thuốc
+                      </Label>
+                      <Select
+                        options={medicationForms.map((form) => ({
+                          value: form,
+                          label: form,
+                        }))}
+                        placeholder="Chọn dạng thuốc"
+                        onChange={(value) =>
+                          updateMedication(medication.id, "form", value)
+                        }
+                        defaultValue={medication.form}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dosage Information */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700 border-b-2 border-gray-100 pb-3">
+                    Liều lượng và cách dùng
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <Label htmlFor={`dosage-${medication.id}`}>
+                        Liều lượng <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id={`dosage-${medication.id}`}
+                        type="text"
+                        value={medication.dosage}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "dosage",
+                            e.target.value
+                          )
+                        }
+                        placeholder="VD: 2 viên/lần, 5ml/lần"
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`route-${medication.id}`}>
+                        Cách dùng
+                      </Label>
+                      <Select
+                        options={routes.map((route) => ({
+                          value: route,
+                          label: route,
+                        }))}
+                        placeholder="Chọn cách dùng"
+                        onChange={(value) =>
+                          updateMedication(medication.id, "route", value)
+                        }
+                        defaultValue={medication.route}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`totalQuantity-${medication.id}`}>
+                        Tổng số lượng <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id={`totalQuantity-${medication.id}`}
+                        type="number"
+                        value={medication.totalQuantity}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "totalQuantity",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Số lượng"
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Schedule */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700 border-b-2 border-gray-100 pb-2">
+                    Lịch trình cho thuốc
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor={`frequency-${medication.id}`}>
+                        Tần suất (lần/ngày)
+                      </Label>
+                      <Input
+                        id={`frequency-${medication.id}`}
+                        type="number"
+                        value={medication.frequency}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "frequency",
+                            parseInt(e.target.value)
+                          )
+                        }
+                        min="1"
+                        max="6"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                      Thời gian cho thuốc trong ngày
+                    </Label>
+                    <div className="flex flex-wrap gap-3 mb-3">
+                      {medication.timeToAdminister.map((time, timeIndex) => (
+                        <div
+                          key={timeIndex}
+                          className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-2 hover:bg-gray-100 transition-colors"
+                        >
+                          <Input
+                            type="time"
+                            value={time}
+                            onChange={(e) =>
+                              updateTimeSlot(
+                                medication.id,
+                                timeIndex,
+                                e.target.value
+                              )
+                            }
+                            className="w-32 border-0 bg-transparent text-gray-900 focus:ring-0 focus:outline-none text-center font-medium"
+                          />
+                          {medication.timeToAdminister.length > 1 && (
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                removeTimeSlot(medication.id, timeIndex)
+                              }
+                              className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => addTimeSlot(medication.id)}
+                      className="text-sm px-5 py-2.5 border border-gray-300 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Thêm giờ
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-5">
+                  <h4 className="text-sm font-semibold text-gray-700 border-b-2 border-gray-100 pb-3">
+                    Thời gian sử dụng
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <DatePicker
+                        id={`startDate-${medication.id}`}
+                        label="Ngày bắt đầu *"
+                        placeholder="Chọn ngày bắt đầu"
+                        minDate={new Date().toISOString().split("T")[0]}
+                        maxDate={"9999-12-31"}
+                        onChange={(selectedDates) => {
+                          if (selectedDates.length > 0) {
+                            updateMedication(
+                              medication.id,
+                              "startDate",
+                              selectedDates[0].toISOString().split("T")[0]
+                            );
+                          }
+                        }}
+                        defaultDate={medication.startDate}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <DatePicker
+                        id={`endDate-${medication.id}`}
+                        label="Ngày kết thúc *"
+                        minDate={new Date().toISOString().split("T")[0]}
+                        maxDate={"9999-12-31"}
+                        placeholder="Chọn ngày kết thúc"
+                        onChange={(selectedDates) => {
+                          if (selectedDates.length > 0) {
+                            updateMedication(
+                              medication.id,
+                              "endDate",
+                              selectedDates[0].toISOString().split("T")[0]
+                            );
+                          }
+                        }}
+                        defaultDate={medication.endDate}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-5">
+                  <h4 className="text-sm font-semibold text-gray-700 border-b-2 border-gray-100 pb-3">
+                    Ghi chú
+                  </h4>
+                  <div>
+                    <textarea
+                      id={`note-${medication.id}`}
+                      value={medication.note}
+                      onChange={(e) =>
+                        updateMedication(medication.id, "note", e.target.value)
+                      }
+                      rows={4}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm leading-relaxed"
+                      placeholder="Ghi chú thêm về cách sử dụng thuốc, lưu ý đặc biệt..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              <span className="font-semibold text-blue-600">
+                {medications.length}
+              </span>{" "}
+              loại thuốc được thêm
+            </div>
+            <div className="flex space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="px-8 py-2.5 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={handleClose}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-2.5 rounded-lg shadow-sm transition-colors"
+              >
+                Lưu đơn thuốc
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+export default MultiMedicationModal;

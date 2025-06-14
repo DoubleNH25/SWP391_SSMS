@@ -160,8 +160,14 @@ export default function HealthProfiles() {
           .map((s) => s.fullName)
           .join(", ");
         toast.warning(
-          `Please complete health information for: ${studentNames}`,
-          { autoClose: 5000 }
+          `Vui lòng hoàn thành thông tin sức khỏe cho: ${studentNames}`,
+          {
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
         );
       }
 

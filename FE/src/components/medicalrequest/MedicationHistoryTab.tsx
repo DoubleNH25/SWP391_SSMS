@@ -26,6 +26,10 @@ interface MedicationHistoryTabProps {
   medicationHistory: MedicationHistoryRecord[];
   historySearchTerm: string;
   setHistorySearchTerm: (term: string) => void;
+  historyStartDate: string;
+  setHistoryStartDate: (date: string) => void;
+  historyEndDate: string;
+  setHistoryEndDate: (date: string) => void;
   historyCurrentPage: number;
   setHistoryCurrentPage: (page: number) => void;
   historyItemsPerPage: number;
@@ -41,6 +45,10 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
   medicationHistory,
   historySearchTerm,
   setHistorySearchTerm,
+  historyStartDate,
+  setHistoryStartDate,
+  historyEndDate,
+  setHistoryEndDate,
   historyCurrentPage,
   setHistoryCurrentPage,
   historyItemsPerPage,
@@ -62,7 +70,34 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
         .toLowerCase()
         .includes(historySearchTerm.toLowerCase()) ||
       record.note.toLowerCase().includes(historySearchTerm.toLowerCase());
-    return matchesSearch;
+
+    // Date filter logic for history - improved
+    const matchesDateFilter = (() => {
+      if (!historyStartDate && !historyEndDate) return true;
+
+      // Parse the administeredTime string to Date (handle Vietnamese locale format)
+      const recordDate = new Date(record.administeredTime.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/, '$3-$2-$1T$4:$5:$6'));
+
+      // If parsing fails, try direct parsing
+      if (isNaN(recordDate.getTime())) {
+        const fallbackDate = new Date(record.administeredTime);
+        if (isNaN(fallbackDate.getTime())) return true; // Skip invalid dates
+      }
+
+      const filterStart = historyStartDate ? new Date(historyStartDate + "T00:00:00") : null;
+      const filterEnd = historyEndDate ? new Date(historyEndDate + "T23:59:59.999Z") : null;
+
+      if (filterStart && filterEnd) {
+        return recordDate >= filterStart && recordDate <= filterEnd;
+      } else if (filterStart) {
+        return recordDate >= filterStart;
+      } else if (filterEnd) {
+        return recordDate <= filterEnd;
+      }
+      return true;
+    })();
+
+    return matchesSearch && matchesDateFilter;
   });
 
   // Sort filtered history
@@ -84,28 +119,32 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Filter Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-        <div className="flex flex-col gap-5">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Bộ lọc tìm kiếm
+            <h2 className="text-lg font-medium text-gray-900">
+              Bộ lọc và tìm kiếm
             </h2>
-            {historySearchTerm && (
+            {(historySearchTerm || historyStartDate || historyEndDate) && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onClearFilters}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-gray-600 border-gray-300 hover:bg-gray-50"
               >
                 <X className="w-4 h-4" />
                 Xóa bộ lọc
               </Button>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Search and Sort Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="lg:col-span-3 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
@@ -115,59 +154,104 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                   setHistorySearchTerm(e.target.value);
                   setHistoryCurrentPage(1);
                 }}
-                className="pl-10"
+                className="pl-10 h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-            <Button
-              onClick={onSort}
-              variant="outline"
-              className="flex items-center gap-2 bg-gray-100 py-[22px] rounded-lg"
-            >
-              <Clock className="w-4 h-4" />
-              <span>Sắp xếp theo thời gian</span>
-              {historySortOrder === "asc" ? (
-                <span className="text-xs">↑</span>
-              ) : (
-                <span className="text-xs">↓</span>
-              )}
-            </Button>
+            <div>
+              <Button
+                onClick={onSort}
+                variant="outline"
+                className="w-full h-10 flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="hidden sm:inline">Sắp xếp</span>
+                {historySortOrder === "asc" ? (
+                  <span className="text-xs">↑</span>
+                ) : (
+                  <span className="text-xs">↓</span>
+                )}
+              </Button>
+            </div>
           </div>
-          {historySearchTerm && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
-              <Search className="w-4 h-4" />
-              <span>
-                Hiển thị {historyTotalItems} kết quả cho{" "}
-                <span className="font-medium">"{historySearchTerm}"</span>
-              </span>
+
+          {/* Date Filter Row */}
+          <div className="border-t border-gray-100 pt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Clock className="w-4 h-4 text-gray-500" />
+                <span>Lọc theo thời gian</span>
+              </div>
+              <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                    Từ ngày
+                  </label>
+                  <Input
+                    type="date"
+                    value={historyStartDate}
+                    onChange={(e) => setHistoryStartDate(e.target.value)}
+                    className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                    Đến ngày
+                  </label>
+                  <Input
+                    type="date"
+                    value={historyEndDate}
+                    onChange={(e) => setHistoryEndDate(e.target.value)}
+                    className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Results Info */}
+          {(historySearchTerm || historyStartDate || historyEndDate) && (
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Search className="w-4 h-4" />
+                <span>
+                  Hiển thị <span className="font-medium text-gray-900">{historyTotalItems}</span> kết quả
+                  {historySearchTerm && (
+                    <span> cho "<span className="font-medium text-gray-900">{historySearchTerm}</span>"</span>
+                  )}
+                </span>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Lịch sử cho thuốc
-          </h2>
-          <div className="text-sm text-gray-500">
-            Tổng: {historyTotalItems} lần cho thuốc
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-gray-900">
+              Lịch sử cho thuốc
+            </h2>
+            <div className="text-sm text-gray-600">
+              Tổng: <span className="font-medium text-gray-900">{historyTotalItems}</span> lần cho thuốc
+            </div>
           </div>
         </div>
 
-        {paginatedHistory.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {paginatedHistory.map((record) => (
-              <div
-                key={record.id}
-                className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 p-4 hover:shadow-md transition-all duration-200"
-              >
+        <div className="p-6">
+          {paginatedHistory.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {paginatedHistory.map((record) => (
+                <div
+                  key={record.id}
+                  className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md hover:bg-gray-100 transition-all duration-200"
+                >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-medium text-gray-900">
                         {record.studentName}
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -175,43 +259,49 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                    {record.status}
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                    Hoàn thành
                   </span>
                 </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Pill className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">Liều lượng:</span>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Pill className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600">Liều lượng</span>
+                    </div>
                     <span className="font-medium text-gray-900">
                       {record.dosage}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">Thời gian:</span>
-                    <span className="font-medium text-gray-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600">Thời gian</span>
+                    </div>
+                    <span className="font-medium text-gray-900 text-right">
                       {record.administeredTime}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      Người thực hiện:
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600">Người thực hiện</span>
+                    </div>
                     <span className="font-medium text-gray-900">
                       {record.administeredBy}
                     </span>
                   </div>
                   {record.note && record.note !== "Không có ghi chú" && (
-                    <div className="flex items-start space-x-2">
-                      <FileText className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div>
-                        <span className="text-gray-600">Ghi chú:</span>
-                        <p className="font-medium text-gray-900 mt-1">
-                          {record.note}
-                        </p>
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-start space-x-2">
+                        <FileText className="w-4 h-4 text-gray-500 mt-0.5" />
+                        <div className="flex-1">
+                          <span className="text-gray-600 text-xs font-medium uppercase tracking-wide">Ghi chú</span>
+                          <p className="text-gray-900 mt-1">
+                            {record.note}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -334,6 +424,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -113,10 +113,22 @@ const NotificationDropdown: React.FC = () => {
       setActionLoading("delete");
       await FecthDeleteNotification();
       fetchData(); // Call fetchData directly without await to avoid blocking
-      toast.success("Read notifications deleted.");
+      toast.success("Đã xóa thông báo đã đọc", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } catch (err) {
       console.error("Failed to delete read notifications:", err);
-      toast.error("Failed to delete read notifications.");
+      toast.error("Không thể xóa thông báo đã đọc", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setActionLoading(null);
     }

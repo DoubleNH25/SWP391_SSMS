@@ -71,10 +71,14 @@ export default function AddUser() {
     try {
       const success = await FecthCreateUsers(formData);
       if (success) {
+        toast.success("Tạo người dùng thành công", {
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         navigate("/user");
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
       } else {
         throw new Error('Creation failed');
       }
@@ -83,7 +87,13 @@ export default function AddUser() {
         ? 'Please log in to create a user.'
         : `Failed to create user: ${err instanceof Error ? err.message : 'Unknown error'}`;
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setLoading(false);
     }

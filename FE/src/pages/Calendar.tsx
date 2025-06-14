@@ -931,7 +931,19 @@ const Calendar: React.FC = () => {
       <ToastContainer
         position="top-right"
         autoClose={3000}
-        className="z-9999"
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        className="!top-20 !z-50"
+        style={{
+          fontSize: '14px',
+          fontWeight: '500'
+        }}
       />
       {loading ? (
         <div className="text-center text-gray-500">Đang tải...</div>
