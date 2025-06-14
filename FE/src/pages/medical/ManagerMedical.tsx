@@ -133,7 +133,7 @@ export default function MedicalManager() {
                 icon={<Pill className="w-6 h-6 text-blue-600" />}
                 description="Quản lý thông tin thuốc trong kho"
             />
-            <ToastContainer position="top-right" autoClose={3000} />
+
 
             {/* Search Controls */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
