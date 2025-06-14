@@ -21,13 +21,22 @@ namespace SMMS.Application.Services.Implements
 		}
 
 
-		//-----------------------------------------Medical Stock------------------------------------------------
+        //-----------------------------------------Medical Stock------------------------------------------------
 
 
-		public async Task<bool> CreateMedicalStockAsync(string userId, CreateMedicalStockRequest request)
+        public async Task<bool> CreateMedicalStockAsync(string userId, CreateMedicalStockRequest request)
         {
             try
             {
+                var stock = _repositoryManager.MedicalStockRepository
+                    .FindByCondition(s => s.Name == request.Name && !s.DeletedTime.HasValue, false)
+                    .FirstOrDefault();
+
+                if (stock == null)
+                {
+                    throw new Exception("Stock is already exist");
+                }
+
                 var medicalStock = new MedicalStock
                 {
                     Name = request.Name,
