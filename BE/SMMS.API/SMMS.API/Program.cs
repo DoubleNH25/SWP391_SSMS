@@ -72,7 +72,6 @@ builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 
 // Application Services
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INurseService, NurseService>();
 builder.Services.AddScoped<IHealthActivityService, HealthActivityService>();

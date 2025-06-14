@@ -11,7 +11,6 @@ namespace SMMS.Infrastructure.Implements
 		private IClassRepository _classRepository;
 		private IConselingRepository _conselingRepository;
 		private IConsentRepository _consentRepository;
-		private IDocumentRepository _documentRepository;
 		private IHealthActivityRepository _healthActivityRepository;
 		private IHealthCheckupRepository _healthCheckupRepository;
 		private IHealthProfileRepository _healthProfileRepository;
@@ -26,7 +25,6 @@ namespace SMMS.Infrastructure.Implements
 		private IUserRepository _userRepository;
 		private IVaccinationCampaignRepository _vaccinationCampaignRepository;
 		private IVaccinationRecordRepository _vaccinationRecordRepository;
-		private IOtpRepository _otpRepository;
 
 
 		public RepositoryManager(DatabaseContext context)
@@ -38,7 +36,6 @@ namespace SMMS.Infrastructure.Implements
 			_classRepository = new ClassRepository(context);
 			_conselingRepository = new ConselingRepository(context);
 			_consentRepository = new ConsentRepository(context);
-			_documentRepository = new DocumentRepository(context);
 			_healthActivityRepository = new HealthActivityRepository(context);
 			_healthCheckupRepository = new HealthCheckupRepository(context);
 			_healthProfileRepository = new HealthProfileRepository(context);
@@ -52,7 +49,6 @@ namespace SMMS.Infrastructure.Implements
 			_studentRepository = new StudentRepository(context);
 			_vaccinationCampaignRepository = new VaccinationCampaignRepository(context);
 			_vaccinationRecordRepository = new VaccinationRecordRepository(context);
-			_otpRepository = new OtpRepository(_context);
 		}
 
 		public IUserRepository UserRepository { get { return _userRepository; } }
@@ -64,8 +60,6 @@ namespace SMMS.Infrastructure.Implements
 		public IConselingRepository ConselingRepository { get { return _conselingRepository; } }
 
 		public IConsentRepository ConsentRepository { get { return _consentRepository; } }
-
-		public IDocumentRepository DocumentRepository { get { return _documentRepository; } }
 
 		public IHealthActivityRepository HealthActivityRepository { get { return _healthActivityRepository; } }
 
@@ -92,8 +86,6 @@ namespace SMMS.Infrastructure.Implements
 		public IVaccinationCampaignRepository VaccinationCampaignRepository { get { return _vaccinationCampaignRepository; } }
 
 		public IVaccinationRecordRepository VaccinationRecordRepository { get { return _vaccinationRecordRepository; } }
-
-		public IOtpRepository OtpRepository { get { return _otpRepository; } }
 
 		public Task SaveAsync() => _context.SaveChangesAsync();
 	}
