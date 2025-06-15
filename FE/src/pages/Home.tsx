@@ -33,7 +33,7 @@ const BlogSlider = () => {
         const data = await FetchAllBlogs();
         setBlogs(data);
       } catch (error) {
-        console.error("Failed to fetch blogs:", error);
+        console.error("Không thể tải danh sách bài viết:", error);
       } finally {
         setLoading(false);
       }
@@ -45,7 +45,7 @@ const BlogSlider = () => {
     if (blogs.length > 0) {
       const timer = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % blogs.length);
-      }, 5000); // Change slide every 5 seconds
+      }, 5000); // Chuyển slide sau mỗi 5 giây
 
       return () => clearInterval(timer);
     }
@@ -135,14 +135,14 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Mock data for the medical events table
+  // Dữ liệu mẫu cho bảng sự kiện y tế
   const medicalEvents = [
     { product: "Tiêm phòng sởi", price: "-", status: "CHỜ DUYỆT" },
     { product: "Khám định kỳ", price: "-", status: "ĐÃ DUYỆT" },
     { product: "Khám răng", price: "-", status: "CHỜ DUYỆT" },
   ];
 
-  // Mock data for the chart
+  // Dữ liệu mẫu cho biểu đồ
   const chartData = [
     { label: "6A", value: 40 },
     { label: "7A", value: 60 },
@@ -170,7 +170,7 @@ export default function Home() {
         const data = await FetchDashboardStats();
         setStats(data);
       } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
+        console.error("Không thể tải dữ liệu thống kê:", error);
       } finally {
         setLoading(false);
       }
@@ -232,7 +232,7 @@ export default function Home() {
                   <Activity className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Dashboard</p>
+                  <p className="text-sm text-gray-600">Tổng quan</p>
                   <p className="text-2xl font-bold">{stats.totalUsers}</p>
                 </div>
               </div>
@@ -308,10 +308,10 @@ export default function Home() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4">Product</th>
-                      <th className="text-left py-3 px-4">Price</th>
-                      <th className="text-left py-3 px-4">Sales</th>
-                      <th className="text-left py-3 px-4">More</th>
+                      <th className="text-left py-3 px-4">Sự kiện</th>
+                      <th className="text-left py-3 px-4">Chi phí</th>
+                      <th className="text-left py-3 px-4">Trạng thái</th>
+                      <th className="text-left py-3 px-4">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -363,7 +363,7 @@ export default function Home() {
               <Activity className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Dashboard</p>
+              <p className="text-sm text-gray-600">Tổng quan</p>
               <p className="text-2xl font-bold">{stats.totalUsers}</p>
             </div>
           </div>
@@ -439,10 +439,10 @@ export default function Home() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4">Product</th>
-                  <th className="text-left py-3 px-4">Price</th>
-                  <th className="text-left py-3 px-4">Sales</th>
-                  <th className="text-left py-3 px-4">More</th>
+                  <th className="text-left py-3 px-4">Sự kiện</th>
+                  <th className="text-left py-3 px-4">Chi phí</th>
+                  <th className="text-left py-3 px-4">Trạng thái</th>
+                  <th className="text-left py-3 px-4">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
