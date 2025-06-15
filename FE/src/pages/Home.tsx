@@ -3,14 +3,124 @@ import { DecodeJWT } from "@/utils/DecodeJWT";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/ui/PageHeader";
-import { LayoutDashboard } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Clock,
+  Stethoscope,
+  Pill,
+  ListTodo,
+  Activity,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import {
+  FetchDashboardStats,
+  DashboardStats,
+} from "@/services/DashboardService";
+import { FetchAllBlogs } from "@/services/BlogService";
+import { BlogResponse } from "@/types/Blog";
 
-interface DashboardStats {
-  totalStudents: number;
-  totalUsers: number;
-  pendingEvents: number;
-  approvedEvents: number;
-}
+const BlogSlider = () => {
+  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const data = await FetchAllBlogs();
+        setBlogs(data);
+      } catch (error) {
+        console.error("Không thể tải danh sách bài viết:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  useEffect(() => {
+    if (blogs.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % blogs.length);
+      }, 5000); // Chuyển slide sau mỗi 5 giây
+
+      return () => clearInterval(timer);
+    }
+  }, [blogs]);
+
+  const goToNextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % blogs.length);
+  };
+
+  const goToPrevSlide = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + blogs.length) % blogs.length
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[300px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (blogs.length === 0) {
+    return (
+      <div className="text-center text-gray-500">Không có bài viết nào.</div>
+    );
+  }
+
+  return (
+    <div className="relative h-[300px] group">
+      <div className="absolute inset-0 overflow-hidden rounded-lg">
+        {blogs[currentIndex]?.image && (
+          <img
+            src={blogs[currentIndex].image}
+            alt={blogs[currentIndex].title}
+            className="w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+          <h3 className="text-xl font-semibold line-clamp-2">
+            {blogs[currentIndex]?.title}
+          </h3>
+        </div>
+      </div>
+
+      <button
+        onClick={goToPrevSlide}
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={goToNextSlide}
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+        {blogs.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              index === currentIndex ? "bg-white w-4" : "bg-white/60"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function Home() {
   const [role, setRole] = useState<string>("");
@@ -18,9 +128,28 @@ export default function Home() {
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalUsers: 0,
+    totalNurses: 0,
     pendingEvents: 0,
-    approvedEvents: 0,
+    processingPrescriptions: 0,
+    testEvents: 0,
   });
+  const [loading, setLoading] = useState(true);
+
+  // Dữ liệu mẫu cho bảng sự kiện y tế
+  const medicalEvents = [
+    { product: "Tiêm phòng sởi", price: "-", status: "CHỜ DUYỆT" },
+    { product: "Khám định kỳ", price: "-", status: "ĐÃ DUYỆT" },
+    { product: "Khám răng", price: "-", status: "CHỜ DUYỆT" },
+  ];
+
+  // Dữ liệu mẫu cho biểu đồ
+  const chartData = [
+    { label: "6A", value: 40 },
+    { label: "7A", value: 60 },
+    { label: "8A", value: 80 },
+    { label: "9A", value: 100 },
+    { label: "10A", value: 70 },
+  ];
 
   useEffect(() => {
     const payload = DecodeJWT();
@@ -34,15 +163,20 @@ export default function Home() {
     }
   }, []);
 
-  // TODO: Replace with actual API calls
   useEffect(() => {
-    // Simulated data
-    setStats({
-      totalStudents: 150,
-      totalUsers: 45,
-      pendingEvents: 8,
-      approvedEvents: 23,
-    });
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        const data = await FetchDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Không thể tải dữ liệu thống kê:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const StatCard = ({
@@ -85,213 +219,276 @@ export default function Home() {
 
   const renderAdminDashboard = () => (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Tổng số học sinh"
-          value={stats.totalStudents}
-          trend={{ value: 12, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Tổng số người dùng"
-          value={stats.totalUsers}
-          trend={{ value: 8, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Sự kiện chờ duyệt"
-          value={stats.pendingEvents}
-          trend={{ value: 5, isPositive: false }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Sự kiện đã duyệt"
-          value={stats.approvedEvents}
-          trend={{ value: 15, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Sự kiện y tế gần đây
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for events list */}
-              <p className="text-sm text-gray-500">
-                Không có sự kiện gần đây để hiển thị.
-              </p>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-100 rounded-lg">
+                  <Activity className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tổng quan</p>
+                  <p className="text-2xl font-bold">{stats.totalUsers}</p>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Cập nhật hệ thống
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for system updates */}
-              <p className="text-sm text-gray-500">
-                Không có cập nhật gần đây để hiển thị.
-              </p>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tổng số học sinh</p>
+                  <p className="text-2xl font-bold">{stats.totalStudents}</p>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
+                  <p className="text-2xl font-bold">{stats.pendingEvents}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Stethoscope className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Số nhân viên y tế</p>
+                  <p className="text-2xl font-bold">{stats.totalNurses}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-100 rounded-lg">
+                  <Pill className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
+                  <p className="text-2xl font-bold">
+                    {stats.processingPrescriptions}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-100 rounded-lg">
+                  <ListTodo className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
+                  <p className="text-2xl font-bold">{stats.testEvents}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4">Sự kiện</th>
+                      <th className="text-left py-3 px-4">Chi phí</th>
+                      <th className="text-left py-3 px-4">Trạng thái</th>
+                      <th className="text-left py-3 px-4">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {medicalEvents.map((event, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-3 px-4">{event.product}</td>
+                        <td className="py-3 px-4">{event.price}</td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm ${
+                              event.status === "ĐÃ DUYỆT"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-orange-100 text-orange-800"
+                            }`}
+                          >
+                            {event.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <button className="text-blue-600 hover:text-blue-800">
+                            Chi tiết
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">
+                Tin mới / Cập nhật y tế
+              </h2>
+              <BlogSlider />
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 
   const renderManagerDashboard = () => (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard
-          title="Tổng số học sinh"
-          value={stats.totalStudents}
-          trend={{ value: 12, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Sự kiện chờ duyệt"
-          value={stats.pendingEvents}
-          trend={{ value: 5, isPositive: false }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Sự kiện đã duyệt"
-          value={stats.approvedEvents}
-          trend={{ value: 15, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <Activity className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Tổng quan</p>
+              <p className="text-2xl font-bold">{stats.totalUsers}</p>
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Sự kiện y tế gần đây
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for events list */}
-              <p className="text-sm text-gray-500">
-                Không có sự kiện gần đây để hiển thị.
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Tổng số học sinh</p>
+              <p className="text-2xl font-bold">{stats.totalStudents}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <Clock className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
+              <p className="text-2xl font-bold">{stats.pendingEvents}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Stethoscope className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Số nhân viên y tế</p>
+              <p className="text-2xl font-bold">{stats.totalNurses}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <Pill className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
+              <p className="text-2xl font-bold">
+                {stats.processingPrescriptions}
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <ListTodo className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
+              <p className="text-2xl font-bold">{stats.testEvents}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4">Sự kiện</th>
+                  <th className="text-left py-3 px-4">Chi phí</th>
+                  <th className="text-left py-3 px-4">Trạng thái</th>
+                  <th className="text-left py-3 px-4">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {medicalEvents.map((event, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="py-3 px-4">{event.product}</td>
+                    <td className="py-3 px-4">{event.price}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          event.status === "ĐÃ DUYỆT"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-orange-100 text-orange-800"
+                        }`}
+                      >
+                        {event.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button className="text-blue-600 hover:text-blue-800">
+                        Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">
+            Tin mới / Cập nhật y tế
+          </h2>
+          <div className="h-[300px] flex items-end justify-between gap-4 px-4">
+            {chartData.map((item, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center">
+                <div
+                  className="w-full bg-blue-500 rounded-t-lg transition-all duration-300 hover:bg-blue-600"
+                  style={{ height: `${item.value}%` }}
+                ></div>
+                <span className="mt-2 text-sm text-gray-600">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </>
   );
@@ -322,7 +519,7 @@ export default function Home() {
         />
         <StatCard
           title="Sự kiện đã duyệt"
-          value={stats.approvedEvents}
+          value={stats.processingPrescriptions}
           trend={{ value: 15, isPositive: true }}
           icon={
             <svg
