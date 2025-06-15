@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, memo, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDownIcon,
-  HorizontaLDots,
   CalenderIcon,
   PieChartIcon,
   UserCircleIcon,
@@ -11,6 +10,7 @@ import {
   TimeIcon,
   CheckCircleIcon,
 } from "@/components/icons";
+import { Home as HomeIcon } from "lucide-react";
 import { useSidebar } from "@/components/context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
@@ -29,6 +29,12 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  {
+    icon: <HomeIcon />,
+    name: "Trang chủ",
+    path: "/home",
+    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
+  },
   {
     icon: <PieChartIcon />,
     name: "Bảng điều khiển",
@@ -208,7 +214,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = useCallback(
     (items: NavItem[], menuType: "main") => (
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-4 px-3">
         {items.map((nav, index) => {
           const isOpen =
             openSubmenu?.type === menuType && openSubmenu.index === index;
@@ -222,11 +228,11 @@ const AppSidebar: React.FC = () => {
               {nav.subItems ? (
                 <button
                   onClick={(e) => handleSubmenuToggle(index, menuType, e)}
-                  className={`menu-item group w-full flex items-center gap-2 px-3 py-2 transition-all
+                  className={`menu-item group w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
                     ${
                       isParentActive
-                        ? "bg-blue-200 text-blue-600 rounded-md"
-                        : "bg-transparent text-gray-700 hover:bg-gray-100"
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
                     }
                     ${
                       !isExpanded && !isHovered
@@ -234,100 +240,61 @@ const AppSidebar: React.FC = () => {
                         : "lg:justify-start"
                     }`}
                 >
-                  <span className="menu-item-icon-size flex-shrink-0 text-gray-500">
-                    {nav.icon}
-                  </span>
+                  <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
                   {isVisible && (
-                    <span className="menu-item-text whitespace-nowrap">
-                      {nav.name}
-                    </span>
-                  )}
-                  {isVisible && (
-                    <ChevronDownIcon
-                      className={`ml-auto w-5 h-5 transition-transform duration-200
-                        ${isOpen ? "text-gray-400" : "text-gray-400"}`}
-                    />
+                    <>
+                      <span className="font-medium">{nav.name}</span>
+                      <ChevronDownIcon
+                        className={`ml-auto w-5 h-5 transition-transform duration-200
+                          ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </>
                   )}
                 </button>
               ) : (
                 nav.path && (
                   <Link
                     to={nav.path}
-                    className={`menu-item group flex items-center gap-2 px-3 py-2 transition-all
+                    className={`menu-item group flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
                       ${
                         isActive(nav.path)
-                          ? "menu-item-active bg-blue-200 text-blue-600 rounded-md"
-                          : "menu-item-inactive"
+                          ? "bg-blue-100 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-100"
                       }`}
                   >
-                    <span
-                      className={`menu-item-icon-size flex items-center justify-center
-                        ${
-                          isActive(nav.path)
-                            ? "menu-item-icon-active"
-                            : "menu-item-icon-inactive"
-                        }`}
-                    >
-                      {nav.icon}
-                    </span>
+                    <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
                     {isVisible && (
-                      <span className="menu-item-text">{nav.name}</span>
+                      <span className="font-medium">{nav.name}</span>
                     )}
                   </Link>
                 )
               )}
-              {nav.subItems && isVisible && (
+              {nav.subItems && isOpen && (
                 <div
                   ref={(el) => {
-                    subMenuRefs.current[key] = el;
+                    if (el) {
+                      subMenuRefs.current[key] = el;
+                    }
                   }}
-                  className="overflow-hidden transition-all duration-300"
                   style={{
-                    height: isOpen ? `${subMenuHeight[key] || 0}px` : "0px",
+                    height: subMenuHeight[key] || "auto",
+                    overflow: "hidden",
                   }}
+                  className="transition-all duration-200 ease-in-out"
                 >
-                  <ul className="mt-2 space-y-1 ml-9">
+                  <ul className="pl-12 py-2 space-y-2">
                     {nav.subItems.map((subItem) => (
-                      <li key={subItem.name} className="p-0 rounded-md">
+                      <li key={subItem.path}>
                         <Link
                           to={subItem.path}
-                          className={`p-2 rounded-md w-full flex items-center justify-between cursor-pointer
+                          className={`block py-2 px-3 rounded-lg transition-all text-[14px] font-medium
                             ${
                               isActive(subItem.path)
-                                ? "bg-blue-200 text-blue-600"
-                                : ""
-                            }
-                            ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-item-active bg-brand-400"
-                                : "menu-dropdown-item-inactive"
-                            } menu-dropdown-item`}
+                                ? "text-blue-700"
+                                : "text-gray-600 hover:text-gray-900"
+                            }`}
                         >
                           {subItem.name}
-                          <span className="flex items-center gap-1 ml-auto">
-                            {subItem.new && (
-                              <span
-                                className={`ml-auto bg-yellow ${
-                                  isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
-                                } menu-dropdown-badge`}
-                              >
-                                new
-                              </span>
-                            )}
-                            {subItem.pro && (
-                              <span
-                                className={`ml-auto ${
-                                  isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
-                                } menu-dropdown-badge`}
-                              >
-                                pro
-                              </span>
-                            )}
-                          </span>
                         </Link>
                       </li>
                     ))}
@@ -339,15 +306,7 @@ const AppSidebar: React.FC = () => {
         })}
       </ul>
     ),
-    [
-      isExpanded,
-      isHovered,
-      isMobileOpen,
-      openSubmenu,
-      subMenuHeight,
-      handleSubmenuToggle,
-      isActive,
-    ]
+    [isExpanded, isHovered, isMobileOpen, openSubmenu, subMenuHeight, isActive]
   );
 
   if (!role) {
@@ -356,41 +315,18 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 lg:mt-0 top-0 left-0 bg-white dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
-        }
-        ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${
+        isExpanded ? "w-64" : "w-20"
+      } ${
+        isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex flex-col mt-5 overflow-y-auto duration-300 ease-linear no-scrollbar">
-        <nav className="mb-6">
-          <div className="flex flex-col gap-4">
-            <div className="mx-5">
-              <h2
-                className={`mb-4 text-md font-bold uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "DANH MỤC"
-                ) : (
-                  <HorizontaLDots className="size-6" />
-                )}
-              </h2>
-              {renderMenuItems(filteredNavItems, "main")}
-            </div>
-          </div>
-        </nav>
+      <div className="flex flex-col h-full py-6">
+        <div className="flex-1 overflow-y-auto">
+          {renderMenuItems(filteredNavItems, "main")}
+        </div>
       </div>
     </aside>
   );

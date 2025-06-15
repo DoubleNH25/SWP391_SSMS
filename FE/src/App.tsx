@@ -23,7 +23,6 @@ import Unauthorized from "@/pages/auth/Unauthorized";
 import CLassSchoolManager from "@/pages/class/ManagerClass";
 import AddSchoolClass from "@/pages/class/AddSchoolClass";
 import UpdateSchoolClass from "@/pages/class/UpdateSchoolClass";
-import EditProfile from "@/pages/user/EditProfile";
 import Home from "@/pages/Home";
 import MedicalVaccinationRecord from "@/pages/medicalevents/MedicalVaccinationRecord";
 import MedicalHealthCheckupRecords from "@/pages/medicalevents/MedicalHealthCheckupRecords";
@@ -46,18 +45,6 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
-          <Route path="/blog" element={<Blog />} />
-
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute
-                allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
-              >
-                <EditProfile />
-              </PrivateRoute>
-            }
-          />
 
           <Route
             path="/"
@@ -71,6 +58,7 @@ function App() {
           >
             <Route index element={<Navigate to="/home" replace />} />
             <Route path="home" element={<Home />} />
+            <Route path="blog" element={<Blog />} />
 
             {/*User*/}
             <Route
