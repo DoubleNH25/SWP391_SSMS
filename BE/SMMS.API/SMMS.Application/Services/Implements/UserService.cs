@@ -488,6 +488,41 @@ namespace SMMS.Application.Services.Implements
 				.ToListAsync();
 		}
 
+		public async Task<ParentResponse> GetParentByStudentIdAsync(string studentId)
+		{
+			var parent = await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.Id == studentId && s.DeletedTime == null, false)
+				.Include(s => s.Parent)
+				.ThenInclude(p => p.Students.Where(st => st.DeletedTime == null))
+				.Select(s => new ParentResponse
+				{
+					Id = s.Parent.Id,
+					Email = s.Parent.Email,
+					Phone = s.Parent.Phone,
+					FullName = s.Parent.FullName,
+					RoleName = s.Parent.Role.RoleName,
+					ImageUrl = s.Parent.Image,
+					Students = s.Parent.Students.Select(st => new StudentResponse
+					{
+						Id = st.Id,
+						FullName = st.FullName,
+						Gender = st.Gender,
+						DateOfBirth = st.DateOfBirth,
+						ClassId = st.ClassId,
+						StudentClass = st.SchoolClass != null ? new SchoolClassResponse
+						{
+							Id = st.SchoolClass.Id,
+							ClassName = st.SchoolClass.ClassName,
+							ClassRoom = st.SchoolClass.ClassRoom,
+							Quantity = st.SchoolClass.Quantity
+						} : null,
+						Image = st.Image
+					}).ToList()
+				}).FirstOrDefaultAsync();
+
+			return parent ?? throw new Exception("Parent not found for the given student ID.");
+		}
+
 		public async Task<StudentResponse> GetStudentByStudentCodeAsync(string studentCode)
 		{
 			var student = await _repositoryManager.StudentRepository

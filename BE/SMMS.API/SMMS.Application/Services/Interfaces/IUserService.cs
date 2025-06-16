@@ -29,5 +29,6 @@ namespace SMMS.Application.Services.Interfaces
 
 		//Parent Features
 		Task<List<ParentResponse>> GetAllParentsAsync();
+		Task<ParentResponse> GetParentByStudentIdAsync(string studentId);
 	}
 }

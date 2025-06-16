@@ -13,5 +13,7 @@ namespace SMMS.Application.Services.Interfaces
 		Task<bool> UpdateHealthActivityAsync(string healthActivityId, HealthActivityRequest request, string userId);
 		Task<bool> DeleteHealthActivityAsync(string healthActivityId, string userId);
 
+		Task<HealthActivityResponse?> GetHealthActivityByIdAndDateAsync(string healthActivityId, DateTime date);
+
 	}
 }

@@ -636,7 +636,8 @@ namespace SMMS.Application.Services.Implements
                 return medicalRequests.Select(mr => new ListMedicalRequestResponse
                 {
                     Id = mr.Id,
-                    StudentName = mr.Student.FullName,
+					StudentId = mr.StudentId,
+					StudentName = mr.Student.FullName,
                     StudentClass = mr.Student.SchoolClass.ClassName,
                     ParentName = mr.ParentName,
                     MedicationName = mr.MedicationName,

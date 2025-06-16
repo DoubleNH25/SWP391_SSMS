@@ -269,5 +269,32 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
+
+		public async Task<VaccinationCampaignResponse?> GetVaccinationCampaignByIdAndDateAsync(string campaignId, DateTime date)
+		{
+			var campaign = await _repositoryManager.VaccinationCampaignRepository
+				.FindByCondition(vc => vc.Id == campaignId && vc.StartDate.Date == date.Date && vc.DeletedTime == null, false)
+				.Include(vc => vc.VaccinationCampaignClasses)
+				.Include(vc => vc.User)
+				.FirstOrDefaultAsync();
+
+			if (campaign == null) return null;
+
+			return new VaccinationCampaignResponse
+			{
+				Id = campaign.Id,
+				Name = campaign.Name,
+				VaccineName = campaign.VaccineName,
+				NurseId = campaign.UserId,
+				NurseName = campaign.User.FullName,
+				EXP = campaign.EXP,
+				MFG = campaign.MFG,
+				VaccineType = campaign.VaccineType,
+				StartDate = campaign.StartDate,
+				Status = campaign.Status,
+				ClassIds = campaign.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
+			};
+		}
+
 	}
 }

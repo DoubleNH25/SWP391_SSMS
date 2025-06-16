@@ -71,14 +71,21 @@ namespace SMMS.API.Controllers
 			return Ok(schedules);
 		}
 
-		[HttpPost("conseling-schedules")]
-		public async Task<IActionResult> RequestConselingSchedule([FromBody] ConselingRequest request)
+		[HttpPut("conseling-schedules-status")]
+		public async Task<IActionResult> UpdateConselingStatus([FromBody] AcceptConselingScheduleRequest request)
 		{
 			var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(parentId)) return Unauthorized("Parent ID not found.");
-			var result = await _conselingService.RequestConselingScheduleAsync(request.StudentId, request.HealthCheckupId, request.RequestedDate, parentId, request.Note);
-			if (!result) return BadRequest("Failed to request schedule.");
-			return Ok("Schedule requested.");
+			if (string.IsNullOrEmpty(parentId))
+			{
+				return Unauthorized("Parent ID not found in claims.");
+			}
+			if (request.Status != ApprovalStatus.Approved && request.Status != ApprovalStatus.Rejected)
+			{
+				return BadRequest("Invalid status. Only Accepted or Rejected are allowed.");
+			}
+			var result = await _conselingService.UpdateScheduleStatusAsync(request.ConselingScheduleId, request.Status, parentId);
+			if (!result) return BadRequest("Failed to accept counseling schedule. Schedule not found or nurse ID mismatch.");
+			return Ok(true);
 		}
 
 		[HttpPut("students/{studentId}/health-profile")]

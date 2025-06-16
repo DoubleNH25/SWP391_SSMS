@@ -177,5 +177,21 @@ namespace SMMS.API.Controllers
 			if (students == null || !students.Any()) return NotFound("No students found for the given parent ID.");
 			return Ok(students);
 		}
+
+		[HttpGet("students/{studentId}/parent")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetParentByStudentId(string studentId)
+		{
+			try
+			{
+				var parent = await _userService.GetParentByStudentIdAsync(studentId);
+				if (parent == null) return NotFound("Parent not found for the given student ID.");
+				return Ok(parent);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+		}		
 	}
 }
