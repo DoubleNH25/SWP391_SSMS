@@ -21,18 +21,6 @@ namespace SMMS.API.Controllers
 			_consentService = consentService;
 		}
 
-		[HttpGet("{healthActivityId}/by-date")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetHealthActivityByIdAndDate(string healthActivityId, [FromQuery] DateTime date)
-		{
-			var healthActivity = await _healthActivityService.GetHealthActivityByIdAndDateAsync(healthActivityId, date);
-			if (healthActivity == null)
-			{
-				return NotFound("Health activity not found for the specified ID and date.");
-			}
-			return Ok(healthActivity);
-		}
-
 		[HttpGet("health-activities/all")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetAllHealthActivities()
@@ -109,18 +97,6 @@ namespace SMMS.API.Controllers
 		{
 			var activities = await _vaccinationCampaignService.GetAllVaccineCampaignAsync();
 			return Ok(activities);
-		}
-
-		[HttpGet("vaccination-campaigns/{campaignId}/by-date")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetVaccinationCampaignByIdAndDate(string campaignId, [FromQuery] DateTime date)
-		{
-			var campaign = await _vaccinationCampaignService.GetVaccinationCampaignByIdAndDateAsync(campaignId, date);
-			if (campaign == null)
-			{
-				return NotFound("Vaccination campaign not found for the specified ID and date.");
-			}
-			return Ok(campaign);
 		}
 
 		[HttpGet("vaccination-campaigns/pending")]

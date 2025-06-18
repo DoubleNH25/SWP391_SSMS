@@ -103,10 +103,10 @@ namespace SMMS.Application.Services.Implements
 					VaccinatedAt = vr.VaccinatedAt
 				}).ToList());
 		}
-		public async Task<List<VaccinationRecordResponse>> GetVaccineRecordsByDateAsync(DateTime date)
+		public async Task<List<VaccinationRecordResponse>> GetVaccineRecordsByDateAndIdAsync(string campaignId, DateTime date)
 		{
 			return await Task.Run(() => _repositoryManager.VaccinationRecordRepository
-				.FindByCondition(vr => vr.Time.Date == date.Date && vr.DeletedTime == null, false)
+				.FindByCondition(vr => vr.VaccinationCampaignId == campaignId && vr.Time.Date == date.Date && vr.DeletedTime == null, false)
 				.Include(vr => vr.Student)
 				.Include(vr => vr.VaccinationCampaign)
 				.Select(vr => new VaccinationRecordResponse

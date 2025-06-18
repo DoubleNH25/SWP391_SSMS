@@ -14,6 +14,5 @@ namespace SMMS.Application.Services.Interfaces
 		Task<bool> UpdateVaccineCampaignStatusAsync(string vcId, string action, string userId);
 		Task<bool> UpdateVaccinationCampaignAsync(string vaccinationCampaignId, VaccinationCampaignRequest request, string userId);
 		Task<bool> DeleteVaccinationCampaignAsync(string vaccinationCampaignId, string userId);
-		Task<VaccinationCampaignResponse?> GetVaccinationCampaignByIdAndDateAsync(string campaignId, DateTime date);
 	}
 }

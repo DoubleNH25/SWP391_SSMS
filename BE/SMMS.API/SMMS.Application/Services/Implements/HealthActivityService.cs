@@ -255,29 +255,6 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager.HealthActivityRepository.Update(activity);
 			await _repositoryManager.SaveAsync();
 			return true;
-		}
-
-		public async Task<HealthActivityResponse?> GetHealthActivityByIdAndDateAsync(string healthActivityId, DateTime date)
-		{
-			var healthActivity = await _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Id == healthActivityId && ha.ScheduledDate.Date == date.Date && ha.DeletedTime == null, false)
-				.Include(ha => ha.HealthActivityClasses)
-				.Include(ha => ha.User)
-				.FirstOrDefaultAsync();
-
-			if (healthActivity == null) return null;
-
-			return new HealthActivityResponse
-			{
-				Id = healthActivity.Id,
-				Name = healthActivity.Name,
-				UserId = healthActivity.UserId,
-				UserName = healthActivity.User?.FullName ?? "Unknown Nurse",
-				Description = healthActivity.Description,
-				ScheduledDate = healthActivity.ScheduledDate,
-				Status = healthActivity.Status,
-				ClassIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
-			};
-		}		
+		}	
 	}
 }

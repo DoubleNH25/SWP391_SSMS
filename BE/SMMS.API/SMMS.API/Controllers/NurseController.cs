@@ -97,11 +97,11 @@ namespace SMMS.API.Controllers
 			return Ok(records);
 		}
 
-		[HttpGet("health-checkup-records/by-date")]
+		[HttpGet("health-checkup-records/by-date-and-activityId")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetCheckupRecordsByDate([FromQuery] DateTime date)
+		public async Task<IActionResult> GetCheckupRecordsByDateAndId(string id, [FromQuery] DateTime date)
 		{
-			var records = await _healthCheckupService.GetCheckupRecordsByDateAsync(date);
+			var records = await _healthCheckupService.GetCheckupRecordsByIdAndDateAsync(id, date);
 			if (records == null || !records.Any())
 			{
 				return NotFound("No health checkup records found for the specified date.");
@@ -188,11 +188,11 @@ namespace SMMS.API.Controllers
 			if (!result) return NotFound();
 			return NoContent();
 		}
-		[HttpGet("vaccination-records/by-date")]
+		[HttpGet("vaccination-records/by-date-and-campaignId")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetVaccineRecordsByDate([FromQuery] DateTime date)
+		public async Task<IActionResult> GetVaccineRecordsByDateAndId(string id, [FromQuery] DateTime date)
 		{
-			var records = await _vaccinationRecordService.GetVaccineRecordsByDateAsync(date);
+			var records = await _vaccinationRecordService.GetVaccineRecordsByDateAndIdAsync(id, date);
 			if (records == null || !records.Any())
 			{
 				return NotFound("No health checkup records found for the specified date.");
