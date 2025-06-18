@@ -13,12 +13,12 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<Blog> Blog { get; set; }
         public virtual DbSet<SchoolClass> SchoolClass { get; set; }
         public virtual DbSet<ConselingSchedule> ConselingSchedule { get; set; }
-        public virtual DbSet<Document> Document { get; set; }
         public virtual DbSet<HealthActivity> HealthActivity { get; set; }
         public virtual DbSet<HealthCheckupRecord> HealthCheckupRecord { get; set; }
         public virtual DbSet<HealthProfile> HealthProfile { get; set; }
         public virtual DbSet<MedicalIncident> MedicalIncident { get; set; }
         public virtual DbSet<MedicalRequest> MedicalRequest { get; set; }
+        public virtual DbSet<MedicationRequestAdministration> MedicationRequestAdministration { get; set; }
         public virtual DbSet<MedicalStock> MedicalStock { get; set; }
         public virtual DbSet<MedicalUsage> MedicalUsage { get; set; }
         public virtual DbSet<Notification> Notification { get; set; }
@@ -26,7 +26,6 @@ namespace SMMS.Infrastructure.Context
         public virtual DbSet<Student> Student { get; set; }
         public virtual DbSet<VaccinationCampaign> VaccinationCampaign { get; set; }
         public virtual DbSet<VaccinationRecord> VaccinationRecord { get; set; }
-		public virtual DbSet<Otp> Otps { get; set; }
 		public virtual DbSet<HealthActivityClass> HealthActivityClasses { get; set; }
 		public virtual DbSet<VaccinationCampaignClass> VaccinationCampaignClasses { get; set; }
 
@@ -197,21 +196,18 @@ namespace SMMS.Infrastructure.Context
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-			modelBuilder.Entity<Otp>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.HasOne(o => o.User)
-					.WithMany(u => u.Otps)
-					.HasForeignKey(o => o.UserId)
-					.OnDelete(DeleteBehavior.SetNull); // Changed from Cascade to SetNull
-
-				entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(15);
-				entity.Property(e => e.OtpCode).IsRequired().HasMaxLength(6);
-				entity.Property(e => e.ExpirationTime).IsRequired();
-				entity.Property(e => e.IsUsed).IsRequired();
-				entity.Property(e => e.UserId).IsRequired(false); // Explicitly nullable
-			});
+            // MedicationRequestAdministration - MedicalRequest, User (N-1)
+            modelBuilder.Entity<MedicationRequestAdministration>(mra =>
+            {
+                mra.HasOne(ur => ur.MedicalRequest)
+                    .WithMany(u => u.MedicationRequestAdministrations)
+                    .HasForeignKey(ur => ur.MedicalRequestId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                mra.HasOne(ur => ur.Administrator)
+                    .WithMany()
+                    .HasForeignKey(ur => ur.AdministeredBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
 			modelBuilder.Entity<HealthActivityClass>()
 			.HasOne(hac => hac.HealthActivity)
@@ -385,7 +381,7 @@ namespace SMMS.Infrastructure.Context
 					Dental = "No cavities",
 					BMI = 20.5,
 					AbnormalNote = "None",
-					VaccinationHistory = "Fully vaccinated",
+					VaccinationHistory = "Fully using Rocket1h",
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow
 				},
@@ -398,7 +394,7 @@ namespace SMMS.Infrastructure.Context
 					Dental = "Minor cavities",
 					BMI = 19.8,
 					AbnormalNote = "Monitor dental health",
-					VaccinationHistory = "Fully vaccinated",
+					VaccinationHistory = "Fully using Rocket24/7",
 					CreatedBy = "System",
 					CreatedTime = DateTimeOffset.UtcNow
 				});
@@ -408,8 +404,8 @@ namespace SMMS.Infrastructure.Context
 				{
 					Id = healthActivityId,
 					UserId = nurseId,
-					Name = "Annual Health Check",
-					Description = "Yearly health check for students",
+					Name = "Bet88",
+					Description = "Nha Cai Hang Dau So 1 Dong Nam A",
 					ScheduledDate = new DateTime(2024, 12, 1),
 					Status = ApprovalStatus.Pending,
 					CreatedBy = nurseId,
@@ -435,8 +431,8 @@ namespace SMMS.Infrastructure.Context
 				{
 					Id = vaccinationCampaignId,
 					UserId = nurseId,
-					Name = "Flu Vaccination",
-					VaccineName = "Flu Vaccine",
+					Name = "KT88",
+					VaccineName = "Nha Cai Hang Dau So 1 Chau Au",
 					EXP = new DateTime(2025, 12, 1),
 					MFG = new DateTime(2024, 1, 1),
 					VaccineType = "Flu",
@@ -457,6 +453,67 @@ namespace SMMS.Infrastructure.Context
 					CreatedTime = DateTimeOffset.UtcNow
 				}
 			);
+            modelBuilder.Entity<MedicalStock>().HasData(
+					new MedicalStock
+					{
+						Id = Guid.NewGuid().ToString(),
+						Name = "Rocket1s",
+						Quantity = 100,
+                        DetailInformation = "A supplement for enhancing health and vitality",
+						ExpiryDate = new DateTime(2025, 12, 31),
+						Status = MedicalStockStatus.Available,
+						CreatedBy = "System",
+						CreatedTime = DateTimeOffset.UtcNow
+					},
+					new MedicalStock
+					{
+						Id = Guid.NewGuid().ToString(),
+						Name = "Rocket1m",
+						Quantity = 50,
+						DetailInformation = "A supplement for enhancing health and vitality",
+						ExpiryDate = new DateTime(2026, 6, 30),
+						Status = MedicalStockStatus.Available,
+						CreatedBy = "System",
+						CreatedTime = DateTimeOffset.UtcNow
+					},
+
+					new MedicalStock
+					{
+						Id = Guid.NewGuid().ToString(),
+						Name = "Rocket1h",
+						Quantity = 50,
+						DetailInformation = "A supplement for enhancing health and vitality",
+						ExpiryDate = new DateTime(2026, 6, 30),
+						Status = MedicalStockStatus.Available,
+						CreatedBy = "System",
+						CreatedTime = DateTimeOffset.UtcNow
+					},
+
+					new MedicalStock
+					{
+						Id = Guid.NewGuid().ToString(),
+						Name = "Rocket12h",
+						Quantity = 50,
+						DetailInformation = "A supplement for enhancing health and vitality",
+						ExpiryDate = new DateTime(2026, 6, 30),
+						Status = MedicalStockStatus.Available,
+						CreatedBy = "System",
+						CreatedTime = DateTimeOffset.UtcNow
+					},
+
+					new MedicalStock
+					{
+						Id = Guid.NewGuid().ToString(),
+						Name = "Rocket-24/7",
+						Quantity = 50,
+						DetailInformation = "A supplement for enhancing health and vitality",
+						ExpiryDate = new DateTime(2026, 6, 30),
+						Status = MedicalStockStatus.Available,
+						CreatedBy = "System",
+						CreatedTime = DateTimeOffset.UtcNow
+					}
+				);
 		}
     }
 }
+

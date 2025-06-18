@@ -18,10 +18,10 @@ namespace SMMS.Application.Services.Implements
 			_notificationService = notificationService;
 		}
 
-		public async Task<bool> RequestConselingScheduleAsync(string studentId, string healthCheckupId, DateTime requestedDate, string parentId, string note)
+		public async Task<bool> RequestConselingScheduleAsync(string studentId, string healthCheckupId, DateTime requestedDate, string note)
 		{
 			var student = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.Id == studentId && s.ParentId == parentId, false)
+				.FindByCondition(s => s.Id == studentId, false)
 				.FirstOrDefault();
 			if (student == null) return false;
 
@@ -40,50 +40,57 @@ namespace SMMS.Application.Services.Implements
 			var schedule = new ConselingSchedule
 			{
 				StudentId = studentId,
-				ParentId = parentId,
+				ParentId = student.ParentId,
 				MedicalStaffId = nurseId,
 				HealthCheckupId = healthCheckupId,
 				MeetingDate = requestedDate,
 				Note = note,
 				Status = ApprovalStatus.Pending,
-				CreatedBy = parentId,
+				CreatedBy = nurseId,
 				CreatedTime = DateTimeOffset.UtcNow
 			};
 			_repositoryManager.ConselingRepository.Create(schedule);
 
-			// Notify Nurse//////////////////////////////
+			//// Notify Nurse//////////////////////////////
+			//await _notificationService.CreateNotificationAsync(
+			//	schedule.MedicalStaffId,
+			//	"New Counseling Schedule Request",
+			//	$"Parent of {student.StudentCode}-{student.FullName} has requested a counseling session."
+			//	,schedule.Id
+			//);
+
+			// Notify Parent/////////////////////////////
 			await _notificationService.CreateNotificationAsync(
-				schedule.MedicalStaffId,
-				"New Counseling Schedule Request",
-				$"Parent of {student.StudentCode}-{student.FullName} has requested a counseling session."
-				,schedule.Id
+				schedule.ParentId,
+				"Counseling Schedule Request",
+				$"A counseling session has been proposed for your child {student.StudentCode}-{student.FullName}. Please confirm or reject the request.",
+				schedule.Id
 			);
+
 
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-
-		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, DateTime scheduledTime, string nurseId)
+		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId)
 		{
 			var schedule = _repositoryManager.ConselingRepository
-				.FindByCondition(cs => cs.Id == conselingScheduleId && cs.MedicalStaffId == nurseId, true)
+				.FindByCondition(cs => cs.Id == conselingScheduleId && cs.ParentId == parentId, true)
 				.FirstOrDefault();
 			if (schedule == null) return false;
 
 			schedule.Status = status;
-			schedule.MeetingDate = scheduledTime;
-			schedule.LastUpdatedBy = nurseId;
+			schedule.LastUpdatedBy = parentId;
 			schedule.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConselingRepository.Update(schedule);
 
-			// Notify Parent//////////////////////////////////////////
+			// Notify Nurse//////////////////////////////////////////
 			var message = status == ApprovalStatus.Approved
-				? $"Your counseling request has been approved. Scheduled for: {scheduledTime}."
+				? $"Your counseling request has been approved. Scheduled for: {schedule.MeetingDate}."
 				: "Your counseling request has been rejected.";
 			await _notificationService.CreateNotificationAsync(
-				schedule.ParentId,
+				schedule.MedicalStaffId,
 				$"Counseling Schedule {status}",
-				message, schedule.Id
+				message, schedule.MedicalStaffId
 			);
 
 			await _repositoryManager.SaveAsync();

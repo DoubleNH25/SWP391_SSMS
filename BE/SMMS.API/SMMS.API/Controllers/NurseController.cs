@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMMS.Application.DataObject.RequestObject;
+using SMMS.Application.Services.Implements;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Enum;
 using System.Security.Claims;
@@ -96,11 +97,11 @@ namespace SMMS.API.Controllers
 			return Ok(records);
 		}
 
-		[HttpGet("health-checkup-records/by-date")]
+		[HttpGet("health-checkup-records/by-date-and-activityId")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetCheckupRecordsByDate([FromQuery] DateTime date)
+		public async Task<IActionResult> GetCheckupRecordsByDateAndId(string id, [FromQuery] DateTime date)
 		{
-			var records = await _healthCheckupService.GetCheckupRecordsByDateAsync(date);
+			var records = await _healthCheckupService.GetCheckupRecordsByIdAndDateAsync(id, date);
 			if (records == null || !records.Any())
 			{
 				return NotFound("No health checkup records found for the specified date.");
@@ -134,25 +135,37 @@ namespace SMMS.API.Controllers
 			return Ok(schedules);
 		}
 
-		[HttpPut("conseling-schedules-status")]
-		public async Task<IActionResult> UpdateConselingStatus([FromBody] AcceptConselingScheduleRequest request)
+		[HttpPost("conseling-schedules")]
+		public async Task<IActionResult> CreateConselingSchedule([FromBody] ConselingRequest request)
 		{
+			if (request.StudentId == null)
+			{
+				return BadRequest("Student ID is required.");
+			}
+
+			if (request.HealthCheckupId == null)
+			{
+				return BadRequest("Health Checkup ID is required.");
+			}
+
+			if (request.Note == null)
+			{
+				return BadRequest("Note is required.");
+			}
+
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 			if (string.IsNullOrEmpty(nurseId))
 			{
-				return Unauthorized("Nurse ID not found in claims.");
+				return Unauthorized("Nurse ID not found.");
 			}
-			if (request.ConselingScheduleId == null || request.ScheduledTime == default)
+
+			var result = await _conselingService.RequestConselingScheduleAsync(request.StudentId, request.HealthCheckupId, request.RequestedDate, request.Note);
+			if (!result)
 			{
-				return BadRequest("Invalid request data.");
+				return BadRequest("Failed to create schedule.");
 			}
-			if (request.Status != ApprovalStatus.Approved && request.Status != ApprovalStatus.Rejected)
-			{
-				return BadRequest("Invalid status. Only Accepted or Rejected are allowed.");
-			}
-			var result = await _conselingService.UpdateScheduleStatusAsync(request.ConselingScheduleId, request.Status, request.ScheduledTime, nurseId);
-			if (!result) return BadRequest("Failed to accept counseling schedule. Schedule not found or nurse ID mismatch.");
-			return Ok(true);
+
+			return Ok("Schedule created.");
 		}
 
 		[HttpGet("vaccination-records")]
@@ -175,16 +188,17 @@ namespace SMMS.API.Controllers
 			if (!result) return NotFound();
 			return NoContent();
 		}
-		[HttpGet("vaccination-records/by-date")]
+		[HttpGet("vaccination-records/by-date-and-campaignId")]
 		[Authorize(Roles = "Admin,Manager,Nurse")]
-		public async Task<IActionResult> GetVaccineRecordsByDate([FromQuery] DateTime date)
+		public async Task<IActionResult> GetVaccineRecordsByDateAndId(string id, [FromQuery] DateTime date)
 		{
-			var records = await _vaccinationRecordService.GetVaccineRecordsByDateAsync(date);
+			var records = await _vaccinationRecordService.GetVaccineRecordsByDateAndIdAsync(id, date);
 			if (records == null || !records.Any())
 			{
 				return NotFound("No health checkup records found for the specified date.");
 			}
 			return Ok(records);
 		}
+
 	}
 }

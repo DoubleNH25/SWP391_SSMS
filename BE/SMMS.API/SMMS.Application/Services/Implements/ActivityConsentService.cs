@@ -181,7 +181,7 @@ namespace SMMS.Application.Services.Implements
 					ScheduleTime = ac.ScheduleTime,
 					ResponsibleUserId = ac.VaccinationCampaign.UserId,
 					ResponsibleUserName = ac.VaccinationCampaign.User.FullName,
-					Description = ac.Comments
+					Description = ac.VaccinationCampaign.VaccineName
 				}).ToListAsync();
 			return consents;
 		}
@@ -227,7 +227,7 @@ namespace SMMS.Application.Services.Implements
 						ScheduleTime = ac.ScheduleTime,
 						ResponsibleUserId = ac.VaccinationCampaign.UserId,
 						ResponsibleUserName = ac.VaccinationCampaign.User.FullName,
-						Description = ac.Comments
+						Description = ac.VaccinationCampaign.VaccineName
 					}).ToListAsync();
 			}
 			else

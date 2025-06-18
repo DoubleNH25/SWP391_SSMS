@@ -16,32 +16,6 @@ namespace SMMS.API.Controllers
 			_authService = authService;
 		}
 
-		[HttpPost("parent/send-otp")]
-		public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
-		{
-			if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-			{
-				return BadRequest("Phone number is required.");
-			}
-			await _authService.SendOtpAsync(request.PhoneNumber);
-			return Ok("OTP sent");
-		}
-
-		[HttpPost("parent/verify-otp")]
-		public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
-		{
-			if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-			{
-				return BadRequest("Phone number is required.");
-			}
-			if (string.IsNullOrWhiteSpace(request.Otp))
-			{
-				return BadRequest("OTP is required.");
-			}
-			var response = await _authService.VerifyOtpAsync(request.PhoneNumber, request.Otp);
-			return Ok(response);
-		}
-
 		[HttpPost("login")]
 		[AllowAnonymous]
 		public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -57,5 +31,22 @@ namespace SMMS.API.Controllers
 			var response = await _authService.LoginAsync(request.Email, request.Password);
 			return Ok(response);
 		}
-	}
+
+        [HttpPost("verify-phonenumber")]
+        public async Task<IActionResult> VerifyPhoneNumber(VerifyPhoneRequest request)
+        {
+            var checker = await _authService.VerifyPhoneNumberAsync(request);
+
+            return Ok(checker);
+        }
+
+        [HttpPost("create-account")]
+        public async Task<IActionResult> CreateAccount(CreateAccountModelView model)
+        {
+            var checker = await _authService.CreateAccountOtpAsync(model);
+
+            return Ok(checker);
+        }
+
+    }
 }

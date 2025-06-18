@@ -195,10 +195,10 @@ namespace SMMS.Application.Services.Implements
 				)
 				.ToListAsync();
 		}
-		public async Task<List<HealthCheckUpResponse>> GetCheckupRecordsByDateAsync(DateTime date)
+		public async Task<List<HealthCheckUpResponse>> GetCheckupRecordsByIdAndDateAsync(string activityId, DateTime date)
 		{
 			return await _repositoryManager.HealthCheckRepository
-				.FindByCondition(hcr => hcr.Time.Date == date.Date && hcr.DeletedTime == null, false)
+				.FindByCondition(hcr => hcr.HealthActivityId == activityId && hcr.Time.Date == date.Date && hcr.DeletedTime == null, false)
 				.Include(hcr => hcr.Student)
 				.GroupJoin(
 					_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),

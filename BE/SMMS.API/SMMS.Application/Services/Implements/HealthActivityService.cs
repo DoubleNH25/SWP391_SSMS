@@ -216,7 +216,7 @@ namespace SMMS.Application.Services.Implements
 		{
 			var activity = _repositoryManager.HealthActivityRepository
 				.FindByCondition(ha => ha.Id == healthActivityId 
-					&& ha.Status != ApprovalStatus.Approved || ha.Status != ApprovalStatus.Pending, true)
+					&& ha.Status == ApprovalStatus.Pending, true)
 				.FirstOrDefault();
 			if (activity == null) return false;
 
@@ -240,7 +240,7 @@ namespace SMMS.Application.Services.Implements
 		public async Task<bool> DeleteHealthActivityAsync(string healthActivityId, string userId)
 		{
 			var activity = _repositoryManager.HealthActivityRepository
-				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending, true)
+				.FindByCondition(ha => ha.Id == healthActivityId && ha.Status == ApprovalStatus.Pending || ha.Status == ApprovalStatus.Rejected, true)
 				.FirstOrDefault();
 			if (activity == null) return false;
 			
@@ -255,7 +255,6 @@ namespace SMMS.Application.Services.Implements
 			_repositoryManager.HealthActivityRepository.Update(activity);
 			await _repositoryManager.SaveAsync();
 			return true;
-		}
-		
+		}	
 	}
 }
