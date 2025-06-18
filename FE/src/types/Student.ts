@@ -14,6 +14,7 @@ export interface Student {
   image: string | null;
   healthProfile: HealthProfile;
   healthCheckupRecords: MedicalHealthCheckupRecord[] | null;
+  parentId: string;
 }
 
 export interface StudentCreate {

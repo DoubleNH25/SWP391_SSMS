@@ -1,4 +1,5 @@
-import { CalendarEvent, eventCategories, customFormatDateForBackend } from "@/types/CalendarEvent";
+import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
 import { toast } from 'react-toastify';
@@ -65,7 +66,7 @@ const DailySchedule = ({
           ...prev,
           data: {
             ...prev.data,
-            scheduledDate: customFormatDateForBackend(newDate),
+            scheduledDate: DateUtils.customFormatDateForBackend(newDate),
           } as MedicalEventUpdateCreateViewModel,
         };
       } else {
@@ -73,7 +74,7 @@ const DailySchedule = ({
           ...prev,
           data: {
             ...prev.data,
-            startDate: customFormatDateForBackend(newDate),
+            startDate: DateUtils.customFormatDateForBackend(newDate),
           } as VaccinationCampaignsUpdateCreateViewModel,
         };
       }

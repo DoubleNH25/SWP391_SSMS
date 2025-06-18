@@ -6,6 +6,7 @@ import Input from "@/components/ui/form/InputField";
 import Select from "@/components/ui/form/Select";
 import DatePicker from "@/components/ui/form/DateField";
 import Label from "@/components/ui/form/Label";
+import { DateUtils } from "@/utils/DateUtils";
 
 interface NewRequest {
   parentName: string;
@@ -256,15 +257,13 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
                     id="startDate"
                     label="Ngày bắt đầu"
                     placeholder="Chọn ngày bắt đầu"
-                    minDate={new Date().toISOString().split("T")[0]}
+                    minDate={DateUtils.customFormatDateOnly(new Date())}
                     maxDate={"9999-12-31"}
                     onChange={(selectedDates) => {
                       if (selectedDates.length > 0) {
                         setNewRequest({
                           ...newRequest,
-                          startDate: selectedDates[0]
-                            .toISOString()
-                            .split("T")[0],
+                          startDate: DateUtils.customFormatDateOnly(selectedDates[0]),
                         });
                       }
                     }}
@@ -275,16 +274,14 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
                   <DatePicker
                     id="endDate"
                     label="Ngày kết thúc"
-                    minDate={new Date().toISOString().split("T")[0]}
+                    minDate={DateUtils.customFormatDateOnly(new Date())}
                     maxDate={"9999-12-31"}
                     placeholder="Chọn ngày kết thúc"
                     onChange={(selectedDates) => {
                       if (selectedDates.length > 0) {
                         setNewRequest({
                           ...newRequest,
-                          endDate: selectedDates[0]
-                            .toISOString()
-                            .split("T")[0],
+                          endDate: DateUtils.customFormatDateOnly(selectedDates[0]),
                         });
                       }
                     }}

@@ -9,7 +9,7 @@ import { useCallback, useState } from "react";
 import { MedicalCreateViewModel } from "@/types/Medical";
 import { toast } from "react-toastify";
 import { FecthCreateMedical } from "@/services/MedicalService";
-import { customFormatDateForBackend, customFormatDateOnly } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 
 export default function CreateMedical() {
     const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function CreateMedical() {
             setLoading(true);
             const submitData = {
                 ...formData,
-                expiryDate: customFormatDateForBackend(formData.expiryDate)
+                expiryDate: DateUtils.customFormatDateForBackend(formData.expiryDate)
             };
             await FecthCreateMedical(submitData);
             toast.success("Thêm thuốc thành công");
@@ -137,7 +137,7 @@ export default function CreateMedical() {
                     <div className="flex flex-col gap-2">
                         <DatePicker
                             id="date-picker"
-                            minDate={customFormatDateOnly(new Date())}
+                            minDate={DateUtils.customFormatDateOnly(new Date())}
                             maxDate="9999-12-31"
                             label="Date of Birth"
                             placeholder="Select a date"

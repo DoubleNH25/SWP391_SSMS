@@ -3,7 +3,7 @@ import { FecthConselingSchedules, FecthUpdateConselingSchedules } from "@/servic
 import { ConselingSchedulesAND, ConselingSchedulesANDUpdate } from "@/types/ConselingSchedules";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { customFormatDateOnly, customFormatDateForBackend, toLocalISOString } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import { FecthUserById } from "@/services/UserService";
 import { Modal } from "@/components/ui/modal";
 import Label from "@/components/ui/form/Label";
@@ -49,7 +49,7 @@ export default function ManagerConselingSchedules() {
 
             const formattedData = {
                 conselingScheduleId: formData.conselingScheduleId,
-                scheduledTime: customFormatDateForBackend(date)
+                scheduledTime: DateUtils.customFormatDateForBackend(date)
             };
             await FecthUpdateConselingSchedules(formattedData);
             toast.success('Cập nhật lịch tư vấn thành công!');
@@ -69,7 +69,7 @@ export default function ManagerConselingSchedules() {
         setSelectedItem(item);
         setFormData({
             conselingScheduleId: item.id,
-            scheduledTime: toLocalISOString(new Date()).slice(0, 16) // Format for datetime-local input
+            scheduledTime: DateUtils.customFormatDate(new Date()).slice(0, 16) // Format for datetime-local input
         });
         setIsModalOpen(true);
     };
@@ -243,7 +243,7 @@ export default function ManagerConselingSchedules() {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
                                     <CalendarIcon className="w-4 h-4 text-blue-500" />
-                                    <span>Ngày hẹn: {customFormatDateOnly(item.meetingDate)}</span>
+                                    <span>Ngày hẹn: {DateUtils.customFormatDateOnly(item.meetingDate)}</span>
                                 </div>
 
                                 {item.note && (
@@ -255,7 +255,7 @@ export default function ManagerConselingSchedules() {
                                 <div className="pt-4 border-t border-gray-100 space-y-2">
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <ClockIcon className="w-4 h-4 text-gray-400" />
-                                        <span>Tạo lúc: {customFormatDateOnly(item.createdTime)}</span>
+                                        <span>Tạo lúc: {DateUtils.customFormatDateOnly(item.createdTime)}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <PencilSquareIcon className="w-4 h-4 text-gray-400" />
@@ -264,7 +264,7 @@ export default function ManagerConselingSchedules() {
                                     {item.updatedTime && item.updatedTime instanceof Date && !isNaN(item.updatedTime.getTime()) && (
                                         <div className="flex items-center gap-2 text-xs text-gray-500">
                                             <PencilSquareIcon className="w-4 h-4 text-gray-400" />
-                                            <span>Cập nhật: {customFormatDateOnly(item.updatedTime)}</span>
+                                            <span>Cập nhật: {DateUtils.customFormatDateOnly(item.updatedTime)}</span>
                                             <br />
                                             <span>Bởi: {userNames[item.updatedBy] || 'Đang tải...'}</span>
                                         </div>
@@ -341,7 +341,7 @@ export default function ManagerConselingSchedules() {
                                     </Label>
                                     <Input
                                         type="datetime-local"
-                                        min={toLocalISOString(new Date()).slice(0, 16)}
+                                        min={DateUtils.customFormatDate(new Date()).slice(0, 16)}
                                         value={formData.scheduledTime}
                                         onChange={(e) => setFormData(prev => ({
                                             ...prev,

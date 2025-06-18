@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
 import PageHeader from "@/components/ui/PageHeader";
 import { FecthMedicalVaccinationRecord, FecthUpdateVaccinationRecord } from "@/services/MedicalRecordService";
-import { customFormatDateForBackend } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import { FecthStudentById } from "@/services/UserService";
 import type { MedicalVaccinationRecord, VaccinationRecord } from "@/types/MedicalRecord";
 import { Student } from "@/types/Student";
@@ -16,7 +16,7 @@ export default function MedicalVaccinationRecord() {
     const [medicalRecord, setMedicalRecord] = useState<MedicalVaccinationRecord[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [updating, setUpdating] = useState<boolean>(false);
-    const { eventDate } = useParams<{ eventDate: string}>();
+    const { eventDate, id } = useParams<{ eventDate: string, id: string}>();
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [vaccinationData, setVaccinationData] = useState<VaccinationRecord>({
@@ -28,14 +28,14 @@ export default function MedicalVaccinationRecord() {
 
     const handleGetMedicalRecord = useCallback(async () => {
         setLoading(true);
-        if (!eventDate) {
+        if (!eventDate || !id) {
             setLoading(false);
             return;
         }
-        const data = await FecthMedicalVaccinationRecord(eventDate);
+        const data = await FecthMedicalVaccinationRecord(id,eventDate);
         setMedicalRecord(data);
         setLoading(false);
-    }, [eventDate]);
+    }, [eventDate, id]);
 
     const handleGetStudent = useCallback(async () => {
         if (!medicalRecord) {
@@ -77,7 +77,7 @@ export default function MedicalVaccinationRecord() {
             if (!record) {
                 return;
             }
-            vaccinationData.vaccinatedAt = customFormatDateForBackend(new Date());
+            vaccinationData.vaccinatedAt = DateUtils.customFormatDateForBackend(new Date());
             const result = await FecthUpdateVaccinationRecord(record.id, vaccinationData);
             if (result) {
                 toast.success("Cập nhật thành công");

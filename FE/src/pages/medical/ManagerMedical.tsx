@@ -128,6 +128,7 @@ export default function MedicalManager() {
 
     return (
         <div className="p-4">
+            <ToastContainer position="top-right" autoClose={3000} />
             <PageHeader
                 title="Quản lý thuốc"
                 icon={<Pill className="w-6 h-6 text-blue-600" />}

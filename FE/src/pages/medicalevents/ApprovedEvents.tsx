@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/ui/PageHeader";
 import { CheckCircle2, Calendar } from "lucide-react";
 
+
 export default function ApprovedEventManager() {
   const navigate = useNavigate();
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>(
@@ -106,15 +107,16 @@ export default function ApprovedEventManager() {
   };
 
   const handleGetMedicalRecord = useCallback(
-    async (medicalEventDate: string, status: string) => {
+    async (medicalEventDate: string, status: string, id: string) => {
       if (status === "Rejected") {
         toast.error("Sự kiện đã bị từ chối, không thể xem danh sách");
         return;
       }
+      console.log(medicalEventDate);
       if (selectedView === "MedicalEvents") {
-        navigate(`/medical-health-checkup-record/${medicalEventDate}`);
+        navigate(`/medical-health-checkup-record/${medicalEventDate}/${id}`);
       } else {
-        navigate(`/medical-vaccination-record/${medicalEventDate}`);
+        navigate(`/medical-vaccination-record/${medicalEventDate}/${id}`);
       }
     },
     [navigate, selectedView]
@@ -126,13 +128,13 @@ export default function ApprovedEventManager() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = currentData.slice(startIndex, endIndex);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (selectedView === "MedicalEvents") {
         const data = await FecthApprovedRejectedMedicalEvents();
         setMedicalEvents(data);
+        console.log(data);
       } else {
         const data = await FecthApprovedRejectedVaccinationCampaigns();
         setVaccinationCampaigns(data);
@@ -522,7 +524,8 @@ export default function ApprovedEventManager() {
                                 : (event as VaccinationCampaignsViewModel)
                                     .startDate
                             ).toISOString(),
-                            item.status
+                            item.status,
+                            event.id
                           )
                         }
                       >

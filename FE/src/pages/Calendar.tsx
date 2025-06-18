@@ -11,12 +11,8 @@ import {
   VaccinationCampaignsUpdateCreateViewModel,
   VaccinationCampaignsViewModel,
 } from "@/types/VaccinationCampaigns";
-import {
-  CalendarEvent,
-  customFormatDate,
-  customFormatDateOnly,
-  customFormatDateForBackend,
-} from "@/types/CalendarEvent";
+import { CalendarEvent } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -54,7 +50,7 @@ const Calendar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(
-    customFormatDateOnly(new Date())
+    DateUtils.customFormatDateOnly(new Date())
   );
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -85,7 +81,7 @@ const Calendar: React.FC = () => {
       ).map((event: MedicalEventViewModel) => ({
         id: event.id ?? "",
         title: event.name ?? "",
-        start: customFormatDate(event.scheduledDate || new Date()),
+        start: DateUtils.customFormatDate(event.scheduledDate || new Date()),
         allDay: false,
         extendedProps: {
           calendar: event.status,
@@ -102,13 +98,13 @@ const Calendar: React.FC = () => {
       ).map((event: VaccinationCampaignsViewModel) => ({
         id: event.id ?? "",
         title: event.name ?? "",
-        start: customFormatDate(event.startDate || new Date()),
+        start: DateUtils.customFormatDate(event.startDate || new Date()),
         allDay: false,
         extendedProps: {
           calendar: event.status,
           vaccineType: event.vaccineType || "",
-          exp: customFormatDate(event.exp || new Date()),
-          mfg: customFormatDate(event.mfg || new Date()),
+          exp: DateUtils.customFormatDate(event.exp || new Date()),
+          mfg: DateUtils.customFormatDate(event.mfg || new Date()),
           vaccineName: event.vaccineName || "",
           eventType: "vaccination",
           classIds: event.classIds?.length
@@ -205,7 +201,7 @@ const Calendar: React.FC = () => {
       return;
     }
 
-    setSelectedDate(customFormatDateOnly(date));
+    setSelectedDate(DateUtils.customFormatDateOnly(date));
     setSelectedClasses([]);
     setFormData((prev) => {
       selected.setHours(9, 0);
@@ -214,7 +210,7 @@ const Calendar: React.FC = () => {
           type: "medical",
           data: {
             ...prev.data,
-            scheduledDate: customFormatDateForBackend(selected),
+            scheduledDate: DateUtils.customFormatDateForBackend(selected),
             classIds: [""],
           } as MedicalEventUpdateCreateViewModel,
         };
@@ -223,7 +219,7 @@ const Calendar: React.FC = () => {
           type: "vaccination",
           data: {
             ...prev.data,
-            startDate: customFormatDateForBackend(selected),
+            startDate: DateUtils.customFormatDateForBackend(selected),
           } as VaccinationCampaignsUpdateCreateViewModel,
         };
       }
@@ -292,36 +288,32 @@ const Calendar: React.FC = () => {
         setFormData(
           event.extendedProps.eventType === "medical"
             ? {
-                type: "medical",
-                data: {
-                  name: event.title,
-                  description: event.extendedProps.description || "",
-                  scheduledDate: new Date(event.start).toISOString(),
-                  classIds:
-                    eventClassIds.length > 0
-                      ? (eventClassIds as [string])
-                      : [""],
-                },
-              }
+              type: "medical",
+              data: {
+                name: event.title,
+                description: event.extendedProps.description || "",
+                scheduledDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                classIds:
+                  eventClassIds.length > 0
+                    ? (eventClassIds as [string])
+                    : [""],
+              },
+            }
             : {
-                type: "vaccination",
-                data: {
-                  name: event.title,
-                  vaccineName: event.extendedProps.vaccineName || "",
-                  vaccineType: event.extendedProps.vaccineType || "",
-                  exp: new Date(
-                    event.extendedProps.exp || new Date()
-                  ).toISOString(),
-                  mfg: new Date(
-                    event.extendedProps.mfg || new Date()
-                  ).toISOString(),
-                  startDate: new Date(event.start).toISOString(),
-                  classIds:
-                    eventClassIds.length > 0
-                      ? (eventClassIds as [string])
-                      : [""],
-                },
-              }
+              type: "vaccination",
+              data: {
+                name: event.title,
+                vaccineName: event.extendedProps.vaccineName || "",
+                vaccineType: event.extendedProps.vaccineType || "",
+                exp: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.exp || new Date())),
+                mfg: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.mfg || new Date())),
+                startDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                classIds:
+                  eventClassIds.length > 0
+                    ? (eventClassIds as [string])
+                    : [""],
+              },
+            }
         );
 
         // Dismiss loading toast, clear view events date, and open modal
@@ -337,26 +329,26 @@ const Calendar: React.FC = () => {
         setFormData(
           event.extendedProps.eventType === "medical"
             ? {
-                type: "medical",
-                data: {
-                  name: event.title,
-                  description: event.extendedProps.description || "",
-                  scheduledDate: new Date(event.start).toISOString(),
-                  classIds: [""],
-                },
-              }
+              type: "medical",
+              data: {
+                name: event.title,
+                description: event.extendedProps.description || "",
+                scheduledDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                classIds: [""],
+              },
+            }
             : {
-                type: "vaccination",
-                data: {
-                  name: event.title,
-                  vaccineName: event.extendedProps.vaccineName || "",
-                  vaccineType: event.extendedProps.vaccineType || "",
-                  exp: new Date(event.extendedProps.exp || new Date()).toISOString(),
-                  mfg: new Date(event.extendedProps.mfg || new Date()).toISOString(),
-                  startDate: new Date(event.start).toISOString(),
-                  classIds: [""],
-                },
-              }
+              type: "vaccination",
+              data: {
+                name: event.title,
+                vaccineName: event.extendedProps.vaccineName || "",
+                vaccineType: event.extendedProps.vaccineType || "",
+                exp: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.exp || new Date())),
+                mfg: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.mfg || new Date())),
+                startDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                classIds: [""],
+              },
+            }
         );
         toast.dismiss(loadingToastId);
         setViewEventsDate(null); // Clear view events date to show edit form
@@ -407,7 +399,7 @@ const Calendar: React.FC = () => {
   ): MedicalEventUpdateCreateViewModel {
     return {
       ...data,
-      scheduledDate: customFormatDateForBackend(data.scheduledDate),
+      scheduledDate: DateUtils.customFormatDateForBackend(data.scheduledDate),
     };
   }
 
@@ -416,9 +408,9 @@ const Calendar: React.FC = () => {
   ): VaccinationCampaignsUpdateCreateViewModel {
     return {
       ...data,
-      exp: customFormatDateForBackend(data.exp),
-      mfg: customFormatDateForBackend(data.mfg),
-      startDate: customFormatDateForBackend(data.startDate),
+      exp: DateUtils.customFormatDateForBackend(data.exp),
+      mfg: DateUtils.customFormatDateForBackend(data.mfg),
+      startDate: DateUtils.customFormatDateForBackend(data.startDate),
     };
   }
 
@@ -586,19 +578,20 @@ const Calendar: React.FC = () => {
               prev.map((event) =>
                 event.id === selectedEvent.id
                   ? {
-                      ...event,
-                      title: data.name,
-                      start: customFormatDate(data.scheduledDate),
-                      allDay: false,
-                      extendedProps: {
-                        ...event.extendedProps,
-                        description: data.description || "",
-                        calendar: event.extendedProps.calendar,
-                      },
-                    }
+                    ...event,
+                    title: data.name,
+                    start: DateUtils.customFormatDate(data.scheduledDate),
+                    allDay: false,
+                    extendedProps: {
+                      ...event.extendedProps,
+                      description: data.description || "",
+                      calendar: event.extendedProps.calendar,
+                    },
+                  }
                   : event
               )
             );
+            console.log("Update medical event success", payload.scheduledDate);
             toast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
           }
         } else {
@@ -612,19 +605,19 @@ const Calendar: React.FC = () => {
               prev.map((event) =>
                 event.id === selectedEvent.id
                   ? {
-                      ...event,
-                      title: data.name,
-                      start: customFormatDate(data.startDate),
-                      allDay: false,
-                      extendedProps: {
-                        ...event.extendedProps,
-                        vaccineName: data.vaccineName || "",
-                        vaccineType: data.vaccineType || "",
-                        exp: customFormatDate(data.exp),
-                        mfg: customFormatDate(data.mfg),
-                        calendar: event.extendedProps.calendar,
-                      },
-                    }
+                    ...event,
+                    title: data.name,
+                    start: DateUtils.customFormatDate(data.startDate),
+                    allDay: false,
+                    extendedProps: {
+                      ...event.extendedProps,
+                      vaccineName: data.vaccineName || "",
+                      vaccineType: data.vaccineType || "",
+                      exp: DateUtils.customFormatDate(data.exp),
+                      mfg: DateUtils.customFormatDate(data.mfg),
+                      calendar: event.extendedProps.calendar,
+                    },
+                  }
                   : event
               )
             );
@@ -649,7 +642,7 @@ const Calendar: React.FC = () => {
             {
               id: response.id ?? "",
               title: response.name ?? "",
-              start: customFormatDate(response.scheduledDate || new Date()),
+              start: DateUtils.customFormatDate(response.scheduledDate || new Date()),
               allDay: false,
               extendedProps: {
                 calendar: response.status || "Pending",
@@ -670,14 +663,14 @@ const Calendar: React.FC = () => {
             {
               id: response.id ?? "",
               title: response.name ?? "",
-              start: customFormatDate(response.startDate || new Date()),
+              start: DateUtils.customFormatDate(response.startDate || new Date()),
               allDay: false,
               extendedProps: {
                 calendar: response.status || "Pending",
                 vaccineName: response.vaccineName || "",
                 vaccineType: response.vaccineType || "",
-                exp: customFormatDate(response.exp || new Date()),
-                mfg: customFormatDate(response.mfg || new Date()),
+                exp: DateUtils.customFormatDate(response.exp || new Date()),
+                mfg: DateUtils.customFormatDate(response.mfg || new Date()),
                 eventType: "vaccination",
                 classIds: response.classIds?.length
                   ? (response.classIds as [string])
@@ -898,26 +891,26 @@ const Calendar: React.FC = () => {
     setFormData(
       value === "medical"
         ? {
-            type: "medical",
-            data: {
-              name: "",
-              description: "",
-              scheduledDate: new Date().toISOString(),
-              classIds: [""],
-            },
-          }
+          type: "medical",
+          data: {
+            name: "",
+            description: "",
+            scheduledDate: DateUtils.customFormatDateForBackend(new Date()),
+            classIds: [""],
+          },
+        }
         : {
-            type: "vaccination",
-            data: {
-              name: "",
-              vaccineName: "",
-              exp: new Date().toISOString(),
-              mfg: new Date().toISOString(),
-              vaccineType: "",
-              startDate: new Date().toISOString(),
-              classIds: [""],
-            },
-          }
+          type: "vaccination",
+          data: {
+            name: "",
+            vaccineName: "",
+            exp: DateUtils.customFormatDateForBackend(new Date()),
+            mfg: DateUtils.customFormatDateForBackend(new Date()),
+            vaccineType: "",
+            startDate: DateUtils.customFormatDateForBackend(new Date()),
+            classIds: [""],
+          },
+        }
     );
   }, []);
 
@@ -945,31 +938,44 @@ const Calendar: React.FC = () => {
           fontWeight: '500'
         }}
       />
-      {loading ? (
-        <div className="text-center text-gray-500">Đang tải...</div>
+      {loading && !events.length ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
+          </div>
+        </div>
       ) : error ? (
-        <div
-          role="alert"
-          className="text-center text-red-500 p-4 bg-red-100 rounded"
-        >
-          <p>{error}</p>
-          {error.includes("authenticated") ? (
-            <button
-              onClick={() => (window.location.href = "/login")}
-              aria-label="Đăng nhập để xem sự kiện"
-              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Đăng nhập
-            </button>
-          ) : (
-            <button
-              onClick={fetchEvents}
-              aria-label="Thử lại"
-              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Thử lại
-            </button>
-          )}
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div
+            role="alert"
+            className="text-center p-8 bg-red-50 border border-red-200 rounded-lg max-w-md mx-auto"
+          >
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Có lỗi xảy ra</h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            {error.includes("authenticated") ? (
+              <button
+                onClick={() => (window.location.href = "/login")}
+                aria-label="Đăng nhập để xem sự kiện"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Đăng nhập
+              </button>
+            ) : (
+              <button
+                onClick={fetchEvents}
+                aria-label="Thử lại"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Thử lại
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <>
@@ -988,7 +994,7 @@ const Calendar: React.FC = () => {
               onNavigateMonth={navigateMonth}
               onToday={() => {
                 setCurrentDate(new Date());
-                setSelectedDate(customFormatDateOnly(new Date()));
+                setSelectedDate(DateUtils.customFormatDateOnly(new Date()));
               }}
             />
 
@@ -1024,9 +1030,8 @@ const Calendar: React.FC = () => {
                   ? MedicalEventFormComponent
                   : VaccinationCampaignFormComponent}
                 <div
-                  className={`flex mt-6 pt-4 border-t border-gray-200 ${
-                    selectedEvent ? "justify-between" : "justify-end"
-                  }`}
+                  className={`flex mt-6 pt-4 border-t border-gray-200 ${selectedEvent ? "justify-between" : "justify-end"
+                    }`}
                 >
                   {selectedEvent && (
                     <div>

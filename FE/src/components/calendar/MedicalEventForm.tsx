@@ -2,7 +2,7 @@ import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import DatePicker from "@/components/ui/form/DateField";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
-import { customFormatTime } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import ClassSelector from "./ClassSelector";
 
 interface ClassOption {
@@ -104,7 +104,7 @@ const MedicalEventForm = ({
           </Label>
           <Input
             type="time"
-            value={customFormatTime(medicalData.scheduledDate)}
+            value={DateUtils.customFormatTime(medicalData.scheduledDate)}
             onChange={(e) => {
               const [hours, minutes] = e.target.value.split(':').map(Number);
               const newDate = new Date(medicalData.scheduledDate);

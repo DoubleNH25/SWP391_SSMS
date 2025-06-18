@@ -11,7 +11,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FecthClass } from "@/services/SchoolClassService";
 import { SchoolClass } from "@/types/SchoolClass";
-import { customFormatDateOnly } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 
 export default function AddStudent() {
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +100,7 @@ export default function AddStudent() {
   function prepareStudentData(data: StudentCreate): StudentCreate {
     return {
       ...data,
-      dateOfBirth: customFormatDateOnly(data.dateOfBirth)
+      dateOfBirth: DateUtils.customFormatDateOnly(data.dateOfBirth)
     };
   }
 

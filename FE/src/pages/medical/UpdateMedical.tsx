@@ -10,7 +10,7 @@ import Label from "@/components/ui/form/Label";
 import Input from "@/components/ui/form/InputField";
 import DatePicker from "@/components/ui/form/DateField";
 import { Button } from "@/components/ui/button";
-import { customFormatDateForBackend, customFormatDateOnly } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 
 export default function UpdateMedical() {
     const navigate = useNavigate();
@@ -103,7 +103,7 @@ export default function UpdateMedical() {
             const medicalUpdate: MedicalUpdateViewModel = {
                 name: formData.name,
                 quantity: formData.quantity,
-                expiryDate: customFormatDateForBackend(formData.expiryDate),
+                expiryDate: DateUtils.customFormatDateForBackend(formData.expiryDate),
                 detailInformation: formData.detailInformation,
                 status: "active",
             };
@@ -194,7 +194,7 @@ export default function UpdateMedical() {
                     <div className="flex flex-col gap-2">
                         <DatePicker
                             id="date-picker"
-                            minDate={customFormatDateOnly(new Date())}
+                            minDate={DateUtils.customFormatDateOnly(new Date())}
                             maxDate="9999-12-31"
                             label="Hạn sử dụng"
                             placeholder="Select a date"

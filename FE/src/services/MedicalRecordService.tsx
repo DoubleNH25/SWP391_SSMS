@@ -2,7 +2,7 @@ import { ConselingSchedulesAND, ConselingSchedulesANDUpdate } from "@/types/Cons
 import { HealthCheckupRecord, MedicalHealthCheckupRecord, MedicalVaccinationRecord, VaccinationRecord } from "@/types/MedicalRecord";
 import ApiClient from "@/utils/ApiBase";
 
-export async function FecthMedicalVaccinationRecord(date: string): Promise<MedicalVaccinationRecord[]> {
+export async function FecthMedicalVaccinationRecord(id: string,date: string): Promise<MedicalVaccinationRecord[]> {
   if (!localStorage.getItem('token')) {
     console.error('User is not authenticated');
     return [];
@@ -10,7 +10,7 @@ export async function FecthMedicalVaccinationRecord(date: string): Promise<Medic
   try {
     const response = await ApiClient<MedicalVaccinationRecord[]>({
       method: 'GET',
-      endpoint: `/nurse/vaccination-records/by-date?date=${date}`,
+      endpoint: `/nurse/vaccination-records/by-date-and-campaignId?id=${id}&date=${date}`,
     });
     return response?.data || [];
   } catch (err) {
@@ -37,7 +37,7 @@ export async function FecthUpdateVaccinationRecord(id: string, record: Vaccinati
   }
 }
 
-export async function FecthMedicalHealthCheckupRecord(date: string): Promise<MedicalHealthCheckupRecord[]> {
+export async function FecthMedicalHealthCheckupRecord(id: string,date: string): Promise<MedicalHealthCheckupRecord[]> {
   if (!localStorage.getItem('token')) {
     console.error('User is not authenticated');
     return [];
@@ -45,7 +45,7 @@ export async function FecthMedicalHealthCheckupRecord(date: string): Promise<Med
   try {
     const response = await ApiClient<MedicalHealthCheckupRecord[]>({
       method: 'GET',
-      endpoint: `/nurse/health-checkup-records/by-date?date=${date}`,
+      endpoint: `nurse/health-checkup-records/by-date-and-activityId?id=${id}&date=${date}`,
     });
     return response?.data || [];
   } catch (err) {

@@ -7,8 +7,7 @@ import { FecthStudentById } from "@/services/UserService";
 import { HealthProfile, HealthProfileUpdate, Student } from "@/types/HealthProfile";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from '@/components/ui/Toast';
 import { PencilIcon } from "lucide-react";
 
 export default function UpdateCreateHealthProfile() {
@@ -79,10 +78,10 @@ export default function UpdateCreateHealthProfile() {
             await DeleteHealthProfile(studentId || "");
             navigate(-1);
             setTimeout(() => {
-                toast.success("Xóa thành công");
+                showToast.success("Xóa thành công");
             }, 100);
         } catch (error) {
-            toast.error("Xóa thất bại");
+            showToast.error("Xóa thất bại");
         }
     }, [studentId, navigate]);
 
@@ -105,23 +104,22 @@ export default function UpdateCreateHealthProfile() {
                 await FecthUpdateHealthProfileNurse(studentId, formData);
                 navigate(-1);
                 setTimeout(() => {
-                    toast.success("Cập nhật thành công");
+                    showToast.success("Cập nhật thành công");
                 }, 100);
             } else if (!healthProfile && studentId) {
                 await FecthCreateHealthProfile(studentId, formData);
                 navigate(-1);
                 setTimeout(() => {
-                    toast.success("Tạo hồ sơ sức khỏe thành công");
+                    showToast.success("Tạo hồ sơ sức khỏe thành công");
                 }, 100);
             }
         } catch (error) {
-            toast.error("Cập nhật thất bại");
+            showToast.error("Cập nhật thất bại");
         }
     }, [formData, studentId, navigate, healthProfile]);
 
     return (
         <>
-            <ToastContainer position="top-right" autoClose={3000} />
             {loading && <div>Loading...</div>}
             {error && <div>{error}</div>}
             {student && (
