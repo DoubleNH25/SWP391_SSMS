@@ -275,7 +275,7 @@ export default function ManagerActivityMedical() {
                           {activityMedicalEventDetail.activityName}
                         </h2>
                         <p className="text-gray-600">
-                          Mô tả chi tiết về sự kiện y tế này.
+                          {activityMedicalEventDetail.description}
                         </p>
                       </div>
 
@@ -309,7 +309,7 @@ export default function ManagerActivityMedical() {
                           </div>
                         </div>
 
-                        
+
                         <div className="flex items-start gap-3">
                           <User className="w-5 h-5 text-gray-400 mt-0.5" />
                           <div>

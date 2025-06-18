@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, X, Trash2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import DatePicker from "@/components/ui/form/DateField";
 import Label from "@/components/ui/form/Label";
 import { Student } from "@/types/Student";
 import { toast } from "react-toastify";
+import { DateUtils } from "@/utils/DateUtils";
 
 interface Medication {
   id: string;
@@ -24,6 +25,8 @@ interface Medication {
 }
 
 interface MultiMedicationModalProps {
+  parentId: string;
+  studentId: string;
   isOpen: boolean;
   onClose: () => void;
   selectedStudent: Student | null;
@@ -31,6 +34,8 @@ interface MultiMedicationModalProps {
 }
 
 const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
+  parentId,
+  studentId,
   isOpen,
   onClose,
   selectedStudent,
@@ -51,6 +56,18 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       note: "",
     },
   ]);
+
+  // Add useEffect to log IDs when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Modal opened with:", {
+        studentId,
+        parentId,
+        student: selectedStudent
+      });
+    }
+    console.log(parentId);
+  }, [isOpen, studentId, parentId, selectedStudent]);
 
   const addMedication = () => {
     const newMedication: Medication = {
@@ -106,11 +123,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-              ...med,
-              timeToAdminister: med.timeToAdminister.map((time, i) =>
-                i === index ? value : time
-              ),
-            }
+            ...med,
+            timeToAdminister: med.timeToAdminister.map((time, i) =>
+              i === index ? value : time
+            ),
+          }
           : med
       )
     );
@@ -121,11 +138,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-              ...med,
-              timeToAdminister: med.timeToAdminister.filter(
-                (_, i) => i !== index
-              ),
-            }
+            ...med,
+            timeToAdminister: med.timeToAdminister.filter(
+              (_, i) => i !== index
+            ),
+          }
           : med
       )
     );
@@ -222,9 +239,18 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
             </Button>
           </div>
         </div>
-
         {/* Content */}
-        <div className="p-2 space-y-8 max-h-[65vh] overflow-y-auto">
+        <div className="p-2 space-y-3 max-h-[65vh] overflow-y-auto">
+          <div className="flex items-center gap-2 w-full">
+            <Label htmlFor="search">Nhập tên người gửi</Label>
+            <Input
+              id="search"
+              type="text"
+              placeholder="Nhập tên người gửi"
+              value={parentId}
+              className="h-11 w-full"
+            />
+          </div>
           {medications.map((medication, index) => (
             <div
               key={medication.id}
@@ -453,14 +479,14 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         id={`startDate-${medication.id}`}
                         label="Ngày bắt đầu *"
                         placeholder="Chọn ngày bắt đầu"
-                        minDate={new Date().toISOString().split("T")[0]}
+                        minDate={DateUtils.customFormatDateOnly(new Date())}
                         maxDate={"9999-12-31"}
                         onChange={(selectedDates) => {
                           if (selectedDates.length > 0) {
                             updateMedication(
                               medication.id,
                               "startDate",
-                              selectedDates[0].toISOString().split("T")[0]
+                              DateUtils.customFormatDateOnly(selectedDates[0])
                             );
                           }
                         }}
@@ -471,7 +497,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                       <DatePicker
                         id={`endDate-${medication.id}`}
                         label="Ngày kết thúc *"
-                        minDate={new Date().toISOString().split("T")[0]}
+                        minDate={DateUtils.customFormatDateOnly(new Date())}
                         maxDate={"9999-12-31"}
                         placeholder="Chọn ngày kết thúc"
                         onChange={(selectedDates) => {
@@ -479,7 +505,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                             updateMedication(
                               medication.id,
                               "endDate",
-                              selectedDates[0].toISOString().split("T")[0]
+                              DateUtils.customFormatDateOnly(selectedDates[0])
                             );
                           }
                         }}
@@ -513,7 +539,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
+        <div className="px-8 py-2 bg-gray-50 border-t border-gray-100">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
               <span className="font-semibold text-blue-600">

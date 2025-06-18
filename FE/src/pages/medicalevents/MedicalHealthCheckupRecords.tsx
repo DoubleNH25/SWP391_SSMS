@@ -24,7 +24,7 @@ export default function MedicalHealthCheckupRecords() {
     >([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [updating, setUpdating] = useState<boolean>(false);
-    const { eventDate } = useParams<{ eventDate: string }>();
+    const { eventDate, id } = useParams<{ eventDate: string, id: string }>();
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [healthCheckupData, setHealthCheckupData] =
@@ -98,14 +98,14 @@ export default function MedicalHealthCheckupRecords() {
 
     const handleGetMedicalRecord = useCallback(async () => {
         setLoading(true);
-        if (!eventDate) {
+        if (!eventDate || !id) {
             setLoading(false);
             return;
         }
-        const data = await FecthMedicalHealthCheckupRecord(eventDate);
+        const data = await FecthMedicalHealthCheckupRecord(id,eventDate);
         setMedicalRecord(data);
         setLoading(false);
-    }, [eventDate]);
+    }, [eventDate, id]);
 
     useEffect(() => {
         handleGetMedicalRecord();

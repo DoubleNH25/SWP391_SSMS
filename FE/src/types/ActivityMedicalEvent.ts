@@ -12,6 +12,7 @@ export interface ActivityMedicalEventViewModel {
     scheduleTime: string;
     responsibleUserId: string;
     responsibleUserName: string;
+    description: string;
 }
 
 export interface ActivityMedicalEventDetailViewModel {
@@ -27,6 +28,7 @@ export interface ActivityMedicalEventDetailViewModel {
     responsibleUserName: string;
     student: Student | null;
     responsibleUser: UserUpdate | null;
+    description: string;
 }
 
 

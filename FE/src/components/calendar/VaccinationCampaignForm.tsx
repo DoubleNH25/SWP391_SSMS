@@ -2,7 +2,7 @@ import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import DatePicker from "@/components/ui/form/DateField";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
-import { customFormatTime } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import ClassSelector from "./ClassSelector";
 
 interface ClassOption {
@@ -137,7 +137,7 @@ const VaccinationCampaignForm = ({
               </Label>
               <Input
                 type="time"
-                value={customFormatTime(vaccinationData.startDate)}
+                value={DateUtils.customFormatTime(vaccinationData.startDate)}
                 onChange={(e) => {
                   const [hours, minutes] = e.target.value.split(':').map(Number);
                   const newDate = new Date(vaccinationData.startDate);

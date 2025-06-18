@@ -2,8 +2,7 @@ import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from '@/components/ui/Toast';
 import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";
 import { FecthCreateSchoolClass } from "@/services/SchoolClassService";
 
@@ -43,14 +42,14 @@ export default function AddSchoolClass() {
       if (success) {
         navigate("/class");
         setTimeout(() => {
-          toast.success("Cập nhật thành công");
+          showToast.success("Cập nhật thành công");
         }, 100);
       } else {
         throw new Error('Creation failed');
       }
     } catch (err) {
       setError(`Failed to create class: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      toast.error(`Failed to create class: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      showToast.error(`Failed to create class: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -63,7 +62,6 @@ export default function AddSchoolClass() {
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (

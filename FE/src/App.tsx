@@ -194,7 +194,7 @@ function App() {
             />
 
             <Route
-              path="/medical-vaccination-record/:eventDate"
+              path="/medical-vaccination-record/:eventDate/:id"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <MedicalVaccinationRecord />
@@ -202,7 +202,7 @@ function App() {
               }
             />
             <Route
-              path="/medical-health-checkup-record/:eventDate"
+              path="/medical-health-checkup-record/:eventDate/:id"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <MedicalHealthCheckupRecords />

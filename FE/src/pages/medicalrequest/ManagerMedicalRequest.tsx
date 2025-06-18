@@ -12,6 +12,7 @@ import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationMod
 import UpdateMedicationModal from "@/components/medicalrequest/UpdateMedicationModal";
 import ConfirmMedicationModal from "@/components/medicalrequest/ConfirmMedicationModal";
 import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmationModal";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const ManagerMedicalRequest = () => {
   const [loading, setLoading] = useState(false);
@@ -425,6 +426,7 @@ const ManagerMedicalRequest = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastProvider />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -614,12 +616,12 @@ const ManagerMedicalRequest = () => {
         routes={routes}
       />
 
-      <MultiMedicationModal
+      {/* <MultiMedicationModal
         isOpen={showMultiMedicationModal}
         onClose={() => setShowMultiMedicationModal(false)}
         selectedStudent={null}
         onSubmit={handleMultiMedicationSubmit}
-      />
+      /> */}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { CalendarEvent, customFormatDate, customFormatDateOnly, eventCategories } from "@/types/CalendarEvent";
+import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import { Tooltip } from "@material-tailwind/react";
 
 interface CalendarGridProps {
@@ -117,9 +118,9 @@ const CalendarGrid = ({
       {/* Calendar Grid */}
       <div className="grid grid-cols-7">
         {getDaysInMonth(currentDate).map((date, index) => {
-          const isPast = date && new Date(customFormatDateOnly(date)) < new Date(customFormatDateOnly(new Date()));
-          const isToday = date && customFormatDateOnly(date) === customFormatDateOnly(new Date());
-          const isSelected = date && customFormatDateOnly(date) === selectedDate;
+          const isPast = date && new Date(DateUtils.customFormatDateOnly(date)) < new Date(DateUtils.customFormatDateOnly(new Date()));
+          const isToday = date && DateUtils.customFormatDateOnly(date) === DateUtils.customFormatDateOnly(new Date());
+          const isSelected = date && DateUtils.customFormatDateOnly(date) === selectedDate;
 
           return (
             <div
@@ -129,7 +130,7 @@ const CalendarGrid = ({
                   ? "bg-blue-100 hover:bg-blue-200"
                   : isPast ? '' : "hover:bg-gray-100"
                 }`}
-              onClick={() => date && !isPast && onDateSelect(customFormatDate(date))}
+              onClick={() => date && !isPast && onDateSelect(DateUtils.customFormatDate(date))}
             >
               {date && (
                 <>
@@ -159,7 +160,7 @@ const CalendarGrid = ({
                               {event.extendedProps.eventType === "medical" ? (
                                 <>
                                   <p><strong>Description:</strong> {event.extendedProps.description || "No description"}</p>
-                                  <p><strong>Date:</strong> {customFormatDateOnly(new Date(event.start))}</p>
+                                  <p><strong>Date:</strong> {DateUtils.customFormatDateOnly(new Date(event.start))}</p>
                                   <p><strong>Classes:</strong> {(() => {
                                     const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
                                     return validClassIds.length > 0 ? (
@@ -183,9 +184,9 @@ const CalendarGrid = ({
                                 <>
                                   <p><strong>Vaccine Name:</strong> {event.extendedProps.vaccineName || "No vaccine name"}</p>
                                   <p><strong>Vaccine Type:</strong> {event.extendedProps.vaccineType || "No vaccine type"}</p>
-                                  <p><strong>EXP:</strong> {customFormatDateOnly(new Date(event.extendedProps.exp!))}</p>
-                                  <p><strong>MFG:</strong> {customFormatDateOnly(new Date(event.extendedProps.mfg!))}</p>
-                                  <p><strong>Date:</strong> {customFormatDateOnly(new Date(event.start))}</p>
+                                  <p><strong>EXP:</strong> {DateUtils.customFormatDateOnly(new Date(event.extendedProps.exp!))}</p>
+                                  <p><strong>MFG:</strong> {DateUtils.customFormatDateOnly(new Date(event.extendedProps.mfg!))}</p>
+                                  <p><strong>Date:</strong> {DateUtils.customFormatDateOnly(new Date(event.start))}</p>
                                   <p><strong>Classes:</strong> {(() => {
                                     const validClassIds = event.extendedProps.classIds?.filter(id => id && id.trim() !== "") || [];
                                     return validClassIds.length > 0 ? (
@@ -240,7 +241,7 @@ const CalendarGrid = ({
                         className="text-xs text-blue-600 font-medium cursor-pointer hover:underline"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onViewMoreEvents(customFormatDateOnly(date));
+                          onViewMoreEvents(DateUtils.customFormatDateOnly(date));
                         }}
                       >
                         +{getEventsForDate(date).length - 2} more

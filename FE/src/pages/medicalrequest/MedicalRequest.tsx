@@ -22,7 +22,7 @@ export default function MedicalRequest() {
   const [parents, setParents] = useState<ParentViewModel[]>([]);
   const [filteredParents, setFilteredParents] = useState<ParentViewModel[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [selectedParentId, setSelectedParentId] = useState<string>("");
   const [selectedParent, setSelectedParent] = useState<ParentViewModel | null>(
     null
   );
@@ -85,9 +85,8 @@ export default function MedicalRequest() {
       setAllStudents(response || []);
       const options = (response || []).map((student) => ({
         value: student.id,
-        label: `${student.studentCode} - ${student.fullName} (${
-          student.studentClass?.className || "N/A"
-        })`,
+        label: `${student.studentCode} - ${student.fullName} (${student.studentClass?.className || "N/A"
+          })`,
       }));
       setStudentOptions(options);
     } catch (err) {
@@ -107,11 +106,15 @@ export default function MedicalRequest() {
     if (selectedStudentId) {
       const student = allStudents.find((s) => s.id === selectedStudentId);
       if (student) {
+        // If no parent is selected, try to get parent ID from student
+        if (!selectedParentId && student.parentId) {
+          setSelectedParentId(student.parentId);
+        }
         setSelectedStudentForModal(student);
         setShowMedicationModal(true);
       }
     }
-  }, [selectedStudentId, allStudents]);
+  }, [selectedStudentId, allStudents, selectedParentId]);
 
   const handleNavigateToStudent = useCallback(() => {
     if (selectedStudentId) {
@@ -122,6 +125,8 @@ export default function MedicalRequest() {
   const handleStudentClick = useCallback((student: Student | null) => {
     if (student) {
       setSelectedStudentForModal(student);
+      setSelectedStudentId(student.id);
+      setSelectedParentId(student.parentId || "");
       setShowMedicationModal(true);
     }
   }, []);
@@ -355,11 +360,10 @@ export default function MedicalRequest() {
                 <div
                   key={index}
                   onClick={() => handleParentClick(parent)}
-                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
-                    selectedParentId === parent.id
-                      ? "border-blue-500 bg-blue-50 shadow-md"
-                      : "border-gray-200 hover:border-blue-300"
-                  }`}
+                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${selectedParentId === parent.id
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 hover:border-blue-300"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -399,7 +403,7 @@ export default function MedicalRequest() {
               <button
                 onClick={() => {
                   setSelectedParent(null);
-                  setSelectedParentId(null);
+                  setSelectedParentId("");
                   setStudents([]);
                 }}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -481,6 +485,8 @@ export default function MedicalRequest() {
       {/* Multi Medication Modal */}
       <MultiMedicationModal
         isOpen={showMedicationModal}
+        parentId={selectedParentId}
+        studentId={selectedStudentId}
         onClose={() => {
           setShowMedicationModal(false);
           setSelectedStudentForModal(null);

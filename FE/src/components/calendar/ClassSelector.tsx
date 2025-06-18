@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Label from "@/components/ui/form/Label";
 
 interface ClassOption {
@@ -13,14 +13,17 @@ interface ClassSelectorProps {
   placeholder?: string;
 }
 
-const ClassSelector = ({ 
-  classOptions, 
-  selectedClasses, 
-  onClassChange, 
-  placeholder = "Chọn lớp hoặc khối" 
+const ClassSelector = ({
+  classOptions,
+  selectedClasses,
+  onClassChange,
+  placeholder = "Chọn lớp hoặc khối"
 }: ClassSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -30,68 +33,65 @@ const ClassSelector = ({
       if (!dropdownContainer && isDropdownOpen) {
         setIsDropdownOpen(false);
         setSearchTerm('');
+        setFocusedIndex(-1);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isDropdownOpen) {
-        setIsDropdownOpen(false);
-        setSearchTerm('');
+      if (!isDropdownOpen) return;
+
+      switch (event.key) {
+        case 'Escape':
+          setIsDropdownOpen(false);
+          setSearchTerm('');
+          setFocusedIndex(-1);
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          setFocusedIndex(prev => {
+            const options = getFilteredOptions();
+            return Math.min(prev + 1, options.length - 1);
+          });
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          setFocusedIndex(prev => Math.max(prev - 1, -1));
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (focusedIndex >= 0) {
+            const options = getFilteredOptions();
+            const option = options[focusedIndex];
+            if (option) {
+              handleClassToggle(option.value);
+            }
+          }
+          break;
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
+  }, [isDropdownOpen, focusedIndex, classOptions, selectedClasses]);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
   }, [isDropdownOpen]);
 
-  const handleClassToggle = (classId: string) => {
-    if (selectedClasses.includes(classId)) {
-      const newClasses = selectedClasses.filter(id => id !== classId);
-      onClassChange(newClasses);
-    } else {
-      const newClasses = [...selectedClasses, classId];
-      onClassChange(newClasses);
-    }
-  };
-
-  const handleBlockToggle = (blockIdentifier: string) => {
-    let classesInBlock: string[] = [];
-    
-    if (blockIdentifier === 'other') {
-      classesInBlock = classOptions.filter(classOption => 
-        !classOption.label.match(/\d+/)
-      ).map(classOption => classOption.value);
-    } else {
-      classesInBlock = classOptions.filter(classOption => {
-        const numberMatch = classOption.label.match(/\d+/);
-        return numberMatch && numberMatch[0] === blockIdentifier;
-      }).map(classOption => classOption.value);
-    }
-
-    const allSelected = classesInBlock.every(id => selectedClasses.includes(id));
-    
-    if (allSelected) {
-      // Bỏ chọn tất cả classes trong khối
-      const newClasses = selectedClasses.filter(id => !classesInBlock.includes(id));
-      onClassChange(newClasses);
-    } else {
-      // Chọn tất cả classes trong khối
-      const newClasses = selectedClasses.concat(classesInBlock.filter(id => !selectedClasses.includes(id)));
-      onClassChange(newClasses);
-    }
-  };
-
-  const renderDropdownOptions = () => {
-    const hierarchicalOptions = [];
+  const getFilteredOptions = () => {
+    const hierarchicalOptions: { type: 'block' | 'class', value: string, label: string }[] = [];
     const blockMap = new Map();
     const otherClasses: ClassOption[] = [];
-    
-    // Phân loại classes theo khối
+
+    // Classify classes by block
     classOptions.forEach(classOption => {
       const blockMatch = classOption.label.match(/\d+/);
       if (blockMatch) {
@@ -104,105 +104,150 @@ const ClassSelector = ({
         otherClasses.push(classOption);
       }
     });
-    
+
     const sortedBlocks = Array.from(blockMap.keys()).sort((a, b) => parseInt(a) - parseInt(b));
-    
-    // Render các khối
+
+    // Add blocks
     sortedBlocks.forEach(block => {
-      const classesInBlock = blockMap.get(block);
-      const allClassesInBlockSelected = classesInBlock.every((classOption: ClassOption) =>
-        selectedClasses.includes(classOption.value)
-      );
-      
       const blockLabel = `KHỐI ${block}`;
       if (!searchTerm || blockLabel.toLowerCase().includes(searchTerm.toLowerCase())) {
-        hierarchicalOptions.push(
-          <div
-            key={`block-${block}`}
-            className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            onClick={() => handleBlockToggle(block)}
-          >
-            <input
-              type="checkbox"
-              checked={allClassesInBlockSelected}
-              onChange={() => {}}
-              className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <span className="font-semibold text-sm text-gray-900">{blockLabel}</span>
-          </div>
-        );
+        hierarchicalOptions.push({
+          type: 'block',
+          value: `block-${block}`,
+          label: blockLabel
+        });
       }
-      
-      // Render classes trong khối
+
+      // Add classes in block
+      const classesInBlock = blockMap.get(block);
       classesInBlock.forEach((classOption: ClassOption) => {
         if (!searchTerm || classOption.label.toLowerCase().includes(searchTerm.toLowerCase())) {
-          hierarchicalOptions.push(
-            <div
-              key={classOption.value}
-              className="flex items-center px-4 py-2 pl-8 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handleClassToggle(classOption.value)}
-            >
-              <input
-                type="checkbox"
-                checked={selectedClasses.includes(classOption.value)}
-                onChange={() => {}}
-                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="text-sm text-gray-700">{classOption.label}</span>
-            </div>
-          );
+          hierarchicalOptions.push({
+            type: 'class',
+            value: classOption.value,
+            label: classOption.label
+          });
         }
       });
     });
-    
-    // Render nhóm "Other"
+
+    // Add "Other" block and its classes
     if (otherClasses.length > 0) {
-      const allOtherClassesSelected = otherClasses.every((classOption: ClassOption) =>
-        selectedClasses.includes(classOption.value)
-      );
-      
       if (!searchTerm || "Khác".toLowerCase().includes(searchTerm.toLowerCase())) {
-        hierarchicalOptions.push(
-          <div
-            key="block-other"
-            className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            onClick={() => handleBlockToggle('other')}
-          >
-            <input
-              type="checkbox"
-              checked={allOtherClassesSelected}
-              onChange={() => {}}
-              className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <span className="font-semibold text-sm text-gray-900">Khác</span>
-          </div>
-        );
+        hierarchicalOptions.push({
+          type: 'block',
+          value: 'block-other',
+          label: 'Khác'
+        });
       }
-      
+
       otherClasses.forEach(classOption => {
         if (!searchTerm || classOption.label.toLowerCase().includes(searchTerm.toLowerCase())) {
-          hierarchicalOptions.push(
-            <div
-              key={classOption.value}
-              className="flex items-center px-4 py-2 pl-8 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handleClassToggle(classOption.value)}
-            >
-              <input
-                type="checkbox"
-                checked={selectedClasses.includes(classOption.value)}
-                onChange={() => {}}
-                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="text-sm text-gray-700">{classOption.label}</span>
-            </div>
-          );
+          hierarchicalOptions.push({
+            type: 'class',
+            value: classOption.value,
+            label: classOption.label
+          });
         }
       });
     }
+
+    return hierarchicalOptions;
+  };
+
+  const handleClassToggle = (classId: string) => {
+    // Prevent deselecting if it's the last selected class
+    if (selectedClasses.length === 1 && selectedClasses.includes(classId)) {
+      return;
+    }
+
+    const newClasses = selectedClasses.includes(classId)
+      ? selectedClasses.filter(id => id !== classId)
+      : [...selectedClasses, classId];
+    onClassChange(newClasses);
+  };
+
+  const handleBlockToggle = (blockIdentifier: string) => {
+    let classesInBlock: string[] = [];
     
-    return hierarchicalOptions.length > 0 ? hierarchicalOptions : (
-      <div className="px-4 py-2 text-gray-500">Không có lớp nào</div>
-    );
+    if (blockIdentifier === 'other') {
+      classesInBlock = classOptions
+        .filter(classOption => !classOption.label.match(/\d+/))
+        .map(classOption => classOption.value);
+    } else {
+      classesInBlock = classOptions
+        .filter(classOption => {
+          const numberMatch = classOption.label.match(/\d+/);
+          return numberMatch && numberMatch[0] === blockIdentifier;
+        })
+        .map(classOption => classOption.value);
+    }
+
+    const allSelected = classesInBlock.every(id => selectedClasses.includes(id));
+    
+    // If trying to deselect all classes in a block, ensure at least one remains selected
+    if (allSelected && selectedClasses.length <= classesInBlock.length) {
+      return;
+    }
+
+    const newClasses = allSelected
+      ? selectedClasses.filter(id => !classesInBlock.includes(id))
+      : [...selectedClasses, ...classesInBlock.filter(id => !selectedClasses.includes(id))];
+    
+    onClassChange(newClasses);
+  };
+
+  const renderDropdownOptions = () => {
+    const options = getFilteredOptions();
+    
+    if (options.length === 0) {
+      return <div className="px-4 py-2 text-gray-500">Không có lớp nào</div>;
+    }
+
+    return options.map((option, index) => {
+      const isBlock = option.type === 'block';
+      const isSelected = isBlock
+        ? (() => {
+            const blockNumber = option.value.replace('block-', '');
+            const classesInBlock = classOptions
+              .filter(classOption => {
+                if (blockNumber === 'other') {
+                  return !classOption.label.match(/\d+/);
+                }
+                const numberMatch = classOption.label.match(/\d+/);
+                return numberMatch && numberMatch[0] === blockNumber;
+              })
+              .map(classOption => classOption.value);
+            return classesInBlock.every(id => selectedClasses.includes(id));
+          })()
+        : selectedClasses.includes(option.value);
+
+      // Disable checkbox if it's the last selected class
+      const isDisabled = !isBlock && selectedClasses.length === 1 && isSelected;
+
+      return (
+        <div
+          key={option.value}
+          className={`flex items-center px-4 py-2 ${isBlock ? '' : 'pl-8'} hover:bg-gray-100 cursor-pointer ${
+            index === focusedIndex ? 'bg-gray-100' : ''
+          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => !isDisabled && (isBlock ? handleBlockToggle(option.value.replace('block-', '')) : handleClassToggle(option.value))}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {}}
+            disabled={isDisabled}
+            className={`mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${
+              isDisabled ? 'cursor-not-allowed' : ''
+            }`}
+          />
+          <span className={`${isBlock ? 'font-semibold' : ''} text-sm ${isBlock ? 'text-gray-900' : 'text-gray-700'}`}>
+            {option.label}
+          </span>
+        </div>
+      );
+    });
   };
 
   return (
@@ -210,15 +255,15 @@ const ClassSelector = ({
       <Label className="block text-sm font-semibold text-gray-700 mb-1">
         Lớp <span className="text-red-500">*</span>
       </Label>
-      
-      <div className="relative" data-dropdown-container>
-        <div 
+
+      <div className="relative" data-dropdown-container ref={dropdownRef}>
+        <div
           className="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 cursor-pointer"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
           <span className="block truncate text-gray-400">
-            {selectedClasses.length > 0 
-              ? `${selectedClasses.length} lớp đã chọn` 
+            {selectedClasses.length > 0
+              ? `${selectedClasses.length} lớp đã chọn`
               : placeholder
             }
           </span>
@@ -241,11 +286,15 @@ const ClassSelector = ({
         {isDropdownOpen && (
           <div className="absolute mt-1 w-full rounded-lg bg-white shadow-lg z-10 border border-gray-300 max-h-60 overflow-auto">
             <input
+              ref={searchInputRef}
               type="text"
               className="h-11 w-full appearance-none rounded-t-lg border-b border-gray-300 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10"
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setFocusedIndex(-1);
+              }}
               autoComplete="off"
             />
             <div className="py-1">

@@ -15,10 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConselingSchedules } from "@/types/ConselingSchedules";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  customFormatDateOnly,
-  customFormatDateForBackend,
-} from "@/types/CalendarEvent";
+import { DateUtils } from "@/utils/DateUtils";
 import Label from "@/components/ui/form/Label";
 import Input from "@/components/ui/form/InputField";
 import PageHeader from "@/components/ui/PageHeader";
@@ -275,7 +272,7 @@ export default function ManagerRecord() {
                       </p>
                       <p className="text-sm text-gray-600 flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                        Ngày: {customFormatDateOnly(item.recordDate)}
+                        Ngày: {DateUtils.customFormatDateOnly(item.recordDate)}
                       </p>
                     </div>
                   </div>
@@ -379,7 +376,7 @@ export default function ManagerRecord() {
                       </Label>
                       <Input
                         type="date"
-                        value={customFormatDateOnly(formData.requestDate)}
+                        value={DateUtils.customFormatDateOnly(formData.requestDate)}
                         onChange={(e) => {
                           const [year, month, day] = e.target.value
                             .split("-")
@@ -389,10 +386,10 @@ export default function ManagerRecord() {
                           newDate.setHours(9, 0, 0, 0);
                           setFormData((prev) => ({
                             ...prev,
-                            requestDate: customFormatDateForBackend(newDate),
+                            requestDate: DateUtils.customFormatDateForBackend(newDate),
                           }));
                         }}
-                        min={customFormatDateOnly(new Date())}
+                        min={DateUtils.customFormatDateOnly(new Date())}
                         className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>

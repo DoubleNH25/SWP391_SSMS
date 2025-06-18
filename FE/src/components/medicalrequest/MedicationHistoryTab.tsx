@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
+import { DateUtils } from "@/utils/DateUtils";
 
 interface MedicationHistoryRecord {
   id: number;
@@ -71,17 +72,29 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
         .includes(historySearchTerm.toLowerCase()) ||
       record.note.toLowerCase().includes(historySearchTerm.toLowerCase());
 
-    // Date filter logic for history - improved
+    // Date filter logic for history - improved using DateUtils
     const matchesDateFilter = (() => {
       if (!historyStartDate && !historyEndDate) return true;
 
-      // Parse the administeredTime string to Date (handle Vietnamese locale format)
-      const recordDate = new Date(record.administeredTime.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/, '$3-$2-$1T$4:$5:$6'));
+      // Try to parse the administeredTime using DateUtils
+      let recordDate: Date;
+      try {
+        // First try to parse as ISO string or standard format
+        recordDate = DateUtils.toLocalDate(record.administeredTime);
 
-      // If parsing fails, try direct parsing
-      if (isNaN(recordDate.getTime())) {
-        const fallbackDate = new Date(record.administeredTime);
-        if (isNaN(fallbackDate.getTime())) return true; // Skip invalid dates
+        // If that fails, try Vietnamese locale format parsing
+        if (isNaN(recordDate.getTime())) {
+          const vietnameseFormatMatch = record.administeredTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/);
+          if (vietnameseFormatMatch) {
+            const [, day, month, year, hour, minute, second] = vietnameseFormatMatch;
+            recordDate = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute}:${second}`);
+          }
+        }
+
+        // If still invalid, skip this record
+        if (isNaN(recordDate.getTime())) return true;
+      } catch (error) {
+        return true; // Skip invalid dates
       }
 
       const filterStart = historyStartDate ? new Date(historyStartDate + "T00:00:00") : null;
@@ -100,11 +113,18 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
     return matchesSearch && matchesDateFilter;
   });
 
-  // Sort filtered history
+  // Sort filtered history using DateUtils
   const sortedHistory = [...filteredHistory].sort((a, b) => {
-    const dateA = new Date(a.administeredTime).getTime();
-    const dateB = new Date(b.administeredTime).getTime();
-    return historySortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    try {
+      const dateA = DateUtils.toLocalDate(a.administeredTime).getTime();
+      const dateB = DateUtils.toLocalDate(b.administeredTime).getTime();
+      return historySortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    } catch (error) {
+      // Fallback to string comparison if date parsing fails
+      return historySortOrder === "asc"
+        ? a.administeredTime.localeCompare(b.administeredTime)
+        : b.administeredTime.localeCompare(a.administeredTime);
+    }
   });
 
   // Pagination calculations

@@ -65,7 +65,7 @@ export async function FecthCreateConselingSchedule(data: ConselingSchedules): Pr
   try {
     await ApiClient<ConselingSchedules>({
       method: 'POST',
-      endpoint: '/parents/conseling-schedules',
+      endpoint: '/nurse/conseling-schedules',
       data: data,
     });
     return true;
