@@ -68,3 +68,8 @@ export interface LoginResponse {
   token: string;
   userId: string;
 }
+
+export interface VerifyOTPRequest {
+  idToken: string;
+  phoneNumber: string;
+}

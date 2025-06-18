@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FecthLogin } from "@/services/AuthService";
 import { LoginRequest } from "@/types/User";
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
+import PhoneAuthService from "@/services/PhoneAuthService";
 
 export default function Login() {
   const [showPhoneLogin, setShowPhoneLogin] = useState(false);
@@ -19,6 +20,7 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [phone, setPhone] = useState<string>("");
 
   const handleInputLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,7 +41,18 @@ export default function Login() {
       switch (formType) {
         case "phone": {
           const phone = (e.target as HTMLFormElement).phone.value;
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          setPhone(phone);
+          if (!phone) {
+            setError("Vui lòng nhập số điện thoại");
+            return;
+          }
+          // Validate phone number format
+          const phoneRegex = /^[0-9]{10,11}$/;
+          if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+            setError("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số");
+            return;
+          }
+          await PhoneAuthService.sendOTP(phone);
           navigate("/confirm-otp", { state: { phone } });
           break;
         }
@@ -49,7 +62,21 @@ export default function Login() {
           break;
         }
         case "register": {
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          const formData = new FormData(e.target as HTMLFormElement);
+          const phone = formData.get("phone") as string;
+          setPhone(phone);
+          if (!phone) {
+            setError("Vui lòng nhập số điện thoại");
+            return;
+          }
+          // Validate phone number format
+          const phoneRegex = /^[0-9]{10,11}$/;
+          if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+            setError("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số");
+            return;
+          }
+          await PhoneAuthService.sendOTP(phone);
+          navigate("/confirm-otp", { state: { phone, isRegister: true } });
           break;
         }
         case "forgotPassword": {
@@ -72,7 +99,7 @@ export default function Login() {
         );
       }
     } finally {
-      setIsLoading(false); // End loading regardless of outcome
+      setIsLoading(false);
     }
   };
 
@@ -80,18 +107,21 @@ export default function Login() {
     setShowPhoneLogin(!showPhoneLogin);
     setShowRegister(false);
     setShowForgotPassword(false);
+    setPhone("");
   };
 
   const toggleForgotPassword = () => {
     setShowForgotPassword(!showForgotPassword);
     setShowPhoneLogin(false);
     setShowRegister(false);
+    setPhone("");
   };
 
   const toggleForm = () => {
     setShowRegister(!showRegister);
     setShowPhoneLogin(false);
     setShowForgotPassword(false);
+    setPhone("");
   };
 
   return (
@@ -140,7 +170,7 @@ export default function Login() {
                       id="email"
                       type="text"
                       onChange={handleInputLoginChange}
-                      value={userLogin.email}
+                      value={userLogin.email ?? ""}
                       required
                       disabled={isLoading}
                       className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
@@ -161,7 +191,7 @@ export default function Login() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         onChange={handleInputLoginChange}
-                        value={userLogin.password}
+                        value={userLogin.password ?? ""}
                         required
                         disabled={isLoading}
                         className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
@@ -281,6 +311,8 @@ export default function Login() {
                       className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600"
                       placeholder="Enter your phone"
                       whileFocus={{ scale: 1.02 }}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                     />
                   </div>
                   <motion.button
@@ -297,6 +329,7 @@ export default function Login() {
                   >
                     Send OTP
                   </motion.button>
+                  <div id="recaptcha-container"></div>
                 </form>
               )}
               <div className="flex items-center w-full my-4">
