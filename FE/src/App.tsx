@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/auth/Login";
-import ConfirmOTP from "@/pages/ConfirmOTP";
+import ConfirmOTP from "@/pages/auth/ConfirmOTP";
 import Blog from "@/pages/Blog";
 import Calendar from "@/pages/Calendar";
 import UserManager from "@/pages/user/ManagerUser";
@@ -36,6 +36,7 @@ import HealthCheckupRecords from "./pages/healthprofile/HealthCheckupRecords";
 import MedicalRequest from "./pages/medicalrequest/MedicalRequest";
 import ManagerMedicalRequest from "./pages/medicalrequest/ManagerMedicalRequest";
 import ManagerActivityMedical from "./pages/acivitymedical/ManagerActivityMedical";
+import EditProfile from "./pages/user/EditProfile";
 
 function App() {
   return (
@@ -45,7 +46,7 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
-
+          <Route path="/profile" element={<EditProfile />} />
           <Route
             path="/"
             element={

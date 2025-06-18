@@ -120,6 +120,20 @@ export default function MedicalHealthCheckupRecords() {
         }
     }, [eventDate]);
 
+    const handleNext = useCallback(
+        (e?: React.MouseEvent) => {
+            if (e) e.preventDefault();
+            if (!selectedStudent) return;
+            const currentIndex = filteredStudents.findIndex(
+                (student) => student.id === selectedStudent.id
+            );
+            if (currentIndex < filteredStudents.length - 1) {
+                handleSelectStudent(filteredStudents[currentIndex + 1]);
+            }
+        },
+        [selectedStudent, students]
+    );
+
     const handleUpdateHealthCheckupRecord = useCallback(
         async (e?: React.MouseEvent) => {
             if (e) e.preventDefault();
@@ -157,6 +171,19 @@ export default function MedicalHealthCheckupRecords() {
                 );
                 if (result) {
                     toast.success("Cập nhật thành công");
+                    // Cập nhật local state
+                    setMedicalRecord(prev =>
+                        prev.map(r =>
+                            r.studentId === selectedStudent.id
+                                ? {
+                                    ...r,
+                                    ...healthCheckupData,
+                                    recordDate: new Date().toISOString(),
+                                }
+                                : r
+                        )
+                    );
+                    handleNext();
                 } else {
                     toast.error("Cập nhật thất bại");
                 }
@@ -172,6 +199,8 @@ export default function MedicalHealthCheckupRecords() {
             healthCheckupData,
             validateHealthCheckupData,
             isCurrentDate,
+            handleNext,
+            handleGetMedicalRecord
         ]
     );
 
@@ -207,20 +236,6 @@ export default function MedicalHealthCheckupRecords() {
             });
         }
     };
-
-    const handleNext = useCallback(
-        (e: React.MouseEvent) => {
-            e.preventDefault();
-            if (!selectedStudent) return;
-            const currentIndex = filteredStudents.findIndex(
-                (student) => student.id === selectedStudent.id
-            );
-            if (currentIndex < filteredStudents.length - 1) {
-                handleSelectStudent(filteredStudents[currentIndex + 1]);
-            }
-        },
-        [selectedStudent, students]
-    );
 
     useEffect(() => {
         handleGetStudent();

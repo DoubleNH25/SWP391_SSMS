@@ -34,13 +34,21 @@ export default function EditProfile() {
                 });
                 setError(null);
             } else {
-                throw new Error('User not found');
+                throw new Error('Không tìm thấy dữ liệu');
             }
             setError(null);
         } catch (err) {
-            setError(err instanceof Error && err.message.includes('authenticated')
-                ? 'Please log in to view user data.'
-                : 'Failed to load user data. Please try again.');
+            const errorMessage = err instanceof Error && err.message.includes('authenticated')
+                ? 'Vui lòng đăng nhập để xem dữ liệu'
+                : 'Lỗi khi tải dữ liệu. Vui lòng thử lại.';
+            setError(errorMessage);
+            toast.error(errorMessage, {
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         } finally {
             setLoading(false);
         }
@@ -56,21 +64,38 @@ export default function EditProfile() {
         try {
             if (!formData.fullName
                 || !formData.phone) {
-                throw new Error('Please fill in all required fields');
+                throw new Error('Vui lòng điền đầy đủ các trường');
             }
             const success = await FecthUpdateProfile(formData as UserProfileUpdateViewModel);
             if (success) {
-                toast.success('Profile updated successfully');
+                toast.success('Profile updated successfully', {
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                  });
                 navigate('/');
             } else {
-                throw new Error('Update failed');
+                throw new Error('Lỗi khi cập nhật');
             }
-            toast.success('Profile updated successfully');
-            navigate('/');
+            toast.error('Lỗi khi cập nhật', {
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
+            const errorMessage = err instanceof Error ? err.message : 'Lỗi xảy ra, vui lòng thử lại.';
             setError(errorMessage);
-            toast.error(errorMessage);
+            toast.error(errorMessage, {
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         } finally {
             setLoading(false);
         }
@@ -153,7 +178,7 @@ export default function EditProfile() {
                             type="submit"
                             className="mt-4 bg-blue-600 w-[10%] hover:bg-blue-700 text-white py-2 rounded"
                         >
-                            {loading ? 'Saving...' : 'Save'}
+                            {loading ? 'Đang lưu...' : 'Lưu'}
                         </button>
                         <button
                             onClick={handleCancel}
@@ -161,7 +186,7 @@ export default function EditProfile() {
                             type="button"
                             className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                         >
-                            Cancel
+                            Hủy
                         </button>
                     </div>
                 </div>

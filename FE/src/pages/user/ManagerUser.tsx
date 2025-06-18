@@ -33,13 +33,12 @@ export default function UserManager() {
     setLoading(true);
     try {
       const fetchedUsers = await FecthUsers();
-      console.log(fetchedUsers);
       setUsers(fetchedUsers);
       setError(null);
     } catch (err) {
       setError(err instanceof Error && err.message.includes('authenticated')
-        ? 'Please log in to view users.'
-        : 'Failed to fetch users. Please try again.');
+        ? 'Vui lòng đăng nhập để xem danh sách người dùng'
+        : 'Lỗi khi tải danh sách người dùng. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -55,15 +54,15 @@ export default function UserManager() {
       const success = await FecthDeleteUsers(selectedUserId);
       if (success) {
         setUsers(users.filter(user => user.id !== selectedUserId));
-        toast.success('User deleted successfully');
+        toast.success('Xóa người dùng thành công');
       } else {
-        throw new Error('Deletion failed');
+        throw new Error('Lỗi khi xóa người dùng');
       }
       setIsDeleteModalOpen(false);
       setSelectedUserId(null);
       setError(null);
     } catch (error) {
-      toast.error(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Lỗi khi xóa người dùng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -113,6 +112,14 @@ export default function UserManager() {
 
   return (
     <div className="p-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+      />
       <PageHeader
         title="Quản lý người dùng"
         icon={<UserCog className="w-6 h-6 text-blue-600" />}
