@@ -32,7 +32,7 @@ namespace SMMS.Application.Services.Implements
                     .FindByCondition(s => s.Name == request.Name && !s.DeletedTime.HasValue, false)
                     .FirstOrDefault();
 
-                if (stock == null)
+                if (stock != null)
                 {
                     throw new Exception("Stock is already exist");
                 }
