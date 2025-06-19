@@ -30,7 +30,7 @@ export default function ManagerRecord() {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openItemIndex, setOpenItemIndex] = useState<number | null>(null);
+  const [openItemIndex, setOpenItemId] = useState<string  | null>(null);
   const [showConsultForm, setShowConsultForm] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -248,8 +248,8 @@ export default function ManagerRecord() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {paginatedRecords.map((item, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" style={{ alignItems: 'start' }}>
+          {paginatedRecords.map((item) => (
             <div
               key={item.healthCheckUpId}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg"
@@ -257,7 +257,7 @@ export default function ManagerRecord() {
               <div
                 className="p-4 cursor-pointer"
                 onClick={() =>
-                  setOpenItemIndex(openItemIndex === index ? null : index)
+                  setOpenItemId(openItemIndex === item.healthCheckUpId ? null : item.healthCheckUpId)
                 }
               >
                 <div className="flex justify-between items-start">
@@ -290,7 +290,7 @@ export default function ManagerRecord() {
                         Đặt lịch tư vấn
                       </span>
                     </button>
-                    {openItemIndex === index ? (
+                    {openItemIndex === item.healthCheckUpId ? (
                       <ChevronUpIcon className="w-5 h-5 text-gray-500" />
                     ) : (
                       <ChevronDownIcon className="w-5 h-5 text-gray-500" />
@@ -299,7 +299,7 @@ export default function ManagerRecord() {
                 </div>
               </div>
 
-              {openItemIndex === index && (
+              {openItemIndex === item.healthCheckUpId && (
                 <div className="border-t border-gray-100 p-4 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 p-3 rounded-lg">
@@ -340,7 +340,7 @@ export default function ManagerRecord() {
               )}
 
               <Modal
-                isOpen={showConsultForm === index}
+                isOpen={showConsultForm === item.healthCheckUpId}
                 onClose={() => {
                   setShowConsultForm(null);
                   clearForm();

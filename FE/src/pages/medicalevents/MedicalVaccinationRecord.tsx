@@ -151,7 +151,7 @@ export default function MedicalVaccinationRecord() {
             <div className="max-w-8xl mx-auto">
                 {/* Header */}
                 <PageHeader
-                    title="Sự kiện kiểm tra sức khỏe"
+                    title="Sự kiện tiêm vaccine"
                     icon={<Heart className="w-6 h-6 text-red-600" />}
                     description={`Ngày ${new Date(eventDate || "").toLocaleDateString("vi-VN")}`}
                 />

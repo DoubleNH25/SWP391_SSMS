@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 import { MedicalCreateViewModel } from "@/types/Medical";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { FecthCreateMedical } from "@/services/MedicalService";
 import { DateUtils } from "@/utils/DateUtils";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateMedical() {
     const navigate = useNavigate();
@@ -96,6 +97,14 @@ export default function CreateMedical() {
 
     return (
         <div className="p-4">
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+            />
             <PageHeader
                 title="Thêm thuốc mới"
                 icon={<Pill className="w-6 h-6 text-blue-600" />}
@@ -139,7 +148,7 @@ export default function CreateMedical() {
                             id="date-picker"
                             minDate={DateUtils.customFormatDateOnly(new Date())}
                             maxDate="9999-12-31"
-                            label="Date of Birth"
+                            label="Hạn sữ dụng"
                             placeholder="Select a date"
                             defaultDate={formData.expiryDate ? new Date(formData.expiryDate) : undefined}
                             onChange={(dates, currentDateString) => {

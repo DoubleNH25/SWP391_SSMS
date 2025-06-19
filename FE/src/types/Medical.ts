@@ -18,5 +18,5 @@ export interface MedicalUpdateViewModel {
     quantity: number;
     expiryDate: string;
     detailInformation: string;
-    status: string;
+    status: "Available" | "OutOfStock";
 }
