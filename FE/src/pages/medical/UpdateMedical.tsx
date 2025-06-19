@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { MedicalCreateViewModel, MedicalUpdateViewModel } from "@/types/Medical";
+import { MedicalUpdateViewModel } from "@/types/Medical";
 import { FecthMedicalById, FecthUpdateMedical } from "@/services/MedicalService";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/ui/PageHeader";
 import { Pill } from "lucide-react";
@@ -11,15 +11,17 @@ import Input from "@/components/ui/form/InputField";
 import DatePicker from "@/components/ui/form/DateField";
 import { Button } from "@/components/ui/button";
 import { DateUtils } from "@/utils/DateUtils";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function UpdateMedical() {
     const navigate = useNavigate();
     const { medicalId } = useParams<{ medicalId: string }>();
-    const [formData, setFormData] = useState<MedicalCreateViewModel>({
+    const [formData, setFormData] = useState<MedicalUpdateViewModel>({
         name: "",
         quantity: 0,
         expiryDate: "",
         detailInformation: "",
+        status: "Available",
     });
     const [errors, setErrors] = useState({
         name: "",
@@ -37,6 +39,7 @@ export default function UpdateMedical() {
                 quantity: response.quantity || 0,
                 expiryDate: response.expiryDate || "",
                 detailInformation: response.detailInformation || "",
+                status: "Available",
             });
             setError(null);
         } catch (error) {
@@ -76,6 +79,7 @@ export default function UpdateMedical() {
             name: "",
             quantity: "",
             expiryDate: "",
+            status: "",
         };
 
         if (!formData.name.trim()) {
@@ -88,6 +92,10 @@ export default function UpdateMedical() {
         }
         if (!formData.expiryDate) {
             newErrors.expiryDate = "Vui lòng chọn hạn sử dụng";
+            isValid = false;
+        }
+        if (!formData.status) {
+            newErrors.status = "Vui lòng chọn trạng thái";
             isValid = false;
         }
         setErrors(newErrors);
@@ -105,7 +113,7 @@ export default function UpdateMedical() {
                 quantity: formData.quantity,
                 expiryDate: DateUtils.customFormatDateForBackend(formData.expiryDate),
                 detailInformation: formData.detailInformation,
-                status: "active",
+                status: formData.status as "Available" | "OutOfStock",
             };
             await FecthUpdateMedical(medicalId!, medicalUpdate);
             toast.success("Cập nhật thuốc thành công");
@@ -153,6 +161,14 @@ export default function UpdateMedical() {
 
     return (
         <div className="p-4">
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+            />
             <PageHeader
                 title="Cập nhật thuốc"
                 icon={<Pill className="w-6 h-6 text-blue-600" />}

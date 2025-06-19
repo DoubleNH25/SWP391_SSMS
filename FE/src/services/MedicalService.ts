@@ -52,6 +52,7 @@ export async function FecthUpdateMedical(id: string, medical: MedicalUpdateViewM
         throw new Error("Please enter complete medical information");
     }
     try {
+        console.log(medical);
         await ApiClient<MedicalUpdateViewModel>({
             method: 'PUT',
             endpoint: `/medical/stock/${id}`,

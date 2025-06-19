@@ -8,7 +8,7 @@ import {
 } from "@/services/UserService";
 import { ParentViewModel } from "@/types/User";
 import { Student } from "@/types/Student";
-import { Search, X, Users, ArrowRight, PlusIcon } from "lucide-react";
+import { Search, X, Users, ArrowRight, AlertTriangleIcon, FilePlusIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
@@ -77,6 +77,12 @@ export default function MedicalRequest() {
     },
     [fetchStudentsByParentId]
   );
+
+  const handleNavigateCreateIncident = useCallback(async () => {
+    if (selectedStudentId) {
+      navigate(`/medical/medical-incident/${selectedStudentId}`);
+    }
+  }, [selectedStudentId, navigate]);
 
   const fetchAllStudents = useCallback(async () => {
     setStudentsLoadingForSearch(true);
@@ -216,7 +222,7 @@ export default function MedicalRequest() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div>
               <Label htmlFor="search">Tìm kiếm phụ huynh</Label>
               <div className="relative">
@@ -245,8 +251,9 @@ export default function MedicalRequest() {
             </div>
             <div>
               <Label htmlFor="student-search">Tìm kiếm học sinh</Label>
-              <div className="flex gap-2">
-                <div className="flex-1">
+              <div className="flex flex-wrap gap-2 items-start">
+                {/* Ô chọn học sinh */}
+                <div className="flex-1 min-w-[200px]">
                   <SearchableSelect
                     options={studentOptions}
                     placeholder={
@@ -256,29 +263,45 @@ export default function MedicalRequest() {
                     }
                     onChange={handleStudentSelect}
                     value={selectedStudentId}
-                    className="w-[90%]"
                   />
                 </div>
-                <div className="flex gap-2">
+
+                {/* Các nút chức năng */}
+                <div className="flex flex-row gap-3 items-start">
+                  {/* Nút xem đơn thuốc */}
                   <button
                     onClick={handleNavigateToStudent}
                     disabled={!selectedStudentId || studentsLoadingForSearch}
-                    className="inline-flex items-center gap-2 px-2 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                   >
                     <ArrowRight className="w-4 h-4" />
                     Xem đơn thuốc
                   </button>
-                  <button
-                    onClick={handleNavigateCreateMedicalRequest}
-                    disabled={!selectedStudentId || studentsLoadingForSearch}
-                    className="inline-flex items-center gap-2 px-2 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <PlusIcon className="w-4 h-4" />
-                    Tạo đơn thuốc
-                  </button>
+
+                  {/* Cụm 2 nút dọc */}
+                  <div className="flex flex-col gap-2 items-stretch">
+                    <button
+                      onClick={handleNavigateCreateIncident}
+                      disabled={!selectedStudentId || studentsLoadingForSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    >
+                      <AlertTriangleIcon className="w-4 h-4" />
+                      Tạo sự cố y tế
+                    </button>
+
+                    <button
+                      onClick={handleNavigateCreateMedicalRequest}
+                      disabled={!selectedStudentId || studentsLoadingForSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    >
+                      <FilePlusIcon className="w-4 h-4" />
+                      Tạo đơn thuốc
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
           {(searchTerm || selectedStudentId) && (
             <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
