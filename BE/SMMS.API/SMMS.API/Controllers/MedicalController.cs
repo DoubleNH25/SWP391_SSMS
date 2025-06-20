@@ -136,18 +136,6 @@ namespace SMMS.API.Controllers
 
         //---------------Medical Usage----------------
 
-        [HttpPost("usage")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> CreateMedicalUsage([FromBody] CreateMedicalUsageRequest request)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _medicalService.CreateMedicalUsageAsync(userId, request);
-            if (!result)
-                return BadRequest("Failed to create medical usage.");
-
-            return Ok("MedicalUsage created successfully.");
-        }
-
         [HttpDelete("usage/{id}")]
         [Authorize(Roles = "Admin,Manager,Nurse")]
         public async Task<IActionResult> DeleteMedicalUsage(string id)
