@@ -192,7 +192,8 @@ namespace SMMS.Application.Services.Implements
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).ToList());
 
@@ -250,7 +251,8 @@ namespace SMMS.Application.Services.Implements
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).ToList());
 
@@ -308,7 +310,8 @@ namespace SMMS.Application.Services.Implements
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).FirstOrDefaultAsync();
 
@@ -574,7 +577,8 @@ namespace SMMS.Application.Services.Implements
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).FirstOrDefaultAsync();
 
