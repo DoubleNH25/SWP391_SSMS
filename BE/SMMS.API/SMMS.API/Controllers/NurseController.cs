@@ -109,6 +109,31 @@ namespace SMMS.API.Controllers
 			return Ok(records);
 		}
 
+		[HttpGet("health-checkup-records/abnormal")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetAbnormalCheckupRecords()
+		{
+			var records = await _healthCheckupService.GetAbnormalCheckupRecordsAsync();
+			if (records == null || !records.Any())
+			{
+				return NotFound("No abnormal health checkup records found.");
+			}
+			return Ok(records);
+		}
+
+		[HttpGet("health-checkup-records/normal")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
+		public async Task<IActionResult> GetNormalCheckupRecords()
+		{
+			var records = await _healthCheckupService.GetNormalCheckupRecordsAsync();
+			if (records == null || !records.Any())
+			{
+				return NotFound("No normal health checkup records found.");
+			}
+			return Ok(records);
+		}
+
+
 		[HttpPut("health-checkup-records/{id}")]
 		public async Task<IActionResult> UpdateHealthCheckupRecord(string id, [FromBody] HealthCheckupUpdateRequest request)
 		{
