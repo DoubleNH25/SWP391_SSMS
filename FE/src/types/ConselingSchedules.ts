@@ -13,7 +13,7 @@ export interface ConselingSchedulesAND {
     healthCheckupId: string;
     meetingDate: Date;
     note: string;
-    status: boolean;
+    status: string;
     createdTime: Date;
     createdBy: string;
     updatedTime: Date;

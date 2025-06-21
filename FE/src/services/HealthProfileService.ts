@@ -75,6 +75,8 @@ export async function FecthCreateConselingSchedule(data: ConselingSchedules): Pr
   }
 }
 
+
+
 export async function FecthHealthProfileByStudentId(studentId: string): Promise<HealthProfile | null> {
   if (!localStorage.getItem('token')) {
     console.error('User is not authenticated');

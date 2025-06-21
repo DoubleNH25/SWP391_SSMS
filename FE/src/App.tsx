@@ -38,6 +38,8 @@ import ManagerMedicalRequest from "./pages/medicalrequest/ManagerMedicalRequest"
 import ManagerActivityMedical from "./pages/acivitymedical/ManagerActivityMedical";
 import EditProfile from "./pages/user/EditProfile";
 import CreateMedicalIncident from "./pages/medicalincident/CreateMedicalIncident";
+import ConselingScheduleAbnormal from "./pages/conselingshedules/ConselingScheduleAbnormal";
+import ManagerMedicalIncident from "./pages/medicalincident/ManagerMedicalIncident";
 
 function App() {
   return (
@@ -302,12 +304,32 @@ function App() {
               }
             />
             <Route
+              path="/medical/manager-medical-incident/:studentId"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <ManagerMedicalIncident />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/activity-medical/:eventId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
                 >
                   <ManagerActivityMedical />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/conseling-schedules/abnormal"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse"]}
+                >
+                  <ConselingScheduleAbnormal />
                 </PrivateRoute>
               }
             />

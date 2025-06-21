@@ -8,7 +8,14 @@ import {
 } from "@/services/UserService";
 import { ParentViewModel } from "@/types/User";
 import { Student } from "@/types/Student";
-import { Search, X, Users, ArrowRight, AlertTriangleIcon, FilePlusIcon } from "lucide-react";
+import {
+  Search,
+  X,
+  Users,
+  ArrowRight,
+  AlertTriangleIcon,
+  FilePlusIcon,
+} from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
@@ -91,8 +98,9 @@ export default function MedicalRequest() {
       setAllStudents(response || []);
       const options = (response || []).map((student) => ({
         value: student.id,
-        label: `${student.studentCode} - ${student.fullName} (${student.studentClass?.className || "N/A"
-          })`,
+        label: `${student.studentCode} - ${student.fullName} (${
+          student.studentClass?.className || "N/A"
+        })`,
       }));
       setStudentOptions(options);
     } catch (err) {
@@ -125,6 +133,12 @@ export default function MedicalRequest() {
   const handleNavigateToStudent = useCallback(() => {
     if (selectedStudentId) {
       navigate(`/medical/manager-medical-request/${selectedStudentId}`);
+    }
+  }, [selectedStudentId, navigate]);
+
+  const handleNavigateToStudentIncident = useCallback(() => {
+    if (selectedStudentId) {
+      navigate(`/medical/manager-medical-incident/${selectedStudentId}`);
     }
   }, [selectedStudentId, navigate]);
 
@@ -202,8 +216,8 @@ export default function MedicalRequest() {
         theme="light"
         className="!top-20"
         style={{
-          fontSize: '14px',
-          fontWeight: '500'
+          fontSize: "14px",
+          fontWeight: "500",
         }}
       />
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
@@ -269,15 +283,24 @@ export default function MedicalRequest() {
                 {/* Các nút chức năng */}
                 <div className="flex flex-row gap-3 items-start">
                   {/* Nút xem đơn thuốc */}
-                  <button
-                    onClick={handleNavigateToStudent}
-                    disabled={!selectedStudentId || studentsLoadingForSearch}
-                    className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                    Xem đơn thuốc
-                  </button>
-
+                  <div className="flex flex-col gap-2 items-stretch">
+                    <button
+                      onClick={handleNavigateToStudentIncident}
+                      disabled={!selectedStudentId || studentsLoadingForSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      Xem sự cố y tế
+                    </button>
+                    <button
+                      onClick={handleNavigateToStudent}
+                      disabled={!selectedStudentId || studentsLoadingForSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      Xem đơn thuốc
+                    </button>
+                  </div>
                   {/* Cụm 2 nút dọc */}
                   <div className="flex flex-col gap-2 items-stretch">
                     <button
@@ -301,7 +324,6 @@ export default function MedicalRequest() {
                 </div>
               </div>
             </div>
-
           </div>
           {(searchTerm || selectedStudentId) && (
             <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
@@ -383,10 +405,11 @@ export default function MedicalRequest() {
                 <div
                   key={index}
                   onClick={() => handleParentClick(parent)}
-                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${selectedParentId === parent.id
-                    ? "border-blue-500 bg-blue-50 shadow-md"
-                    : "border-gray-200 hover:border-blue-300"
-                    }`}
+                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
+                    selectedParentId === parent.id
+                      ? "border-blue-500 bg-blue-50 shadow-md"
+                      : "border-gray-200 hover:border-blue-300"
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">

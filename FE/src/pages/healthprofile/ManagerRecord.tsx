@@ -1,5 +1,4 @@
 import {
-  FecthCreateConselingSchedule,
   FecthHealthCheckup,
 } from "@/services/HealthProfileService";
 import { MedicalHealthCheckupRecord } from "@/types/MedicalRecord";
@@ -12,7 +11,6 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Modal } from "@/components/ui/modal";
-import { ConselingSchedules } from "@/types/ConselingSchedules";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DateUtils } from "@/utils/DateUtils";
@@ -20,6 +18,10 @@ import Label from "@/components/ui/form/Label";
 import Input from "@/components/ui/form/InputField";
 import PageHeader from "@/components/ui/PageHeader";
 import { LightbulbIcon } from "lucide-react";
+import { UpdateActivityConsentSchedules } from "@/services/ActiviceMedicalEvent";
+import { MedicalAccess } from "@/types/Medical";
+import { FecthConselingSchedules } from "@/services/MedicalRecordService";
+import { ConselingSchedulesAND } from "@/types/ConselingSchedules";
 
 export default function ManagerRecord() {
   const [healthCheckup, setHealthCheckup] = useState<
@@ -31,18 +33,18 @@ export default function ManagerRecord() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openItemIndex, setOpenItemId] = useState<string  | null>(null);
-  const [showConsultForm, setShowConsultForm] = useState<number | null>(null);
+  const [showConsultForm, setShowConsultForm] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 8;
-  const [formData, setFormData] = useState<ConselingSchedules>({
-    studentId: "",
-    healthCheckupId: "",
-    note: "",
-    requestDate: "",
+  const [formData, setFormData] = useState<MedicalAccess>({
+    conselingScheduleId: "",
+    status: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [conselingSchedules, setConselingSchedules] = useState<ConselingSchedulesAND[]>([]);
+  const [selectedConseling, setSelectedConseling] = useState<ConselingSchedulesAND | null>(null);
 
   // Toast utility function
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -70,25 +72,27 @@ export default function ManagerRecord() {
   };
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (
-        !formData.studentId ||
-        !formData.healthCheckupId ||
-        !formData.requestDate
-      ) {
-        showToast("Vui lòng điền đầy đủ thông tin", 'error');
+    async (status: string) => {
+      if (!formData.conselingScheduleId) {
+        showToast("Vui lòng chọn lịch tư vấn", 'error');
         return;
       }
-
       try {
         setIsSubmitting(true);
-        await FecthCreateConselingSchedule(formData);
-        showToast("Đặt lịch tư vấn thành công", 'success');
+        await UpdateActivityConsentSchedules({
+          conselingScheduleId: formData.conselingScheduleId,
+          status,
+        });
+        showToast(
+          status === "Approved"
+            ? "Xác nhận tư vấn thành công"
+            : "Từ chối tư vấn thành công",
+          'success'
+        );
         setShowConsultForm(null);
         clearForm();
       } catch (error) {
-        showToast("Đặt lịch tư vấn thất bại", 'error');
+        showToast("Xác nhận tư vấn thất bại", 'error');
         setError(error as string);
       } finally {
         setIsSubmitting(false);
@@ -99,24 +103,25 @@ export default function ManagerRecord() {
 
   const clearForm = useCallback(() => {
     setFormData({
-      studentId: "",
-      healthCheckupId: "",
-      note: "",
-      requestDate: "",
+      conselingScheduleId: "",
+    status: "",
     });
   }, []);
 
   const handleOpenConsultForm = useCallback(
     (item: MedicalHealthCheckupRecord) => {
+      // Tìm lịch tư vấn tương ứng
+      const found = conselingSchedules.find(
+        (c) => c.healthCheckupId === item.healthCheckUpId
+      );
+      setSelectedConseling(found || null);
       setFormData({
-        studentId: item.studentId || "",
-        healthCheckupId: item.healthCheckUpId || "",
-        note: "",
-        requestDate: "",
+        conselingScheduleId: found ? found.id : "",
+        status: "",
       });
-      setShowConsultForm(healthCheckup.indexOf(item));
+      setShowConsultForm(item.healthCheckUpId || null);
     },
-    [healthCheckup]
+    [conselingSchedules]
   );
 
   const fetchHealthCheckup = useCallback(async () => {
@@ -177,6 +182,10 @@ export default function ManagerRecord() {
     fetchHealthCheckup();
   }, [fetchHealthCheckup]);
 
+  useEffect(() => {
+    FecthConselingSchedules().then(setConselingSchedules);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -216,8 +225,8 @@ export default function ManagerRecord() {
           <LightbulbIcon className="w-5 h-5 text-blue-600" />
           <p className="text-sm text-blue-700">
             Nhấn vào biểu tượng{" "}
-            <CalendarIcon className="w-4 h-4 inline-block mx-1" /> để đặt lịch
-            tư vấn
+            <CalendarIcon className="w-4 h-4 inline-block mx-1" /> để xác nhận
+            tư vấn (nếu có)
           </p>
         </div>
 
@@ -286,8 +295,8 @@ export default function ManagerRecord() {
                       title="Đặt lịch tư vấn"
                     >
                       <CalendarIcon className="w-5 h-5" />
-                      <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        Đặt lịch tư vấn
+                      <span className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        Xác nhận tư vấn
                       </span>
                     </button>
                     {openItemIndex === item.healthCheckUpId ? (
@@ -349,88 +358,56 @@ export default function ManagerRecord() {
                 isFullscreen={false}
                 className="max-w-md"
               >
-                <form onSubmit={handleSubmit} className="p-6">
+                <div className="p-6">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-blue-50 rounded-lg">
                       <CalendarIcon className="w-6 h-6 text-blue-600" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-800">
-                      Đặt lịch tư vấn
+                      Xác nhận tư vấn
                     </h3>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-2">
-                        Học sinh
-                      </Label>
-                      <Input
-                        type="text"
-                        value={item.studentName}
-                        disabled
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg text-gray-600"
-                      />
+                  {selectedConseling ? (
+                    <div className="space-y-4 mb-6">
+                      <div>
+                        <Label>Học sinh</Label>
+                        <Input type="text" value={selectedConseling.studentName} disabled />
+                      </div>
+                      <div>
+                        <Label>Phụ huynh</Label>
+                        <Input type="text" value={selectedConseling.parentName} disabled />
+                      </div>
+                      <div>
+                        <Label>Ngày hẹn</Label>
+                        <Input type="text" value={selectedConseling.meetingDate ? new Date(selectedConseling.meetingDate).toLocaleString() : ""} disabled />
+                      </div>
+                      <div>
+                        <Label>Ghi chú</Label>
+                        <Input type="text" value={selectedConseling.note} disabled />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ngày tư vấn
-                      </Label>
-                      <Input
-                        type="date"
-                        value={DateUtils.customFormatDateOnly(formData.requestDate)}
-                        onChange={(e) => {
-                          const [year, month, day] = e.target.value
-                            .split("-")
-                            .map(Number);
-                          const newDate = new Date(formData.requestDate);
-                          newDate.setFullYear(year, month - 1, day);
-                          newDate.setHours(9, 0, 0, 0);
-                          setFormData((prev) => ({
-                            ...prev,
-                            requestDate: DateUtils.customFormatDateForBackend(newDate),
-                          }));
-                        }}
-                        min={DateUtils.customFormatDateOnly(new Date())}
-                        className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ghi chú
-                      </Label>
-                      <Input
-                        type="text"
-                        value={formData.note}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            note: e.target.value,
-                          }))
-                        }
-                        placeholder="Nhập ghi chú (nếu có)"
-                        className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
+                  ) : (
+                    <div>Không tìm thấy thông tin lịch tư vấn.</div>
+                  )}
                   <div className="flex justify-end gap-3 mt-8">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowConsultForm(null);
-                        clearForm();
-                      }}
-                      className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      disabled={isSubmitting}
+                      onClick={() => handleSubmit("Rejected")}
+                      className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Hủy
+                      {isSubmitting ? "Đang xử lý..." : "Từ chối"}
                     </button>
                     <button
-                      type="submit"
+                      type="button"
                       disabled={isSubmitting}
+                      onClick={() => handleSubmit("Approved")}
                       className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      {isSubmitting ? "Đang xử lý..." : "Đặt lịch"}
+                      {isSubmitting ? "Đang xử lý..." : "Xác nhận"}
                     </button>
                   </div>
-                </form>
+                </div>
               </Modal>
             </div>
           ))}
