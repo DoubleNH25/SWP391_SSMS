@@ -1,4 +1,4 @@
-import { UsageCreateViewModel } from "@/types/Usage";
+
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateUsage(data: UsageCreateViewModel): Promise<boolean> {

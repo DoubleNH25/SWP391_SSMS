@@ -46,12 +46,12 @@ const navItems: NavItem[] = [
         pro: false,
         allowedRoles: ["Admin"],
       },
-      {
-        name: "Học sinh",
-        path: "/student",
-        pro: false,
-        allowedRoles: ["Admin", "Manager", "Nurse"],
-      },
+      // {
+      //   name: "Học sinh",
+      //   path: "/student",
+      //   pro: false,
+      //   allowedRoles: ["Admin", "Manager", "Nurse"],
+      // },
       { name: "Lớp học", path: "/class", pro: false, allowedRoles: ["Admin"] },
       {
         name: "Thuốc",
@@ -107,8 +107,21 @@ const navItems: NavItem[] = [
   {
     icon: <TimeIcon />,
     name: "Lịch tư vấn",
-    path: "/conseling-schedules",
-    allowedRoles: ["Nurse"],
+    allowedRoles: ["Admin", "Manager", "Nurse"],
+    subItems: [
+      {
+        name: "Quản lý lịch tư vấn",
+        path: "/conseling-schedules",
+        pro: false,
+        allowedRoles: ["Admin", "Manager", "Nurse"],
+      },
+      {
+        name: "Học sinh bất thường",
+        path: "/conseling-schedules/abnormal",
+        pro: false,
+        allowedRoles: ["Admin", "Manager", "Nurse"],
+      },
+    ],
   },
   {
     icon: <DocsIcon />,
@@ -147,7 +160,7 @@ const AppSidebar: React.FC = () => {
     try {
       return (
         DecodeJWT()?.[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ] || null
       );
     } catch (err) {
@@ -229,15 +242,13 @@ const AppSidebar: React.FC = () => {
                 <button
                   onClick={(e) => handleSubmenuToggle(index, menuType, e)}
                   className={`menu-item group w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
-                    ${
-                      isParentActive
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-700 hover:bg-gray-100"
+                    ${isParentActive
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
                     }
-                    ${
-                      !isExpanded && !isHovered
-                        ? "lg:justify-center"
-                        : "lg:justify-start"
+                    ${!isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "lg:justify-start"
                     }`}
                 >
                   <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
@@ -256,10 +267,9 @@ const AppSidebar: React.FC = () => {
                   <Link
                     to={nav.path}
                     className={`menu-item group flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
-                      ${
-                        isActive(nav.path)
-                          ? "bg-blue-100 text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
+                      ${isActive(nav.path)
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
                       }`}
                   >
                     <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
@@ -288,10 +298,9 @@ const AppSidebar: React.FC = () => {
                         <Link
                           to={subItem.path}
                           className={`block py-2 px-3 rounded-lg transition-all text-[14px] font-medium
-                            ${
-                              isActive(subItem.path)
-                                ? "text-blue-700"
-                                : "text-gray-600 hover:text-gray-900"
+                            ${isActive(subItem.path)
+                              ? "text-blue-700"
+                              : "text-gray-600 hover:text-gray-900"
                             }`}
                         >
                           {subItem.name}
@@ -315,11 +324,9 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${
-        isExpanded ? "w-64" : "w-20"
-      } ${
-        isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      }`}
+      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${isExpanded ? "w-64" : "w-20"
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

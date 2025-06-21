@@ -20,3 +20,8 @@ export interface MedicalUpdateViewModel {
     detailInformation: string;
     status: "Available" | "OutOfStock";
 }
+
+export interface MedicalAccess {
+    conselingScheduleId: string;
+    status: string;
+}

@@ -29,6 +29,7 @@ export interface MedicalHealthCheckupRecord {
     time: string;
     recordDate: string;
     isLatest: boolean;
+    checkingStatus: string
 }
 
 export interface HealthCheckupRecord {
@@ -37,4 +38,5 @@ export interface HealthCheckupRecord {
     dental: string;
     bmi: number;
     abnormalNote: string;
+    checkingStatus: "Normal" | "Abnormal"
 }
