@@ -25,6 +25,7 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/button";
 
 export default function ManagerConselingSchedules() {
   const [conselingSchedules, setConselingSchedules] = useState<
@@ -234,7 +235,7 @@ export default function ManagerConselingSchedules() {
               className="pl-10 w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          <button
+          <Button
             onClick={handleSort}
             className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
@@ -244,7 +245,7 @@ export default function ManagerConselingSchedules() {
             ) : (
               <ChevronDownIcon className="w-5 h-5" />
             )}
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -266,7 +267,7 @@ export default function ManagerConselingSchedules() {
                 </div>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    item.status
+                    item.status === "Pending"
                       ? "bg-amber-50 text-amber-700 border border-amber-200"
                       : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   }`}
@@ -327,15 +328,15 @@ export default function ManagerConselingSchedules() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-8 flex justify-center gap-2">
-            <button
+            <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Trước
-            </button>
+            </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
+              <Button
                 key={page}
                 onClick={() => setCurrentPage(page)}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -345,9 +346,9 @@ export default function ManagerConselingSchedules() {
                 }`}
               >
                 {page}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
@@ -355,7 +356,7 @@ export default function ManagerConselingSchedules() {
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Sau
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -408,19 +409,20 @@ export default function ManagerConselingSchedules() {
                   />
                 </div>
                 <div className="flex justify-end gap-3 mt-8">
-                  <button
+                  <Button
                     type="button"
                     onClick={handleCloseModal}
                     className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                   >
                     Hủy
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
+                    disabled={selectedItem?.status === "Approved"}
                     className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                   >
                     Cập nhật
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

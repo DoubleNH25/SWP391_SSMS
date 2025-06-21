@@ -1,6 +1,7 @@
 import { ConselingSchedulesAND, ConselingSchedulesANDUpdate } from "@/types/ConselingSchedules";
 import { HealthCheckupRecord, MedicalHealthCheckupRecord, MedicalVaccinationRecord, VaccinationRecord } from "@/types/MedicalRecord";
 import ApiClient from "@/utils/ApiBase";
+import { data } from "react-router-dom";
 
 export async function FecthMedicalVaccinationRecord(id: string,date: string): Promise<MedicalVaccinationRecord[]> {
   if (!localStorage.getItem('token')) {
@@ -98,6 +99,24 @@ export async function FecthConselingSchedules(): Promise<ConselingSchedulesAND[]
     const response = await ApiClient<ConselingSchedulesAND[]>({
       method: 'GET',
       endpoint: '/nurse/get-all-conseling-schedules',
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error(`Failed to get conseling schedules: ${err}`);
+    return [];
+  }
+}
+
+
+export async function FecthConselingSchedulesByParent(): Promise<ConselingSchedulesAND[]> {
+  if (!localStorage.getItem('token')) {
+    console.error('User is not authenticated');
+    return [];
+  }
+  try {
+    const response = await ApiClient<ConselingSchedulesAND[]>({
+      method: 'GET',
+      endpoint: '/parents/get-all-conseling-schedules',
     });
     return response?.data || [];
   } catch (err) {

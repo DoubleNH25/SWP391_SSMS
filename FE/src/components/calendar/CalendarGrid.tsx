@@ -1,6 +1,7 @@
 import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
 import { DateUtils } from "@/utils/DateUtils";
 import { Tooltip } from "@material-tailwind/react";
+import { Button } from "../ui/button";
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -67,25 +68,25 @@ const CalendarGrid = ({
       {/* Calendar Header */}
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
+          <Button
             onClick={() => onNavigateMonth("prev")}
             className="p-2 hover:bg-gray-200 bg-gray-100 rounded-lg"
           >
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-          </button>
+          </Button>
           <h2 className="text-xl font-bold text-gray-900">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <button
+          <Button
             onClick={() => onNavigateMonth("next")}
             className="p-2 hover:bg-gray-200 bg-gray-100 rounded-lg"
           >
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Legend */}
@@ -98,12 +99,12 @@ const CalendarGrid = ({
           ))}
         </div>
 
-        <button
+        <Button
           onClick={onToday}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
         >
           Hôm nay
-        </button>
+        </Button>
       </div>
 
       {/* Day Headers */}
