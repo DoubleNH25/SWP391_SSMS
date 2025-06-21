@@ -236,7 +236,7 @@ const Calendar: React.FC = () => {
         if (event.extendedProps.eventType === "medical") {
           navigate(`/medical-health-checkup-record/${event.start}/${event.id}`);
         } else {
-          navigate(`/medical-vaccination-record/${event.start}`);
+          navigate(`/medical-vaccination-record/${event.start}/${event.id}`);
         }
         return;
       }

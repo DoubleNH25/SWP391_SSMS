@@ -13,11 +13,11 @@ export interface ConselingSchedulesAND {
     healthCheckupId: string;
     meetingDate: Date;
     note: string;
-    status: string;
     createdTime: Date;
     createdBy: string;
     updatedTime: Date;
     updatedBy: string;
+    status: string;
 }
 
 export interface ConselingSchedulesANDUpdate {
