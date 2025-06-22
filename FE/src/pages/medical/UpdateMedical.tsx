@@ -1,12 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { MedicalUpdateViewModel } from "@/types/Medical";
 import {
   FecthMedicalById,
   FecthUpdateMedical,
 } from "@/services/MedicalService";
-import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import { Pill } from "lucide-react";
 import Label from "@/components/ui/form/Label";
@@ -14,7 +13,6 @@ import Input from "@/components/ui/form/InputField";
 import DatePicker from "@/components/ui/form/DateField";
 import { Button } from "@/components/ui/button";
 import { DateUtils } from "@/utils/DateUtils";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function UpdateMedical() {
   const navigate = useNavigate();
@@ -128,13 +126,13 @@ export default function UpdateMedical() {
           status: formData.status as "Available" | "OutOfStock",
         };
         await FecthUpdateMedical(medicalId!, medicalUpdate);
-        toast.success("Cập nhật thuốc thành công");
+        showToast.success("Cập nhật thuốc thành công");
         setTimeout(() => {
-          navigate("/medical/manager-medical");
+          navigate("/dashboard/medical/manager-medical");
         }, 100);
       } catch (error) {
         console.error(error);
-        toast.error("Cập nhật thuốc thất bại");
+        showToast.error("Cập nhật thuốc thất bại");
       } finally {
         setLoading(false);
       }
@@ -143,7 +141,7 @@ export default function UpdateMedical() {
   );
 
   const handleCancel = useCallback(() => {
-    navigate("/medical/manager-medical");
+    navigate("/dashboard/medical/manager-medical");
   }, [navigate]);
 
   if (loading) {
@@ -177,14 +175,6 @@ export default function UpdateMedical() {
 
   return (
     <div className="p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
       <PageHeader
         title="Cập nhật thuốc"
         icon={<Pill className="w-6 h-6 text-blue-600" />}

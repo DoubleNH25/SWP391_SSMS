@@ -8,8 +8,7 @@ import { FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
 import { StudentUpdate } from "@/types/Student";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/components/ui/Toast";
 import { DateUtils } from "@/utils/DateUtils";
 
 export default function UpdateStudents() {
@@ -159,23 +158,17 @@ export default function UpdateStudents() {
         return;
       }
       const payload = prepareStudentUpdateData(formData);
-      console.log("payload", payload);
       const success = await FecthUpdateStudents(studentId, payload);
       if (success) {
-        navigate("/student");
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate("/dashboard/student");
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error("Update failed");
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred, please try again.";
+      const errorMessage = err instanceof Error ? err.message : "An error occurred, please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,12 +176,11 @@ export default function UpdateStudents() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/student");
+    navigate("/dashboard/student");
   };
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (
@@ -269,6 +261,7 @@ export default function UpdateStudents() {
                           : undefined
                       }
                       onChange={(dates, currentDateString) => {
+                        console.log(dates);
                         setFormData((prev) => ({
                           ...prev,
                           dateOfBirth: currentDateString,

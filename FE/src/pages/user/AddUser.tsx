@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserCreate } from "@/types/User";
 import { FecthCreateUsers } from "@/services/UserService";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import { FecthRoles } from "@/services/RoleService";
 
 export default function AddUser() {
@@ -71,14 +70,8 @@ export default function AddUser() {
     try {
       const success = await FecthCreateUsers(formData);
       if (success) {
-        toast.success("Tạo người dùng thành công", {
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        navigate("/user");
+        showToast.success("Tạo người dùng thành công");
+        navigate("/dashboard/user");
       } else {
         throw new Error('Creation failed');
       }
@@ -87,13 +80,7 @@ export default function AddUser() {
         ? 'Please log in to create a user.'
         : `Failed to create user: ${err instanceof Error ? err.message : 'Unknown error'}`;
       setError(errorMessage);
-      toast.error(errorMessage, {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -101,12 +88,11 @@ export default function AddUser() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/user");
+    navigate("/dashboard/user");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="px-6 py-5">
         <h3 className="text-base font-medium text-gray-800">
           Add New User

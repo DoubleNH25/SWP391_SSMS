@@ -1,11 +1,10 @@
 import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import { FecthSchoolClassById, FecthUpdateSchoolClass } from "@/services/SchoolClassService";
-import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";;
+import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 
 export default function UpdateSchoolClass() {
   const { schoolClassId } = useParams<{ schoolClassId: string }>();
@@ -75,17 +74,15 @@ export default function UpdateSchoolClass() {
       }
       const success = await FecthUpdateSchoolClass(schoolClassId, formData);
       if (success) {
-        navigate('/class');
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate('/dashboard/class');
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error('Update failed');
       }
-    } catch (err ) {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,12 +90,11 @@ export default function UpdateSchoolClass() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/class");
+    navigate("/dashboard/class");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (

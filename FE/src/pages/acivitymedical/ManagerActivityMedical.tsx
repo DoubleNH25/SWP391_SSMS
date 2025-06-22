@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import PageHeader from "@/components/ui/PageHeader";
+import { showToast } from "@/components/ui/Toast";
 import {
   FecthActivityMedicalEvent,
   UpdateActivityConsentStatus,
@@ -29,8 +30,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function ManagerActivityMedical() {
   const navigate = useNavigate();
@@ -169,7 +168,7 @@ export default function ManagerActivityMedical() {
         statusValue as 1 | 2
       );
 
-      toast.success(
+      showToast.success(
         `Đã ${decision ? "chấp nhận" : "từ chối"} tham gia sự kiện thành công!`
       );
       setShowConfirmation(false);
@@ -177,18 +176,20 @@ export default function ManagerActivityMedical() {
       await fetchActivityMedicalEvent();
     } catch (error) {
       console.error("Error updating consent status:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại.");
+      showToast.error(
+        "Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleBack = () => {
-    navigate("/activity-medical");
+    navigate("/dashboard/activity-medical");
   };
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/activity-medical/${eventId}`);
+    navigate(`/dashboard/activity-medical/${eventId}`);
   };
 
   const filteredEvents = activityMedicalEvent.filter((event) => {
@@ -202,7 +203,7 @@ export default function ManagerActivityMedical() {
     const matchesDate =
       !dateFilter ||
       new Date(event.scheduleTime).toDateString() ===
-      new Date(dateFilter).toDateString();
+        new Date(dateFilter).toDateString();
 
     const matchesType =
       typeFilter === "all" ||
@@ -225,8 +226,6 @@ export default function ManagerActivityMedical() {
 
   return (
     <div>
-      <ToastContainer position="top-right" autoClose={3000} />
-
       <div className="p-6 min-h-screen">
         {loading && (
           <div className="flex justify-center items-center h-full">
@@ -288,7 +287,7 @@ export default function ManagerActivityMedical() {
                             </p>
                             <p className="text-gray-600">
                               {activityMedicalEventDetail.activityType ===
-                                "HealthActivity"
+                              "HealthActivity"
                                 ? "Khám sức khỏe"
                                 : "Tiêm chủng"}
                             </p>
@@ -308,7 +307,6 @@ export default function ManagerActivityMedical() {
                             </p>
                           </div>
                         </div>
-
 
                         <div className="flex items-start gap-3">
                           <User className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -348,8 +346,8 @@ export default function ManagerActivityMedical() {
                             <span className="font-medium text-blue-900">
                               {activityMedicalEventDetail.student?.dateOfBirth
                                 ? new Date(
-                                  activityMedicalEventDetail.student.dateOfBirth
-                                ).toLocaleDateString("vi-VN")
+                                    activityMedicalEventDetail.student.dateOfBirth
+                                  ).toLocaleDateString("vi-VN")
                                 : "Chưa có thông tin"}
                             </span>
                           </div>
@@ -357,15 +355,15 @@ export default function ManagerActivityMedical() {
                             <span className="text-blue-700">Giới tính:</span>
                             <span className="font-medium text-blue-900">
                               {activityMedicalEventDetail.student?.gender ===
-                                "Male"
+                              "Male"
                                 ? "Nam"
                                 : activityMedicalEventDetail.student?.gender ===
                                   "Female"
-                                  ? "Nữ"
-                                  : activityMedicalEventDetail.student?.gender ===
-                                    "Other"
-                                    ? "Khác"
-                                    : "Chưa có thông tin"}
+                                ? "Nữ"
+                                : activityMedicalEventDetail.student?.gender ===
+                                  "Other"
+                                ? "Khác"
+                                : "Chưa có thông tin"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -468,19 +466,19 @@ export default function ManagerActivityMedical() {
                     statusFilter !== "all" ||
                     dateFilter ||
                     typeFilter !== "all") && (
-                      <button
-                        onClick={() => {
-                          setSearchTerm("");
-                          setStatusFilter("all");
-                          setDateFilter("");
-                          setTypeFilter("all");
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                        Xóa bộ lọc
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setStatusFilter("all");
+                        setDateFilter("");
+                        setTypeFilter("all");
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      Xóa bộ lọc
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   <div>
@@ -554,53 +552,53 @@ export default function ManagerActivityMedical() {
                   statusFilter !== "all" ||
                   dateFilter ||
                   typeFilter !== "all") && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>
-                        Hiển thị {totalItems} kết quả
-                        {searchTerm && (
-                          <span>
-                            {" "}
-                            cho "<span className="font-medium">{searchTerm}</span>
-                            "
+                  <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>
+                      Hiển thị {totalItems} kết quả
+                      {searchTerm && (
+                        <span>
+                          {" "}
+                          cho "<span className="font-medium">{searchTerm}</span>
+                          "
+                        </span>
+                      )}
+                      {statusFilter !== "all" && (
+                        <span>
+                          {" "}
+                          - <span className="font-medium">{statusFilter}</span>
+                        </span>
+                      )}
+                      {dateFilter && (
+                        <span>
+                          {" "}
+                          -{" "}
+                          <span className="font-medium">
+                            {new Date(dateFilter).toLocaleDateString("vi-VN")}
                           </span>
-                        )}
-                        {statusFilter !== "all" && (
-                          <span>
-                            {" "}
-                            - <span className="font-medium">{statusFilter}</span>
-                          </span>
-                        )}
-                        {dateFilter && (
-                          <span>
-                            {" "}
-                            -{" "}
-                            <span className="font-medium">
-                              {new Date(dateFilter).toLocaleDateString("vi-VN")}
-                            </span>
-                          </span>
-                        )}
-                        {typeFilter !== "all" && (
-                          <span>
-                            {" "}
-                            - <span className="font-medium">{typeFilter}</span>
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  )}
+                        </span>
+                      )}
+                      {typeFilter !== "all" && (
+                        <span>
+                          {" "}
+                          - <span className="font-medium">{typeFilter}</span>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -669,8 +667,8 @@ export default function ManagerActivityMedical() {
                               {event.status === "Pending"
                                 ? "Chờ duyệt"
                                 : event.status === "Approved"
-                                  ? "Đã duyệt"
-                                  : "Từ chối"}
+                                ? "Đã duyệt"
+                                : "Từ chối"}
                             </div>
                             <span className="text-xs text-gray-500 truncate max-w-[80px]">
                               #{event.id}
@@ -738,10 +736,11 @@ export default function ManagerActivityMedical() {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-white border border-gray-200 hover:bg-gray-50"
-                              }`}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              currentPage === page
+                                ? "bg-blue-600 text-white"
+                                : "bg-white border border-gray-200 hover:bg-gray-50"
+                            }`}
                           >
                             {page}
                           </button>
@@ -776,8 +775,9 @@ export default function ManagerActivityMedical() {
       >
         <div className="text-center">
           <div
-            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${decision ? "bg-green-100" : "bg-red-100"
-              }`}
+            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              decision ? "bg-green-100" : "bg-red-100"
+            }`}
           >
             {decision ? (
               <Check className="w-8 h-8 text-green-600" />
@@ -802,10 +802,11 @@ export default function ManagerActivityMedical() {
             </button>
             <button
               onClick={confirmDecision}
-              className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${decision
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-600 hover:bg-red-700"
-                }`}
+              className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+                decision
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
             >
               Xác nhận
             </button>

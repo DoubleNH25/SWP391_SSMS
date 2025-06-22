@@ -3,8 +3,7 @@ import Label from "@/components/ui/form/Label";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, User} from "lucide-react";
-import { toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import { FecthUpdateProfile, FecthUsersProfile } from "@/services/UserService";
 import { UserProfileUpdateViewModel } from "@/types/User";
 
@@ -39,16 +38,10 @@ export default function EditProfile() {
             setError(null);
         } catch (err) {
             const errorMessage = err instanceof Error && err.message.includes('authenticated')
-                ? 'Vui lòng đăng nhập để xem dữ liệu'
+                ? 'Please log in to load profile data.'
                 : 'Lỗi khi tải dữ liệu. Vui lòng thử lại.';
             setError(errorMessage);
-            toast.error(errorMessage, {
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
+            showToast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -68,34 +61,15 @@ export default function EditProfile() {
             }
             const success = await FecthUpdateProfile(formData as UserProfileUpdateViewModel);
             if (success) {
-                toast.success('Profile updated successfully', {
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                  });
+                showToast.success('Profile updated successfully');
                 navigate('/');
             } else {
                 throw new Error('Lỗi khi cập nhật');
             }
-            toast.error('Lỗi khi cập nhật', {
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Lỗi xảy ra, vui lòng thử lại.';
             setError(errorMessage);
-            toast.error(errorMessage, {
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
+            showToast.error(errorMessage);
         } finally {
             setLoading(false);
         }

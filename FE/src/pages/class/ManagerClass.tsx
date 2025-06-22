@@ -3,13 +3,12 @@ import { PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
 import { PlusIcon, GraduationCap, Search, Users } from "lucide-react";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { SchoolClass } from "@/types/SchoolClass";
 import { FecthClass, FecthDeleteSchoolClass } from "@/services/SchoolClassService";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
+import { showToast } from "@/components/ui/Toast";
 
 export default function CLassSchoolManager() {
   const [schoolClass, setSchoolClass] = useState<SchoolClass[]>([]);
@@ -81,7 +80,7 @@ export default function CLassSchoolManager() {
   };
 
   const handleAddClass = () => {
-    navigate('/class/add-class');
+    navigate('/dashboard/class/add-class');
   };
 
   const handleConfirmDeleteSchoolCLass = async () => {
@@ -91,7 +90,7 @@ export default function CLassSchoolManager() {
       const success = await FecthDeleteSchoolClass(selectedSchoolClassId);
       if (success) {
         setSchoolClass(schoolClass.filter(SchoolClass => SchoolClass.id !== selectedSchoolClassId));
-        toast.success('Lớp học đã được xóa thành công');
+        showToast.success('Lớp học đã được xóa thành công');
       } else {
         throw new Error('Xóa lớp học thất bại');
       }
@@ -99,7 +98,7 @@ export default function CLassSchoolManager() {
       setSelectedSchoolClassId(null);
       setError(null);
     } catch (error) {
-      toast.error(`Không thể xóa lớp học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      showToast.error(`Không thể xóa lớp học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -116,7 +115,7 @@ export default function CLassSchoolManager() {
   };
 
   const handleUpdateSchoolClass = (schoolClassId: string) => {
-    navigate(`/class/update-class/${schoolClassId}`);
+    navigate(`/dashboard/class/update-class/${schoolClassId}`);
   };
 
   const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -126,7 +125,7 @@ export default function CLassSchoolManager() {
 
   const handleClassClick = (cls: SchoolClass) => {
     // Navigate to student management page with classId filter
-    navigate(`/student?classId=${cls.id}`);
+    navigate(`/dashboard/student?classId=${cls.id}`);
   };
 
   const handleClearFilters = () => {
@@ -142,7 +141,6 @@ export default function CLassSchoolManager() {
         icon={<GraduationCap className="w-6 h-6 text-blue-600" />}
         description="Quản lý thông tin lớp học trong hệ thống"
       />
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (
@@ -265,7 +263,7 @@ export default function CLassSchoolManager() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end mb-6 absolute right-[16px] top-[115px]">
+          <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[115px]">
             <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
               onClick={handleAddClass}
             >

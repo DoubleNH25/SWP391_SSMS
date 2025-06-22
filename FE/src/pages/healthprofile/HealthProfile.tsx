@@ -14,11 +14,10 @@ import {
   PenBox,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
-import { toast, ToastContainer } from "react-toastify";
 import Label from "@/components/ui/form/Label";
 import Input from "@/components/ui/form/InputField";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import { showToast } from "@/components/ui/Toast";
 
 export default function HealthProfiles() {
   const [healthProfiles, setHealthProfiles] = useState<Student[]>([]);
@@ -51,7 +50,7 @@ export default function HealthProfiles() {
   };
 
   const handleViewHealthProfile = (studentId: string) => {
-    navigate(`/student/${studentId}/health-checkup-records`);
+    navigate(`/dashboard/student/${studentId}/health-checkup-records`);
   };    
 
   const handleOpenUpdateModal = (studentId: string) => {
@@ -102,7 +101,7 @@ export default function HealthProfiles() {
     setSubmitting(true);
     try {
       await FecthUpdateHealthProfile(selectedProfileId, formData);
-      toast.success("Health profile updated successfully");
+      showToast.success("Health profile updated successfully");
       fetchData();
       setIsUpdateModalOpen(false);
       setSelectedProfileId(null);
@@ -159,15 +158,8 @@ export default function HealthProfiles() {
         const studentNames = studentsWithMissingData
           .map((s) => s.fullName)
           .join(", ");
-        toast.warning(
-          `Vui lòng hoàn thành thông tin sức khỏe cho: ${studentNames}`,
-          {
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
+        showToast.warning(
+          `Vui lòng hoàn thành thông tin sức khỏe cho: ${studentNames}`
         );
       }
 
@@ -190,7 +182,6 @@ export default function HealthProfiles() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

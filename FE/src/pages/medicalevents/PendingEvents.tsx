@@ -12,10 +12,9 @@ import {
   FecthPendingVaccinationCampaign,
 } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import PageHeader from "@/components/ui/PageHeader";
 import { ClockAlert, Calendar, AlertCircleIcon } from "lucide-react";
+import { showToast } from "@/components/ui/Toast";
 
 type EventType = "medicalEvent" | "vaccinationCampaign";
 
@@ -147,7 +146,7 @@ export default function PendingEventManager() {
           setMedicalEvents(
             medicalEvents.filter((event) => event.id !== selectedEvent.id)
           );
-          toast.success("Medical event approved successfully");
+          showToast.success("Medical event approved successfully");
         } else {
           throw new Error("Approval failed");
         }
@@ -162,7 +161,7 @@ export default function PendingEventManager() {
               (event) => event.id !== selectedEvent.id
             )
           );
-          toast.success("Vaccination campaign approved successfully");
+          showToast.success("Vaccination campaign approved successfully");
         } else {
           throw new Error("Approval failed");
         }
@@ -170,7 +169,7 @@ export default function PendingEventManager() {
       setIsApprovedModalOpen(false);
       setSelectedEvent(null);
     } catch (err) {
-      toast.error(
+      showToast.error(
         `Failed to approve ${selectedEvent.type}: ${
           err instanceof Error ? err.message : "Unknown error"
         }`
@@ -193,7 +192,7 @@ export default function PendingEventManager() {
           setMedicalEvents(
             medicalEvents.filter((event) => event.id !== selectedEvent.id)
           );
-          toast.success("Medical event rejected successfully");
+          showToast.success("Medical event rejected successfully");
         } else {
           throw new Error("Rejection failed");
         }
@@ -208,7 +207,7 @@ export default function PendingEventManager() {
               (event) => event.id !== selectedEvent.id
             )
           );
-          toast.success("Vaccination campaign rejected successfully");
+          showToast.success("Vaccination campaign rejected successfully");
         } else {
           throw new Error("Rejection failed");
         }
@@ -216,7 +215,7 @@ export default function PendingEventManager() {
       setIsRejectModalOpen(false);
       setSelectedEvent(null);
     } catch (err) {
-      toast.error(
+      showToast.error(
         `Failed to reject ${selectedEvent.type}: ${
           err instanceof Error ? err.message : "Unknown error"
         }`
@@ -259,7 +258,6 @@ export default function PendingEventManager() {
         icon={<ClockAlert className="w-6 h-6 text-orange-600" />}
         description="Quản lý và phê duyệt các sự kiện y tế đang chờ xử lý"
       />
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading.medicalEvents || loading.vaccinationCampaigns ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error.medicalEvents || error.vaccinationCampaigns ? (

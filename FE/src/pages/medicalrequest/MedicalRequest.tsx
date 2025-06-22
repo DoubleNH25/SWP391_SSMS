@@ -19,8 +19,6 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationModal";
 
 export default function MedicalRequest() {
@@ -87,7 +85,7 @@ export default function MedicalRequest() {
 
   const handleNavigateCreateIncident = useCallback(async () => {
     if (selectedStudentId) {
-      navigate(`/medical/medical-incident/${selectedStudentId}`);
+      navigate(`/dashboard/medical/medical-incident/${selectedStudentId}`);
     }
   }, [selectedStudentId, navigate]);
 
@@ -132,13 +130,13 @@ export default function MedicalRequest() {
 
   const handleNavigateToStudent = useCallback(() => {
     if (selectedStudentId) {
-      navigate(`/medical/manager-medical-request/${selectedStudentId}`);
+      navigate(`/dashboard/medical/manager-medical-request/${selectedStudentId}`);
     }
   }, [selectedStudentId, navigate]);
 
   const handleNavigateToStudentIncident = useCallback(() => {
     if (selectedStudentId) {
-      navigate(`/medical/manager-medical-incident/${selectedStudentId}`);
+      navigate(`/dashboard/medical/manager-medical-incident/${selectedStudentId}`);
     }
   }, [selectedStudentId, navigate]);
 
@@ -202,23 +200,6 @@ export default function MedicalRequest() {
         title="Yêu cầu y tế"
         icon={<TaskIcon className="w-10 h-10" />}
         description="Yêu cầu dịch vụ y tế từ phụ huynh"
-      />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="!top-20"
-        style={{
-          fontSize: "14px",
-          fontWeight: "500",
-        }}
       />
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
         <div className="flex flex-col gap-5">

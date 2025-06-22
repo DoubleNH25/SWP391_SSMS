@@ -19,8 +19,6 @@ import {
 } from "lucide-react";
 import { FecthStudentById } from "@/services/UserService";
 import { Student } from "@/types/Student";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function HealthCheckupRecords() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -151,7 +149,6 @@ export default function HealthCheckupRecords() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="flex items-center gap-3 mb-6">

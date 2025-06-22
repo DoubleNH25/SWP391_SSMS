@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import {
   FecthMedicalHealthCheckupRecord,
   FecthUpdateHealthCheckupRecord,
@@ -25,6 +23,7 @@ import {
   Clock,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import { showToast } from "@/components/ui/Toast";
 
 export default function MedicalHealthCheckupRecords() {
   const [medicalRecord, setMedicalRecord] = useState<
@@ -148,14 +147,14 @@ export default function MedicalHealthCheckupRecords() {
       if (e) e.preventDefault();
 
       if (!isCurrentDate) {
-        toast.warning(
+        showToast.warning(
           "Chỉ có thể cập nhật kết quả kiểm tra sức khỏe trong ngày hiện tại"
         );
         return;
       }
 
       if (!selectedStudent?.id) {
-        toast.warning("Vui lòng chọn học sinh trước khi cập nhật");
+        showToast.warning("Vui lòng chọn học sinh trước khi cập nhật");
         return;
       }
 
@@ -169,11 +168,11 @@ export default function MedicalHealthCheckupRecords() {
           (r) => r.studentId === selectedStudent.id
         );
         if (!record) {
-          toast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
+          showToast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
           return;
         }
         if (!record.healthCheckUpId) {
-          toast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
+          showToast.error("Không thể cập nhật kết quả kiểm tra sức khỏe");
           return;
         }
         console.log(healthCheckupData);
@@ -182,7 +181,7 @@ export default function MedicalHealthCheckupRecords() {
           healthCheckupData
         );
         if (result) {
-          toast.success("Cập nhật thành công");
+          showToast.success("Cập nhật thành công");
           // Cập nhật local state
           setMedicalRecord((prev) =>
             prev.map((r) =>
@@ -197,10 +196,10 @@ export default function MedicalHealthCheckupRecords() {
           );
           handleNext();
         } else {
-          toast.error("Cập nhật thất bại");
+          showToast.error("Cập nhật thất bại");
         }
       } catch (error) {
-        toast.error("Có lỗi xảy ra khi cập nhật");
+        showToast.error("Có lỗi xảy ra khi cập nhật");
       } finally {
         setUpdating(false);
       }
@@ -297,7 +296,6 @@ export default function MedicalHealthCheckupRecords() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-2">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-8xl mx-auto">
         <PageHeader
           title="Sự kiện kiểm tra sức khỏe"

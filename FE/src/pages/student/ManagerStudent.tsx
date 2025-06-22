@@ -20,8 +20,7 @@ import {
 import { FecthClass } from "@/services/SchoolClassService";
 import { Student } from "@/types/Student";
 import { SchoolClass } from "@/types/SchoolClass";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
@@ -126,7 +125,7 @@ export default function StudentManager() {
   };
 
   const handleAddStudent = () => {
-    navigate("/student/add-student");
+    navigate("/dashboard/student/add-student");
   };
 
   const handleConfirmDeleteStudent = async () => {
@@ -136,7 +135,7 @@ export default function StudentManager() {
       const success = await FecthDeleteStudents(selectedStudentId);
       if (success) {
         setStudents(students.filter((user) => user.id !== selectedStudentId));
-        toast.success("Student deleted successfully");
+        showToast.success("Student deleted successfully");
       } else {
         throw new Error("Deletion failed");
       }
@@ -144,9 +143,8 @@ export default function StudentManager() {
       setSelectedStudentId(null);
       setError(null);
     } catch (error) {
-      toast.error(
-        `Failed to delete student: ${
-          error instanceof Error ? error.message : "Unknown error"
+      showToast.error(
+        `Failed to delete student: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     } finally {
@@ -165,11 +163,11 @@ export default function StudentManager() {
   };
 
   const handleUpdateStudent = (studentId: string) => {
-    navigate(`/student/update-student/${studentId}`);
+    navigate(`/dashboard/student/update-student/${studentId}`);
   };
 
   const handleViewHealthProfile = (studentId: string) => {
-    navigate(`/healthprofile/manager-health-profile/${studentId}`);
+    navigate(`/dashboard/healthprofile/manager-health-profile/${studentId}`);
   };
 
   const handleItemsPerPageChange = (
@@ -181,7 +179,7 @@ export default function StudentManager() {
 
   const handleImport = async (file: File) => {
     if (!file) {
-      toast.error("Vui lòng chọn file Excel!");
+      showToast.error("Vui lòng chọn file Excel!");
       return;
     }
     setImportLoading(true);
@@ -190,15 +188,14 @@ export default function StudentManager() {
       if (success) {
         const fetchedStudents = await FecthStudents();
         setStudents(fetchedStudents);
-        toast.success("Import học sinh thành công!");
+        showToast.success("Import học sinh thành công!");
         setIsImportModalOpen(false);
       } else {
         throw new Error("Import thất bại");
       }
     } catch (error) {
-      toast.error(
-        `Lỗi khi import file: ${
-          error instanceof Error ? error.message : "Lỗi không xác định"
+      showToast.error(
+        `Lỗi khi import file: ${error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     } finally {
@@ -243,7 +240,7 @@ export default function StudentManager() {
   };
 
   const handleViewHealthCheckupRecords = (studentId: string) => {
-    navigate(`/student/${studentId}/health-checkup-records`);
+    navigate(`/dashboard/student/${studentId}/health-checkup-records`);
   };
 
   return (
@@ -253,7 +250,6 @@ export default function StudentManager() {
         icon={<Users className="w-6 h-6 text-blue-600" />}
         description="Quản lý thông tin học sinh trong hệ thống"
       />
-      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Search and Filter Controls */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
@@ -420,7 +416,7 @@ export default function StudentManager() {
             acceptedFileTypes={[".xlsx", ".xls"]}
             maxFileSize={10}
           />
-          <div className="flex items-center justify-end mb-6 absolute right-[16px] top-[140px]">
+          <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[140px]">
             <div className="flex items-center gap-2">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
@@ -646,11 +642,10 @@ export default function StudentManager() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                          currentPage === page
+                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === page
                             ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                             : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>

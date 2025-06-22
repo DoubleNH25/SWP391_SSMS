@@ -9,8 +9,6 @@ import { ConselingSchedules } from "@/types/ConselingSchedules";
 import { ConselingSchedulesAND } from "@/types/ConselingSchedules";
 import Label from "@/components/ui/form/Label";
 import Input from "@/components/ui/form/InputField";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import {
   XMarkIcon,
   MagnifyingGlassIcon,
@@ -19,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DateUtils } from "@/utils/DateUtils";
 import DatePicker from "@/components/ui/form/DateField";
+import { showToast } from "@/components/ui/Toast";
 
 export default function ConselingScheduleAbnormal() {
   const [abnormalStudents, setAbnormalStudents] = useState<
@@ -132,7 +131,7 @@ export default function ConselingScheduleAbnormal() {
       requestDate = `${consultDate}T${consultTime}`;
     }
     if (!formData.studentId || !formData.healthCheckupId || !requestDate) {
-      toast.error("Vui lòng nhập đầy đủ thông tin!");
+      showToast.error("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
     setIsSubmitting(true);
@@ -140,11 +139,11 @@ export default function ConselingScheduleAbnormal() {
       console.log(formData);
       console.log(requestDate);
       await FecthCreateConselingSchedule({ ...formData, requestDate });
-      toast.success("Đặt lịch tư vấn thành công!");
+      showToast.success("Đặt lịch tư vấn thành công!");
       await AbnormalStudentsAppointmentSent();
       closeConsultModal();
     } catch (err) {
-      toast.error("Đặt lịch tư vấn thất bại!");
+      showToast.error("Đặt lịch tư vấn thất bại!");
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +180,6 @@ export default function ConselingScheduleAbnormal() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-0 sm:p-4">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Danh sách học sinh có kết quả khám sức khỏe bất thường"
@@ -493,6 +491,7 @@ export default function ConselingScheduleAbnormal() {
                   placeholder="Select a date"
                   defaultDate={consultDate ? new Date(consultDate) : undefined}
                   onChange={(dates, currentDateString) => {
+                    console.log(dates);
                     setConsultDate(currentDateString);
                   }}
                 />

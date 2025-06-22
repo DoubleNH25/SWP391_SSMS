@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 import { MedicalCreateViewModel } from "@/types/Medical";
-import { toast, ToastContainer } from "react-toastify";
+import { showToast } from "@/components/ui/Toast";
 import { FecthCreateMedical } from "@/services/MedicalService";
 import { DateUtils } from "@/utils/DateUtils";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateMedical() {
   const navigate = useNavigate();
@@ -88,13 +87,13 @@ export default function CreateMedical() {
           expiryDate: DateUtils.customFormatDateForBackend(formData.expiryDate),
         };
         await FecthCreateMedical(submitData);
-        toast.success("Thêm thuốc thành công");
+        showToast.success("Thêm thuốc thành công");
         setTimeout(() => {
-          navigate("/medical/manager-medical");
+          navigate("/dashboard/medical/manager-medical");
         }, 100);
       } catch (error) {
         console.error(error);
-        toast.error("Thêm thuốc thất bại");
+        showToast.error("Thêm thuốc thất bại");
       } finally {
         setLoading(false);
       }
@@ -103,19 +102,11 @@ export default function CreateMedical() {
   );
 
   const handleCancel = useCallback(() => {
-    navigate("/medical/manager-medical");
+    navigate("/dashboard/medical/manager-medical");
   }, [navigate]);
 
   return (
     <div className="p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
       <PageHeader
         title="Thêm thuốc mới"
         icon={<Pill className="w-6 h-6 text-blue-600" />}

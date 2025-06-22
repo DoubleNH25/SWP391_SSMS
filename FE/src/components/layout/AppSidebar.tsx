@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
   {
     icon: <HomeIcon />,
     name: "Trang chủ",
-    path: "/home",
+    path: "/dashboard",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
     subItems: [
       {
         name: "Người dùng",
-        path: "/user",
+        path: "/dashboard/user",
         pro: false,
         allowedRoles: ["Admin"],
       },
@@ -52,10 +52,15 @@ const navItems: NavItem[] = [
       //   pro: false,
       //   allowedRoles: ["Admin", "Manager", "Nurse"],
       // },
-      { name: "Lớp học", path: "/class", pro: false, allowedRoles: ["Admin"] },
+      {
+        name: "Lớp học",
+        path: "/dashboard/class",
+        pro: false,
+        allowedRoles: ["Admin"],
+      },
       {
         name: "Thuốc",
-        path: "/medical/manager-medical",
+        path: "/dashboard/medical/manager-medical",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
@@ -64,19 +69,19 @@ const navItems: NavItem[] = [
   {
     icon: <DocsIcon />,
     name: "Blog",
-    path: "/blog",
+    path: "/dashboard/blog",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
     icon: <UserCircleIcon />,
     name: "Hồ sơ sức khỏe",
-    path: "/parent/health-profiles",
+    path: "/dashboard/parent/health-profiles",
     allowedRoles: ["Parent"],
   },
   {
     icon: <CalenderIcon />,
     name: "Lịch",
-    path: "/calendar",
+    path: "/dashboard/calendar",
     allowedRoles: ["Admin", "Manager", "Nurse"],
   },
   {
@@ -86,13 +91,13 @@ const navItems: NavItem[] = [
     subItems: [
       {
         name: "Quản lý chờ duyệt",
-        path: "/pending-medical-events",
+        path: "/dashboard/pending-medical-events",
         pro: false,
         allowedRoles: ["Admin", "Manager"],
       },
       {
         name: "Lịch sử phê duyệt",
-        path: "/approved-medical-events",
+        path: "/dashboard/approved-medical-events",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
@@ -101,7 +106,7 @@ const navItems: NavItem[] = [
   {
     icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
     name: "Kiểm tra sức khỏe",
-    path: "/parent/health-checkup",
+    path: "/dashboard/parent/health-checkup",
     allowedRoles: ["Parent"],
   },
   {
@@ -111,13 +116,13 @@ const navItems: NavItem[] = [
     subItems: [
       {
         name: "Quản lý lịch tư vấn",
-        path: "/conseling-schedules",
+        path: "/dashboard/conseling-schedules",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
       {
         name: "Học sinh bất thường",
-        path: "/conseling-schedules/abnormal",
+        path: "/dashboard/conseling-schedules/abnormal",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
@@ -126,19 +131,19 @@ const navItems: NavItem[] = [
   {
     icon: <DocsIcon />,
     name: "Yêu cầu thuốc",
-    path: "/medical/medical-request",
+    path: "/dashboard/medical/medical-request",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
     icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
     name: "Xác nhận hoạt động y tế",
-    path: "/activity-medical",
+    path: "/dashboard/activity-medical",
     allowedRoles: ["Parent"],
   },
   {
     icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
     name: "Quản lý đơn thuốc",
-    path: "/medical/manager-medical-request",
+    path: "/dashboard/medical/manager-medical-request",
     allowedRoles: ["Admin", "Manager", "Nurse"],
   },
 ];
@@ -160,7 +165,7 @@ const AppSidebar: React.FC = () => {
     try {
       return (
         DecodeJWT()?.[
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ] || null
       );
     } catch (err) {
@@ -242,13 +247,15 @@ const AppSidebar: React.FC = () => {
                 <button
                   onClick={(e) => handleSubmenuToggle(index, menuType, e)}
                   className={`menu-item group w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
-                    ${isParentActive
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-100"
+                    ${
+                      isParentActive
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
                     }
-                    ${!isExpanded && !isHovered
-                      ? "lg:justify-center"
-                      : "lg:justify-start"
+                    ${
+                      !isExpanded && !isHovered
+                        ? "lg:justify-center"
+                        : "lg:justify-start"
                     }`}
                 >
                   <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
@@ -267,9 +274,10 @@ const AppSidebar: React.FC = () => {
                   <Link
                     to={nav.path}
                     className={`menu-item group flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
-                      ${isActive(nav.path)
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-700 hover:bg-gray-100"
+                      ${
+                        isActive(nav.path)
+                          ? "bg-blue-100 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-100"
                       }`}
                   >
                     <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
@@ -298,9 +306,10 @@ const AppSidebar: React.FC = () => {
                         <Link
                           to={subItem.path}
                           className={`block py-2 px-3 rounded-lg transition-all text-[14px] font-medium
-                            ${isActive(subItem.path)
-                              ? "text-blue-700"
-                              : "text-gray-600 hover:text-gray-900"
+                            ${
+                              isActive(subItem.path)
+                                ? "text-blue-700"
+                                : "text-gray-600 hover:text-gray-900"
                             }`}
                         >
                           {subItem.name}
@@ -324,9 +333,11 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${isExpanded ? "w-64" : "w-20"
-        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${
+        isExpanded ? "w-64" : "w-20"
+      } ${
+        isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

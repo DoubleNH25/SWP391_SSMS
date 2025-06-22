@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Eye, Plus, Pencil, Trash, UserCircle } from "lucide-react";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import {
   FetchAllBlogs,
@@ -14,6 +12,7 @@ import {
   UploadBlogImage,
 } from "@/services/BlogService";
 import { BlogResponse, BlogRequest } from "@/types/Blog";
+import { showToast } from "@/components/ui/Toast";
 
 export default function Blog() {
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
@@ -61,7 +60,7 @@ export default function Blog() {
       setBlogs(data);
     } catch (error) {
       console.error("Failed to fetch blogs:", error);
-      toast.error("Không thể tải danh sách bài viết");
+      showToast.error("Không thể tải danh sách bài viết");
     } finally {
       setLoading(false);
     }
@@ -102,7 +101,7 @@ export default function Blog() {
 
   const handleCreateBlog = async () => {
     if (!formData.title || !formData.content) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      showToast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
@@ -130,10 +129,10 @@ export default function Blog() {
       setBlogs((prev) => [blogWithCategory, ...prev]);
       setIsCreateModalOpen(false);
       resetForm();
-      toast.success("Tạo bài viết thành công!");
+      showToast.success("Tạo bài viết thành công!");
     } catch (error) {
       console.error("Error creating blog:", error);
-      toast.error("Có lỗi xảy ra khi tạo bài viết");
+      showToast.error("Có lỗi xảy ra khi tạo bài viết");
     } finally {
       setFormLoading(false);
     }
@@ -141,7 +140,7 @@ export default function Blog() {
 
   const handleEditBlog = async () => {
     if (!selectedBlog || !formData.title || !formData.content) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      showToast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
@@ -178,10 +177,10 @@ export default function Blog() {
       setIsEditModalOpen(false);
       setSelectedBlog(null);
       resetForm();
-      toast.success("Cập nhật bài viết thành công!");
+      showToast.success("Cập nhật bài viết thành công!");
     } catch (error) {
       console.error("Error updating blog:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật bài viết");
+      showToast.error("Có lỗi xảy ra khi cập nhật bài viết");
     } finally {
       setFormLoading(false);
     }
@@ -196,10 +195,10 @@ export default function Blog() {
       setBlogs((prev) => prev.filter((blog) => blog.id !== selectedBlog.id));
       setIsDeleteModalOpen(false);
       setSelectedBlog(null);
-      toast.success("Xóa bài viết thành công!");
+      showToast.success("Xóa bài viết thành công!");
     } catch (error) {
       console.error("Error deleting blog:", error);
-      toast.error("Có lỗi xảy ra khi xóa bài viết");
+      showToast.error("Có lỗi xảy ra khi xóa bài viết");
     } finally {
       setFormLoading(false);
     }
@@ -215,7 +214,7 @@ export default function Blog() {
       setIsViewModalOpen(true);
     } catch (error) {
       console.error("Failed to increment view count:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật lượt xem");
+      showToast.error("Có lỗi xảy ra khi cập nhật lượt xem");
     }
   };
 

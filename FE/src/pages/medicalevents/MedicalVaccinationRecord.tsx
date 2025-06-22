@@ -15,8 +15,7 @@ import { Student } from "@/types/Student";
 import { Search, User, CheckCircle, Clock, Heart } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/components/ui/Toast";
 
 export default function MedicalVaccinationRecord() {
   const [medicalRecord, setMedicalRecord] = useState<
@@ -73,7 +72,7 @@ export default function MedicalVaccinationRecord() {
       if (e) e.preventDefault();
 
       if (!isCurrentDate) {
-        toast.warning(
+        showToast.warning(
           "Chỉ có thể cập nhật kết quả tiêm vaccine trong ngày hiện tại"
         );
         return;
@@ -98,7 +97,7 @@ export default function MedicalVaccinationRecord() {
           vaccinationData
         );
         if (result) {
-          toast.success("Cập nhật thành công");
+          showToast.success("Cập nhật thành công");
           setMedicalRecord((prev) =>
             prev.map((r) =>
               r.studentId === selectedStudent.id
@@ -111,10 +110,10 @@ export default function MedicalVaccinationRecord() {
             )
           );
         } else {
-          toast.error("Cập nhật thất bại");
+          showToast.error("Cập nhật thất bại");
         }
       } catch (error) {
-        toast.error("Có lỗi xảy ra khi cập nhật");
+        showToast.error("Có lỗi xảy ra khi cập nhật");
       } finally {
         setUpdating(false);
       }
@@ -184,7 +183,6 @@ export default function MedicalVaccinationRecord() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-2">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <PageHeader

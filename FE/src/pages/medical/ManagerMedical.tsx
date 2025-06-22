@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { PlusIcon, Pill, X, Search, TrashIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { FecthDeleteMedical, FecthMedical } from "@/services/MedicalService";
 import { MedicalViewModel } from "@/types/Medical";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import { Modal } from "@/components/ui/modal";
@@ -69,17 +68,17 @@ export default function MedicalManager() {
     }, []);
 
     const handleCreateMedicine = useCallback(() => {
-        navigate('/medical/create-medical');
+        navigate('/dashboard/medical/create-medical');
     }, [navigate]);
 
     const handleDeleteMedicine = useCallback(async (medicineId: string) => {
         try {
             await FecthDeleteMedical(medicineId);
             fetchData();
-            toast.success("Xóa thuốc thành công");
+            showToast.success("Xóa thuốc thành công");
         } catch (err) {
             console.error("Failed to delete medicine:", err);
-            toast.error("Xóa thuốc thất bại");
+            showToast.error("Xóa thuốc thất bại");
         }
     }, [fetchData]);
 
@@ -88,7 +87,7 @@ export default function MedicalManager() {
     }, [fetchData]);
 
     const handleUpdateMedicine = useCallback((medicineId: string) => {
-        navigate(`/medical/update-medical/${medicineId}`);
+        navigate(`/dashboard/medical/update-medical/${medicineId}`);
     }, [navigate]);
 
     const handleItemsPerPageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -128,7 +127,6 @@ export default function MedicalManager() {
 
     return (
         <div className="p-4">
-            <ToastContainer position="top-right" autoClose={3000} />
             <PageHeader
                 title="Quản lý thuốc"
                 icon={<Pill className="w-6 h-6 text-blue-600" />}
@@ -217,7 +215,7 @@ export default function MedicalManager() {
                     )}
                 </div>
             </div>
-            <div className="flex items-center justify-end mb-6 absolute right-[16px] top-[140px]">
+            <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[140px]">
                 <div className="flex items-center gap-2">
                     <button
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"

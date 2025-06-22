@@ -2,48 +2,21 @@ import React, { useState } from "react";
 import { Pill, ArrowLeft, Plus } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import MedicationRequestsTab from "@/components/medicalrequest/MedicationRequestsTab";
 import MedicationScheduleTab from "@/components/medicalrequest/MedicationScheduleTab";
 import MedicationHistoryTab from "@/components/medicalrequest/MedicationHistoryTab";
-import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationModal";
 import UpdateMedicationModal from "@/components/medicalrequest/UpdateMedicationModal";
 import ConfirmMedicationModal from "@/components/medicalrequest/ConfirmMedicationModal";
 import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmationModal";
-import { ToastProvider } from "@/components/ui/Toast";
+import { showToast } from "@/components/ui/Toast";
 
 const ManagerMedicalRequest = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, ] = useState(false);
+  const [error, ] = useState<string | null>(null);
 
-  // Toast utility function
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const toastOptions = {
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    };
-
-    switch (type) {
-      case 'success':
-        toast.success(message, toastOptions);
-        break;
-      case 'error':
-        toast.error(message, toastOptions);
-        break;
-      case 'info':
-        toast.info(message, toastOptions);
-        break;
-      default:
-        toast(message, toastOptions);
-    }
-  };
   const [activeTab, setActiveTab] = useState("requests");
-  const [showMultiMedicationModal, setShowMultiMedicationModal] =
+  const [, setShowMultiMedicationModal] =
     useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -258,9 +231,9 @@ const ManagerMedicalRequest = () => {
 
     // Show success toast with note if provided
     if (note) {
-      showToast(`Đã xác nhận cho thuốc thành công! Ghi chú: ${note}`, 'success');
+      showToast.success(`Đã xác nhận cho thuốc thành công! Ghi chú: ${note}`);
     } else {
-      showToast("Đã xác nhận cho thuốc thành công!", 'success');
+      showToast.success("Đã xác nhận cho thuốc thành công!");
     }
   };
 
@@ -328,7 +301,7 @@ const ManagerMedicalRequest = () => {
       setRequests(
         requests.filter((req) => req.uid !== selectedRequestForAction.uid)
       );
-      showToast("Đã xóa đơn thuốc thành công!", 'success');
+      showToast.success("Đã xóa đơn thuốc thành công!");
       setShowDeleteModal(false);
       setSelectedRequestForAction(null);
     }
@@ -343,7 +316,7 @@ const ManagerMedicalRequest = () => {
             : req
         )
       );
-      showToast("Đã cập nhật đơn thuốc thành công!", 'success');
+      showToast.success("Đã cập nhật đơn thuốc thành công!");
       setShowUpdateModal(false);
       setSelectedRequestForAction(null);
       setUpdateRequest({});
@@ -400,51 +373,8 @@ const ManagerMedicalRequest = () => {
     setScheduleSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
-  const handleMultiMedicationSubmit = (medications: any[]) => {
-    // Convert multiple medications to individual requests
-    const newRequests = medications.map((medication, index) => ({
-      ...medication,
-      uid: `MR${String(requests.length + index + 1).padStart(3, "0")}`,
-      medicationRequestId: `REQ-2024-${String(
-        requests.length + index + 1
-      ).padStart(3, "0")}`,
-      studentId: `ST${String(requests.length + index + 1).padStart(3, "0")}`,
-      parentId: `P${String(requests.length + index + 1).padStart(3, "0")}`,
-      parentName: "Phụ huynh", // This should come from selected student
-      phoneNumber: "0123456789", // This should come from selected student
-      studentName: "Học sinh", // This should come from selected student
-      remainingQuantity: parseInt(medication.totalQuantity),
-      status: "active",
-      createdBy: "Y tá Minh",
-      createdDate: new Date().toISOString().split("T")[0],
-    }));
-
-    setRequests([...requests, ...newRequests]);
-    setShowMultiMedicationModal(false);
-    showToast(`Đã tạo thành công ${medications.length} đơn thuốc!`, 'success');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastProvider />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="!top-20"
-        style={{
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
-      />
-
       {loading && (
         <div className="flex justify-center items-center h-screen">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-600"></div>

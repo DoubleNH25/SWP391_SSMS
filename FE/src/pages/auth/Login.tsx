@@ -5,6 +5,7 @@ import { FecthLogin } from "@/services/AuthService";
 import { LoginRequest } from "@/types/User";
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
 import PhoneAuthService from "@/services/PhoneAuthService";
+import { ArrowLeft } from "lucide-react";
 
 export default function Login() {
   const [showPhoneLogin, setShowPhoneLogin] = useState(false);
@@ -48,8 +49,10 @@ export default function Login() {
           }
           // Validate phone number format
           const phoneRegex = /^[0-9]{10,11}$/;
-          if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
-            setError("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số");
+          if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
+            setError(
+              "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số"
+            );
             return;
           }
           await PhoneAuthService.sendOTP(phone);
@@ -58,7 +61,7 @@ export default function Login() {
         }
         case "login": {
           await FecthLogin(userLogin);
-          navigate("/");
+          navigate("/dashboard");
           break;
         }
         case "register": {
@@ -71,8 +74,10 @@ export default function Login() {
           }
           // Validate phone number format
           const phoneRegex = /^[0-9]{10,11}$/;
-          if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
-            setError("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số");
+          if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
+            setError(
+              "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số"
+            );
             return;
           }
           await PhoneAuthService.sendOTP(phone);
@@ -126,6 +131,34 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-6 px-4 bg-gray-50">
+      <motion.button
+        onClick={() => navigate("/")}
+        aria-label="Về Trang Chủ"
+        initial={{ width: 48 }}
+        whileHover={{ width: 160 }}
+        transition={{ type: "spring", stiffness: 340, damping: 24 }}
+        className="
+          absolute top-6 left-6 z-10
+          flex items-center overflow-hidden
+          rounded-full bg-white border border-gray-200 shadow
+          text-blue-600 hover:text-white
+          hover:bg-blue-600 transition-colors
+          p-2 group
+        "
+        style={{ minWidth: 48, height: 48 }}
+      >
+        <ArrowLeft className="w-6 h-6 flex-shrink-0" />
+        <span
+          className="
+            ml-2 whitespace-nowrap text-base font-medium
+            opacity-0 group-hover:opacity-100
+            transition-opacity duration-200
+            text-blue-600 group-hover:text-white
+          "
+        >
+          Trở về Home
+        </span>
+      </motion.button>
       <AnimatePresence mode="wait">
         {!showRegister && !showForgotPassword ? (
           <motion.div
