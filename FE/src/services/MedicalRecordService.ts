@@ -1,7 +1,6 @@
 import { ConselingSchedulesAND, ConselingSchedulesANDUpdate } from "@/types/ConselingSchedules";
 import { HealthCheckupRecord, MedicalHealthCheckupRecord, MedicalVaccinationRecord, VaccinationRecord } from "@/types/MedicalRecord";
 import ApiClient from "@/utils/ApiBase";
-import { data } from "react-router-dom";
 
 export async function FecthMedicalVaccinationRecord(id: string,date: string): Promise<MedicalVaccinationRecord[]> {
   if (!localStorage.getItem('token')) {

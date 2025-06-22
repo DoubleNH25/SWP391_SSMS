@@ -2,7 +2,7 @@ import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
 import { DateUtils } from "@/utils/DateUtils";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
-import { toast } from 'react-toastify';
+import { showToast } from "../ui/Toast";
 
 interface DailyScheduleProps {
   selectedDate: string | null;
@@ -53,7 +53,7 @@ const DailySchedule = ({
     currentDate.setHours(0, 0, 0, 0);
 
     if (selected < currentDate) {
-      toast.error("Cannot create events in the past!");
+      showToast.error("Cannot create events in the past!");
       return;
     }
 

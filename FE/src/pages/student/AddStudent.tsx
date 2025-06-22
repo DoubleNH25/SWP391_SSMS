@@ -7,8 +7,7 @@ import { FecthCreateStudents, FecthParents } from "@/services/UserService";
 import { StudentCreate } from "@/types/Student";
 import DatePicker from "@/components/ui/form/DateField";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import { FecthClass } from "@/services/SchoolClassService";
 import { SchoolClass } from "@/types/SchoolClass";
 import { DateUtils } from "@/utils/DateUtils";
@@ -125,16 +124,14 @@ export default function AddStudent() {
       const payload = prepareStudentData(submitData);
       const success = await FecthCreateStudents(formData.parentId, payload);
       if (success) {
-        navigate("/student");
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate("/dashboard/student");
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error('Creation failed');
       }
     } catch (err) {
       setError(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      toast.error(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      showToast.error(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -142,12 +139,11 @@ export default function AddStudent() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/student");
+    navigate("/dashboard/student");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (

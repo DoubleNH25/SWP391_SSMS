@@ -1,6 +1,3 @@
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-
 export default function BlogHeader() {
   return (
     <div className="relative bg-gradient-to-r from-blue-600 to-blue-800">

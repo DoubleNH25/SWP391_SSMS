@@ -5,8 +5,7 @@ import { FecthUpdateUsers, FecthUserById } from "@/services/UserService";
 import { UserUpdate } from "@/types/User";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 
 export default function UpdateUser() {
   const { userId } = useParams<{ userId: string }>();
@@ -75,17 +74,15 @@ export default function UpdateUser() {
       }
       const success = await FecthUpdateUsers(userId as string, formData);
       if (success) {
-        navigate('/user');
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate('/dashboard/user');
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error('Update failed');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,12 +90,11 @@ export default function UpdateUser() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/user");
+    navigate("/dashboard/user");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : error ? (

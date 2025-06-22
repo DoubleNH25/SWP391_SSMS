@@ -7,8 +7,8 @@ import Select from "@/components/ui/form/Select";
 import DatePicker from "@/components/ui/form/DateField";
 import Label from "@/components/ui/form/Label";
 import { Student } from "@/types/Student";
-import { toast } from "react-toastify";
 import { DateUtils } from "@/utils/DateUtils";
+import { showToast } from "../ui/Toast";
 
 interface Medication {
   id: string;
@@ -160,13 +160,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     );
 
     if (validMedications.length === 0) {
-      toast.error("Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc", {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showToast.error("Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc");
       return;
     }
 

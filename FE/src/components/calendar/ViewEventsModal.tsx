@@ -2,7 +2,7 @@ import { CalendarEvent, eventCategories } from "@/types/CalendarEvent";
 import { DateUtils } from "@/utils/DateUtils";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
-import { toast } from 'react-toastify';
+import { showToast } from "../ui/Toast";
 
 interface ViewEventsModalProps {
   viewEventsDate: string | null;
@@ -45,7 +45,7 @@ const ViewEventsModal = ({
     currentDate.setHours(0, 0, 0, 0);
     
     if (viewDate < currentDate) {
-      toast.error("Cannot create events in the past!");
+      showToast.error("Cannot create events in the past!");
       return;
     }
     

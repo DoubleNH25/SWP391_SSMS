@@ -4,13 +4,12 @@ import { VaccinationCampaignsViewModel } from "@/types/VaccinationCampaigns";
 import { FecthApprovedRejectedMedicalEvents } from "@/services/MedicalEventService";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { FecthApprovedRejectedVaccinationCampaigns } from "@/services/VaccinationCampaignService";
 import { FecthClass } from "@/services/SchoolClassService";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/ui/PageHeader";
 import { CheckCircle2, Calendar } from "lucide-react";
+import { showToast } from "@/components/ui/Toast";
 
 
 export default function ApprovedEventManager() {
@@ -109,14 +108,14 @@ export default function ApprovedEventManager() {
   const handleGetMedicalRecord = useCallback(
     async (medicalEventDate: string, status: string, id: string) => {
       if (status === "Rejected") {
-        toast.error("Sự kiện đã bị từ chối, không thể xem danh sách");
+        showToast.error("Sự kiện đã bị từ chối, không thể xem danh sách");
         return;
       }
       console.log(medicalEventDate);
       if (selectedView === "MedicalEvents") {
-        navigate(`/medical-health-checkup-record/${medicalEventDate}/${id}`);
+        navigate(`/dashboard/medical-health-checkup-record/${medicalEventDate}/${id}`);
       } else {
-        navigate(`/medical-vaccination-record/${medicalEventDate}/${id}`);
+        navigate(`/dashboard/medical-vaccination-record/${medicalEventDate}/${id}`);
       }
     },
     [navigate, selectedView]
@@ -202,7 +201,6 @@ export default function ApprovedEventManager() {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="p-4 min-h-screen">
         <PageHeader
           title="Quản lý sự kiện đã duyệt"

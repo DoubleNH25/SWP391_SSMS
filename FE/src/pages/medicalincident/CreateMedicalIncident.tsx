@@ -19,9 +19,8 @@ import { DateUtils } from "@/utils/DateUtils";
 import { FecthCreateIncident } from "@/services/IncidentService";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import { Modal } from "@/components/ui/modal";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/components/ui/Toast";
 
 export default function CreateMedicalIncident() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -313,7 +312,7 @@ export default function CreateMedicalIncident() {
     try {
       await FecthCreateIncident(payload);
       setShowConfirmModal(false);
-      toast.success("Báo cáo không thuốc đã được gửi!");
+      showToast.success("Báo cáo không thuốc đã được gửi!");
       resetForm();
       // Optional: redirect or reset form
     } catch (err) {
@@ -362,7 +361,7 @@ export default function CreateMedicalIncident() {
     setLoading(true);
     try {
       await FecthCreateIncident(payload);
-      toast.success("Báo cáo đã được gửi thành công!");
+      showToast.success("Báo cáo đã được gửi thành công!");
       resetForm();
       // Optional: redirect or reset form
     } catch (err) {
@@ -383,12 +382,11 @@ export default function CreateMedicalIncident() {
   ];
 
   const handleBack = () => {
-    navigate("/medical/medical-request");
+    navigate("/dashboard/medical/medical-request");
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex items-center gap-3 px-4">
         <Button
           variant="outline"

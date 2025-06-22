@@ -40,7 +40,7 @@ export default function AddSchoolClass() {
       };
       const success = await FecthCreateSchoolClass(submitData);
       if (success) {
-        navigate("/class");
+        navigate("/dashboard/class");
         setTimeout(() => {
           showToast.success("Cập nhật thành công");
         }, 100);
@@ -57,7 +57,7 @@ export default function AddSchoolClass() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/class");
+    navigate("/dashboard/class");
   }
 
   return (

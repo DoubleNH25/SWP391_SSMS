@@ -13,8 +13,7 @@ import {
 } from "@/types/VaccinationCampaigns";
 import { CalendarEvent } from "@/types/CalendarEvent";
 import { DateUtils } from "@/utils/DateUtils";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   FecthCreateMedicalEvent,
   FecthDeleteMedicalEvents,
@@ -36,6 +35,7 @@ import ViewEventsModal from "@/components/calendar/ViewEventsModal";
 import DailySchedule from "@/components/calendar/DailySchedule";
 import PageHeader from "@/components/ui/PageHeader";
 import { CalendarDays } from "lucide-react";
+import { showToast } from "@/components/ui/Toast";
 
 type FormData =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
@@ -197,7 +197,7 @@ const Calendar: React.FC = () => {
     currentDate.setHours(0, 0, 0, 0);
 
     if (selected < currentDate) {
-      toast.error("Không thể tạo sự kiện trong quá khứ!");
+      showToast.error("Không thể tạo sự kiện trong quá khứ!");
       return;
     }
 
@@ -234,20 +234,20 @@ const Calendar: React.FC = () => {
 
       if (event.extendedProps.calendar === "Approved") {
         if (event.extendedProps.eventType === "medical") {
-          navigate(`/medical-health-checkup-record/${event.start}/${event.id}`);
+          navigate(`/dashboard/medical-health-checkup-record/${event.start}/${event.id}`);
         } else {
-          navigate(`/medical-vaccination-record/${event.start}/${event.id}`);
+          navigate(`/dashboard/medical-vaccination-record/${event.start}/${event.id}`);
         }
         return;
       }
 
       if (eventDate < currentDate) {
-        toast.error("Không thể chỉnh sửa sự kiện trong quá khứ");
+        showToast.error("Không thể chỉnh sửa sự kiện trong quá khứ");
         return;
       }
 
       if (event.extendedProps.calendar !== "Pending") {
-        toast.error("Không thể cập nhật hoặc xóa sự kiện này");
+        showToast.error("Không thể cập nhật hoặc xóa sự kiện này");
         return;
       }
 
@@ -323,7 +323,7 @@ const Calendar: React.FC = () => {
       } catch (error) {
         console.error("Error fetching event details:", error);
         toast.dismiss(loadingToastId);
-        toast.error("Không thể tải thông tin sự kiện");
+        showToast.error("Không thể tải thông tin sự kiện");
         // Fallback to basic data without classes
         setSelectedClasses([]);
         setFormData(
@@ -591,8 +591,7 @@ const Calendar: React.FC = () => {
                   : event
               )
             );
-            console.log("Update medical event success", payload.scheduledDate);
-            toast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
+            showToast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
           }
         } else {
           const payload = prepareVaccinationCampaignData(data);
@@ -621,7 +620,7 @@ const Calendar: React.FC = () => {
                   : event
               )
             );
-            toast.success("Cập nhật chiến dịch tiêm chủng thành công");
+            showToast.success("Cập nhật chiến dịch tiêm chủng thành công");
           }
         }
       } else {
@@ -654,7 +653,7 @@ const Calendar: React.FC = () => {
               },
             },
           ]);
-          toast.success("Tạo lịch kiểm tra sức khỏe thành công");
+          showToast.success("Tạo lịch kiểm tra sức khỏe thành công");
         } else {
           const payload = prepareVaccinationCampaignData(data);
           const response = await FecthCreateVaccinationCampaign(payload);
@@ -678,14 +677,14 @@ const Calendar: React.FC = () => {
               },
             },
           ]);
-          toast.success("Tạo chiến dịch tiêm chủng thành công");
+          showToast.success("Tạo chiến dịch tiêm chủng thành công");
         }
       }
       closeModal();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
-      toast.error(`Không thể lưu sự kiện: ${errorMessage}`);
+      showToast.error(`Không thể lưu sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -693,7 +692,7 @@ const Calendar: React.FC = () => {
 
   const handleDeleteEvent = useCallback(async () => {
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
-      toast.error("Không thể xóa sự kiện này");
+      showToast.error("Không thể xóa sự kiện này");
       return;
     }
     if (loading) return;
@@ -707,13 +706,13 @@ const Calendar: React.FC = () => {
         setEvents((prev) =>
           prev.filter((event) => event.id !== selectedEvent.id)
         );
-        toast.success("Xóa sự kiện thành công");
+        showToast.success("Xóa sự kiện thành công");
       }
       closeModal();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
-      toast.error(`Không thể xóa sự kiện: ${errorMessage}`);
+      showToast.error(`Không thể xóa sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -920,23 +919,6 @@ const Calendar: React.FC = () => {
         title="Lịch kiểm tra sức khỏe và tiêm chủng"
         icon={<CalendarDays className="w-6 h-6 text-purple-600" />}
         description="Quản lý và theo dõi các hoạt động kiểm tra sức khỏe và tiêm chủng trong trường"
-      />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="!top-20 !z-50"
-        style={{
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
       />
       {loading && !events.length ? (
         <div className="flex items-center justify-center min-h-[400px]">

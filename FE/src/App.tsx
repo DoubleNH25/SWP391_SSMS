@@ -2,7 +2,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
 } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/auth/Login";
@@ -23,23 +22,25 @@ import Unauthorized from "@/pages/auth/Unauthorized";
 import CLassSchoolManager from "@/pages/class/ManagerClass";
 import AddSchoolClass from "@/pages/class/AddSchoolClass";
 import UpdateSchoolClass from "@/pages/class/UpdateSchoolClass";
-import Home from "@/pages/Home";
+import Dashboard from "@/pages/Dashboard";
 import MedicalVaccinationRecord from "@/pages/medicalevents/MedicalVaccinationRecord";
 import MedicalHealthCheckupRecords from "@/pages/medicalevents/MedicalHealthCheckupRecords";
 import ManagerRecord from "@/pages/healthprofile/ManagerRecord";
 import ManagerConselingSchedules from "@/pages/conselingshedules/ManagerConselingSchedules";
-import ManagerHealthProfile from "./pages/healthprofile/UpdateCreateHealthProfile";
-import ManagerMedical from "./pages/medical/ManagerMedical";
-import UpdateMedical from "./pages/medical/UpdateMedical";
-import CreateMedical from "./pages/medical/CreateMedical";
-import HealthCheckupRecords from "./pages/healthprofile/HealthCheckupRecords";
-import MedicalRequest from "./pages/medicalrequest/MedicalRequest";
-import ManagerMedicalRequest from "./pages/medicalrequest/ManagerMedicalRequest";
-import ManagerActivityMedical from "./pages/acivitymedical/ManagerActivityMedical";
-import EditProfile from "./pages/user/EditProfile";
-import CreateMedicalIncident from "./pages/medicalincident/CreateMedicalIncident";
-import ConselingScheduleAbnormal from "./pages/conselingshedules/ConselingScheduleAbnormal";
-import ManagerMedicalIncident from "./pages/medicalincident/ManagerMedicalIncident";
+import ManagerHealthProfile from "@/pages/healthprofile/UpdateCreateHealthProfile";
+import ManagerMedical from "@/pages/medical/ManagerMedical";
+import UpdateMedical from "@/pages/medical/UpdateMedical";
+import CreateMedical from "@/pages/medical/CreateMedical";
+import HealthCheckupRecords from "@/pages/healthprofile/HealthCheckupRecords";
+import MedicalRequest from "@/pages/medicalrequest/MedicalRequest";
+import ManagerMedicalRequest from "@/pages/medicalrequest/ManagerMedicalRequest";
+import ManagerActivityMedical from "@/pages/acivitymedical/ManagerActivityMedical";
+import EditProfile from "@/pages/user/EditProfile";
+import CreateMedicalIncident from "@/pages/medicalincident/CreateMedicalIncident";
+import ConselingScheduleAbnormal from "@/pages/conselingshedules/ConselingScheduleAbnormal";
+import ManagerMedicalIncident from "@/pages/medicalincident/ManagerMedicalIncident";
+import { ToastProvider } from "@/components/ui/Toast";
+import Home from "@/pages/Home";
 
 function App() {
   return (
@@ -50,8 +51,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/profile" element={<EditProfile />} />
+          <Route index element={<Home />} />
+          <Route path="/" element={<Home />} />
           <Route
-            path="/"
+            path="/dashboard/*"
             element={
               <PrivateRoute
                 allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -60,8 +63,7 @@ function App() {
               </PrivateRoute>
             }
           >
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="home" element={<Home />} />
+            <Route index element={<Dashboard />} />
             <Route path="blog" element={<Blog />} />
 
             {/*User*/}
@@ -74,7 +76,7 @@ function App() {
               }
             />
             <Route
-              path="/user/add-user"
+              path="user/add-user"
               element={
                 <PrivateRoute allowedRoles={["Admin"]}>
                   <AddUser />
@@ -82,7 +84,7 @@ function App() {
               }
             />
             <Route
-              path="/user/update-user/:userId"
+              path="user/update-user/:userId"
               element={
                 <PrivateRoute allowedRoles={["Admin"]}>
                   <UpdateUser />
@@ -91,7 +93,7 @@ function App() {
             />
             {/**Class*/}
             <Route
-              path="/class"
+              path="class"
               element={
                 <PrivateRoute allowedRoles={["Admin"]}>
                   <CLassSchoolManager />
@@ -99,7 +101,7 @@ function App() {
               }
             />
             <Route
-              path="/class/add-class"
+              path="class/add-class"
               element={
                 <PrivateRoute allowedRoles={["Admin"]}>
                   <AddSchoolClass />
@@ -107,7 +109,7 @@ function App() {
               }
             />
             <Route
-              path="/class/update-class/:schoolClassId"
+              path="class/update-class/:schoolClassId"
               element={
                 <PrivateRoute allowedRoles={["Admin"]}>
                   <UpdateSchoolClass />
@@ -116,7 +118,7 @@ function App() {
             />
             {/*Student*/}
             <Route
-              path="/student"
+              path="student"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <StudentManager />
@@ -124,7 +126,7 @@ function App() {
               }
             />
             <Route
-              path="/student/add-student"
+              path="student/add-student"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager"]}>
                   <AddStudent />
@@ -132,16 +134,16 @@ function App() {
               }
             />
             <Route
-              path="/student/update-student/:studentId"
+              path="student/update-student/:studentId"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager"]}>
                   <UpdateStudents />
                 </PrivateRoute>
               }
             />
-            {/*Calender*/}
+            {/*Calendar*/}
             <Route
-              path="/calendar"
+              path="calendar"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <Calendar />
@@ -150,7 +152,7 @@ function App() {
             />
 
             <Route
-              path="/pending-medical-events"
+              path="pending-medical-events"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager"]}>
                   <PendingEventManager />
@@ -159,7 +161,7 @@ function App() {
             />
 
             <Route
-              path="/approved-medical-events"
+              path="approved-medical-events"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <ApprovedEventManager />
@@ -168,7 +170,7 @@ function App() {
             />
 
             <Route
-              path="/parent/health-profiles"
+              path="parent/health-profiles"
               element={
                 <PrivateRoute allowedRoles={["Parent"]}>
                   <HealthProfiles />
@@ -177,7 +179,7 @@ function App() {
             />
 
             <Route
-              path="/parent/health-checkup"
+              path="parent/health-checkup"
               element={
                 <PrivateRoute allowedRoles={["Parent"]}>
                   <ManagerRecord />
@@ -186,7 +188,7 @@ function App() {
             />
 
             <Route
-              path="/medical-vaccination-record/:eventDate/:id"
+              path="medical-vaccination-record/:eventDate/:id"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <MedicalVaccinationRecord />
@@ -194,7 +196,7 @@ function App() {
               }
             />
             <Route
-              path="/medical-health-checkup-record/:eventDate/:id"
+              path="medical-health-checkup-record/:eventDate/:id"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <MedicalHealthCheckupRecords />
@@ -202,7 +204,7 @@ function App() {
               }
             />
             <Route
-              path="/conseling-schedules"
+              path="conseling-schedules"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <ManagerConselingSchedules />
@@ -210,7 +212,7 @@ function App() {
               }
             />
             <Route
-              path="/healthprofile/manager-health-profile/:studentId"
+              path="healthprofile/manager-health-profile/:studentId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -220,7 +222,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/manager-medical"
+              path="medical/manager-medical"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <ManagerMedical />
@@ -228,7 +230,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/update-medical/:medicalId"
+              path="medical/update-medical/:medicalId"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <UpdateMedical />
@@ -236,7 +238,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/create-medical"
+              path="medical/create-medical"
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <CreateMedical />
@@ -244,7 +246,7 @@ function App() {
               }
             />
             <Route
-              path="/student/:studentId/health-checkup-records"
+              path="student/:studentId/health-checkup-records"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -254,7 +256,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/medical-request"
+              path="medical/medical-request"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -264,7 +266,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/manager-medical-request"
+              path="medical/manager-medical-request"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -274,7 +276,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/manager-medical-request/:studentId"
+              path="medical/manager-medical-request/:studentId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -284,7 +286,7 @@ function App() {
               }
             />
             <Route
-              path="/activity-medical"
+              path="activity-medical"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -294,7 +296,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/medical-incident/:studentId"
+              path="medical/medical-incident/:studentId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -304,7 +306,7 @@ function App() {
               }
             />
             <Route
-              path="/medical/manager-medical-incident/:studentId"
+              path="medical/manager-medical-incident/:studentId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -314,7 +316,7 @@ function App() {
               }
             />
             <Route
-              path="/activity-medical/:eventId"
+              path="activity-medical/:eventId"
               element={
                 <PrivateRoute
                   allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
@@ -324,11 +326,9 @@ function App() {
               }
             />
             <Route
-              path="/conseling-schedules/abnormal"
+              path="conseling-schedules/abnormal"
               element={
-                <PrivateRoute
-                  allowedRoles={["Admin", "Manager", "Nurse"]}
-                >
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <ConselingScheduleAbnormal />
                 </PrivateRoute>
               }
@@ -336,6 +336,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
+      <ToastProvider />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { ConselingSchedules } from "@/types/ConselingSchedules";
 import { HealthProfile, HealthProfileUpdate, Student } from "@/types/HealthProfile";
-import { MedicalHealthCheckupRecord } from "@/types/MedicalRecord";
+import { MedicalHealthCheckupRecord, MedicalVaccinationRecord } from "@/types/MedicalRecord";
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthHealthProfile(): Promise<Student[]> {
@@ -50,6 +50,23 @@ export async function FecthHealthCheckup(): Promise<MedicalHealthCheckupRecord[]
     const response = await ApiClient<MedicalHealthCheckupRecord[]>({
       method: 'GET',
       endpoint: '/parents/get-all-student-health-checkup',
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error(`Failed to get health profile: ${err}`);
+    return [];
+  }
+}
+
+export async function FecthVaccinationRecords(): Promise<MedicalVaccinationRecord[]> {
+  if (!localStorage.getItem('token')) {
+    console.error('User is not authenticated');
+    return [];
+  }
+  try {
+    const response = await ApiClient<MedicalVaccinationRecord[]>({
+      method: 'GET',
+      endpoint: '/parents/get-all-vaccination-records',
     });
     return response?.data || [];
   } catch (err) {
