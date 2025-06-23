@@ -76,7 +76,7 @@ export async function FecthVaccinationRecords(): Promise<MedicalVaccinationRecor
 }
 
 export async function FecthCreateConselingSchedule(data: ConselingSchedules): Promise<boolean> {
-  if (!data || !data.studentId || !data.healthCheckupId || !data.requestDate) {
+  if (!data || !data.studentId || !data.healthCheckupId || !data.requestedDate) {
     throw new Error("Please enter complete conseling schedule information");
   }
   try {
