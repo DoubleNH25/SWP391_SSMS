@@ -2,7 +2,7 @@ export interface ConselingSchedules {
     studentId: string;
     healthCheckupId: string;
     note: string;
-    requestDate: string;
+    requestedDate: string;
 }
 
 export interface ConselingSchedulesAND {

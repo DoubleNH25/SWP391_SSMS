@@ -1,5 +1,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { FecthConselingSchedules, FecthMedicalHealthCheckupRecordAbnormal } from "@/services/MedicalRecordService";
+import {
+  FecthConselingSchedules,
+  FecthMedicalHealthCheckupRecordAbnormal,
+} from "@/services/MedicalRecordService";
 import { MedicalHealthCheckupRecord } from "@/types/MedicalRecord";
 import PageHeader from "@/components/ui/PageHeader";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
@@ -36,7 +39,7 @@ export default function ConselingScheduleAbnormal() {
     studentId: "",
     healthCheckupId: "",
     note: "",
-    requestDate: "",
+    requestedDate: "",
   });
   const [consultDate, setConsultDate] = useState<string>("");
   const [consultTime, setConsultTime] = useState<string>("");
@@ -65,23 +68,22 @@ export default function ConselingScheduleAbnormal() {
 
   // Search + Pagination + Date filter
   const filteredStudents = useMemo(() => {
-    return abnormalStudents
-      .filter((student) => {
-        // Loại bỏ học sinh đã gửi tư vấn (trùng studentId và healthCheckUpId)
-        const isSent = sentStudents.some(
-          (sent) =>
-            sent.studentId === student.studentId &&
-            sent.healthCheckupId === student.healthCheckUpId
-        );
-        if (isSent) return false;
-        const matchName = student.studentName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        const matchDate = searchDate
-          ? student.recordDate.startsWith(searchDate)
-          : true;
-        return matchName && matchDate;
-      });
+    return abnormalStudents.filter((student) => {
+      // Loại bỏ học sinh đã gửi tư vấn (trùng studentId và healthCheckUpId)
+      const isSent = sentStudents.some(
+        (sent) =>
+          sent.studentId === student.studentId &&
+          sent.healthCheckupId === student.healthCheckUpId
+      );
+      if (isSent) return false;
+      const matchName = student.studentName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchDate = searchDate
+        ? student.recordDate.startsWith(searchDate)
+        : true;
+      return matchName && matchDate;
+    });
   }, [abnormalStudents, sentStudents, searchTerm, searchDate]);
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -102,7 +104,7 @@ export default function ConselingScheduleAbnormal() {
       studentId: student.studentId,
       healthCheckupId: student.healthCheckUpId || "",
       note: "",
-      requestDate: "",
+      requestedDate: "",
     });
     setConsultDate("");
     setConsultTime("");
@@ -116,7 +118,7 @@ export default function ConselingScheduleAbnormal() {
       studentId: "",
       healthCheckupId: "",
       note: "",
-      requestDate: "",
+      requestedDate: "",
     });
     setConsultDate("");
     setConsultTime("");
@@ -138,7 +140,13 @@ export default function ConselingScheduleAbnormal() {
     try {
       console.log(formData);
       console.log(requestDate);
-      await FecthCreateConselingSchedule({ ...formData, requestDate });
+      const data = {
+        studentId: formData.studentId,
+        healthCheckupId: formData.healthCheckupId,
+        note: formData.note,
+        requestedDate: requestDate,
+      } as ConselingSchedules;
+      await FecthCreateConselingSchedule(data);
       showToast.success("Đặt lịch tư vấn thành công!");
       await AbnormalStudentsAppointmentSent();
       closeConsultModal();
@@ -409,10 +417,11 @@ export default function ConselingScheduleAbnormal() {
                         <Button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === page
+                          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                            currentPage === page
                               ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                               : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                            }`}
+                          }`}
                         >
                           {page}
                         </Button>
