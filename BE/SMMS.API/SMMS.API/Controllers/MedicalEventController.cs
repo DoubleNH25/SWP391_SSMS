@@ -46,12 +46,12 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpPost("health-activities")]
-		[Authorize(Roles = "Nurse")]
+		[Authorize(Roles = "Nurse,Admin,Manager")]
 		public async Task<IActionResult> CreateHealthActivity([FromBody] HealthActivityRequest request)
 		{
-			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (nurseId == null) return Unauthorized("Nurse ID not found in claims.");
-			var response = await _healthActivityService.CreateHealthActivityAsync(request, nurseId);
+			var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			if (userId == null) return Unauthorized("user ID not found in claims.");
+			var response = await _healthActivityService.CreateHealthActivityAsync(request, userId);
 			return Ok(response);
 		}
 
