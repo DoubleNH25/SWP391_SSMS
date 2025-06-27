@@ -1,6 +1,6 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 🌈 Custom theme variables (nếu cần dùng cho theming/dark mode) */
 :root {
