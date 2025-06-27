@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="FirebaseAdmin" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -20,6 +21,10 @@
     <ProjectReference Include="..\SMMS.Application\SMMS.Application.csproj" />
     <ProjectReference Include="..\SMMS.Domain\SMMS.Domain.csproj" />
     <ProjectReference Include="..\SMMS.Infrastructure\SMMS.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Hub\" />
   </ItemGroup>
 
 </Project>

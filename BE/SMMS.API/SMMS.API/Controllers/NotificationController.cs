@@ -68,6 +68,5 @@ namespace SMMS.API.Controllers
 			await _notificationService.DeleteIsReadNotificationsAsync(userId);
 			return NoContent();
 		}
-
 	}
 }
