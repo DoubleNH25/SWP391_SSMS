@@ -19,6 +19,10 @@ import {
   FecthReadAllNotification,
 } from "@/services/NotificationService";
 import { DecodeJWT } from "@/utils/DecodeJWT";
+import {
+  startSignalRConnection,
+  stopSignalRConnection,
+} from "@/services/SignalRService";
 
 const NotificationDropdown: React.FC = () => {
   const navigate = useNavigate();
@@ -209,7 +213,35 @@ const NotificationDropdown: React.FC = () => {
   useEffect(() => {
     fetchData();
     const intervalId = setInterval(fetchData, 5 * 60 * 1000);
-    return () => clearInterval(intervalId);
+
+    const token = localStorage.getItem("token") || "";
+    let notificationBuffer: NotificationViewModel[] = [];
+    let toastTimeout: NodeJS.Timeout | null = null;
+    startSignalRConnection(token, (newNotification: NotificationViewModel) => {
+      setNotificationData((prev) => [newNotification, ...prev]);
+      notificationBuffer.push(newNotification);
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+
+      toastTimeout = setTimeout(() => {
+        const count = notificationBuffer.length;
+        if (count > 0) {
+          showToast.info(`Bạn có ${count} thông báo mới`);
+          notificationBuffer = [];
+        }
+      }, 500);
+
+      const audio = new Audio("public/sounds/livechat-129007.mp3");
+      audio.currentTime = 0;
+      audio.play().catch((err) => {
+        console.warn("Không thể phát âm báo:", err);
+      });
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      stopSignalRConnection();
+    };
   }, []); // Remove fetchData dependency to prevent infinite loop
 
   useEffect(() => {
