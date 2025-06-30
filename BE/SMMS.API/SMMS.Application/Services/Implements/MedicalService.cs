@@ -32,7 +32,7 @@ namespace SMMS.Application.Services.Implements
                     .FindByCondition(s => s.Name == request.Name && !s.DeletedTime.HasValue, false)
                     .FirstOrDefault();
 
-                if (stock == null)
+                if (stock != null)
                 {
                     throw new Exception("Stock is already exist");
                 }
@@ -176,6 +176,7 @@ namespace SMMS.Application.Services.Implements
         {
             try
             {
+                // Tạo Incident
                 var medicalIncident = new MedicalIncident
                 {
                     StudentId = request.StudentId,
@@ -191,21 +192,65 @@ namespace SMMS.Application.Services.Implements
                 _repositoryManager.MedicalIncidentRepository.Create(medicalIncident);
                 await _repositoryManager.SaveAsync();
 
-				// Notify Parent///////////////////////////
-				var student = await _repositoryManager.StudentRepository
-					.FindByCondition(s => s.Id == request.StudentId && s.DeletedTime == null, false)
-					.FirstOrDefaultAsync();
-				if (student != null)
-				{
-					await _notificationService.CreateNotificationAsync(
-						student.ParentId,
-						"New Medical Incident",
-						$"An incident involving {student.FullName} has been reported."
-						, medicalIncident.Id
-					);
-				}
+                // Xử lý Usage
+                var stockIds = request.MedicalUsageDetails.Select(m => m.MedicalStockId).Distinct().ToList();
 
-				return true;
+                var medicalStocks = _repositoryManager.MedicalStockRepository
+                    .FindByCondition(ms => stockIds.Contains(ms.Id) && !ms.DeletedTime.HasValue, true)
+                    .ToDictionary(ms => ms.Id);
+
+                foreach (var detail in request.MedicalUsageDetails)
+                {
+                    if (!medicalStocks.TryGetValue(detail.MedicalStockId, out var stock))
+                    {
+                        throw new InvalidOperationException($"Không tìm thấy thuốc với ID: {detail.MedicalStockId}");
+                    }
+
+                    if (stock.Quantity < detail.Quantity)
+                    {
+                        throw new InvalidOperationException($"Thuốc '{stock.Name}' không đủ số lượng. Còn lại: {stock.Quantity}");
+                    }
+
+                    stock.Quantity -= detail.Quantity;
+                    if (stock.Quantity == 0)
+                    {
+                        stock.Status = MedicalStockStatus.OutOfStock;
+                    }
+
+                    var usage = new MedicalUsage
+                    {
+                        MedicalIncidentId = medicalIncident.Id,
+                        MedicalStockId = stock.Id,
+                        Status = "Is Using",
+                        MedicalName = stock.Name,
+                        Dosage = detail.Dosage,
+                        Quantity = detail.Quantity,
+                        CreatedBy = userId,
+                        CreatedTime = DateTime.Now,
+                    };
+
+                    _repositoryManager.MedicalUsageRepository.Create(usage);
+                    _repositoryManager.MedicalStockRepository.Update(stock);
+                }
+
+                await _repositoryManager.SaveAsync();
+
+                // Gửi thông báo cho phụ huynh
+                var student = await _repositoryManager.StudentRepository
+                    .FindByCondition(s => s.Id == request.StudentId && s.DeletedTime == null, false)
+                    .FirstOrDefaultAsync();
+
+                if (student != null)
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        student.ParentId,
+                        "New Medical Incident",
+                        $"An incident involving {student.FullName} has been reported.",
+                        medicalIncident.Id
+                    );
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -382,55 +427,6 @@ namespace SMMS.Application.Services.Implements
 
 
         //-----------------------------------------Medical Usage------------------------------------------------
-
-        public async Task<bool> CreateMedicalUsageAsync(string userId, CreateMedicalUsageRequest request)
-        {
-            var stockIds = request.MedicalUsageDetails.Select(m => m.MedicalStockId).Distinct().ToList();
-
-            // Lấy tất cả MedicalStock cần thiết một lần
-            var medicalStocks = _repositoryManager.MedicalStockRepository
-                .FindByCondition(ms => stockIds.Contains(ms.Id) && !ms.DeletedTime.HasValue, true)
-                .ToDictionary(ms => ms.Id);
-
-            foreach (var detail in request.MedicalUsageDetails)
-            {
-                if (!medicalStocks.TryGetValue(detail.MedicalStockId, out var stock))
-                {
-                    throw new InvalidOperationException($"Không tìm thấy thuốc với ID: {detail.MedicalStockId}");
-                }
-
-                if (stock.Quantity < detail.Quantity)
-                {
-                    throw new InvalidOperationException($"Thuốc '{stock.Name}' không đủ số lượng. Còn lại: {stock.Quantity}");
-                }
-
-                // Trừ số lượng thuốc và cập nhật trạng thái
-                stock.Quantity -= detail.Quantity;
-                if (stock.Quantity == 0)
-                {
-                    stock.Status = MedicalStockStatus.OutOfStock;
-                }
-
-                // Tạo MedicalUsage mới
-                var usage = new MedicalUsage
-                {
-                    MedicalIncidentId = request.MedicalIncidentId,
-                    MedicalStockId = stock.Id,
-                    Status = "Is Using",
-                    MedicalName = stock.Name,
-                    Dosage = detail.Dosage,
-                    Quantity = detail.Quantity,
-                    CreatedBy = userId,
-                    CreatedTime = DateTime.Now,
-                };
-
-                _repositoryManager.MedicalUsageRepository.Create(usage);
-                _repositoryManager.MedicalStockRepository.Update(stock);
-            }
-
-            await _repositoryManager.SaveAsync();
-            return true;
-        }
 
         public async Task<bool> DeleteMedicalUsageAsync(string id, string userId)
         {

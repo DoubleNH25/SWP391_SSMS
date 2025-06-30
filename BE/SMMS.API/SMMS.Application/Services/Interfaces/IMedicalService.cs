@@ -39,7 +39,6 @@ namespace SMMS.Application.Services.Interfaces
 
 
         //---------------Medical Usage----------------
-        Task<bool> CreateMedicalUsageAsync(string userId, CreateMedicalUsageRequest request);
         Task<bool> DeleteMedicalUsageAsync(string id, string userId);
         Task<bool> UpdateMedicalUsageAsync(string id, UpdateMedicalUsageRequest model, string userId);
 
