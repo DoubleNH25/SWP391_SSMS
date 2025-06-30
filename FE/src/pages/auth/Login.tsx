@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FecthLogin } from "@/services/AuthService";
 import { LoginRequest } from "@/types/User";
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
-import PhoneAuthService from "@/services/PhoneAuthService";
+import { initReCAPTCHA, sendOTP } from "@/services/PhoneAuthService";
 import { ArrowLeft } from "lucide-react";
+import { auth } from "@/utils/firebase";
 
 export default function Login() {
   const [showPhoneLogin, setShowPhoneLogin] = useState(false);
@@ -22,6 +23,8 @@ export default function Login() {
     password: "",
   });
   const [phone, setPhone] = useState<string>("");
+  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const handleInputLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,22 +44,36 @@ export default function Login() {
     try {
       switch (formType) {
         case "phone": {
-          const phone = (e.target as HTMLFormElement).phone.value;
-          setPhone(phone);
-          if (!phone) {
-            setError("Vui lòng nhập số điện thoại");
+          if (!isRecaptchaVerified) {
+            setError("Vui lòng xác minh reCAPTCHA trước khi gửi OTP");
             return;
           }
-          // Validate phone number format
-          const phoneRegex = /^[0-9]{10,11}$/;
-          if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
-            setError(
-              "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số"
-            );
-            return;
+          if (isSendingOtp) return;
+
+          setIsSendingOtp(true);
+          try {
+            const phone = (e.target as HTMLFormElement).phone.value;
+            setPhone(phone);
+            if (!phone) {
+              setError("Vui lòng nhập số điện thoại");
+              return;
+            }
+            // Validate phone number format
+            const phoneRegex = /^[0-9]{10,11}$/;
+            if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
+              setError(
+                "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số"
+              );
+              return;
+            }
+
+            await sendOTP(phone);
+            navigate("/confirm-otp", { state: { phone } });
+          } catch (err) {
+            setError("Lỗi khi gửi OTP. Vui lòng thử lại.");
+          } finally {
+            setIsSendingOtp(false);
           }
-          await PhoneAuthService.sendOTP(phone);
-          navigate("/confirm-otp", { state: { phone } });
           break;
         }
         case "login": {
@@ -80,7 +97,7 @@ export default function Login() {
             );
             return;
           }
-          await PhoneAuthService.sendOTP(phone);
+          await sendOTP(phone);
           navigate("/confirm-otp", { state: { phone, isRegister: true } });
           break;
         }
@@ -128,6 +145,23 @@ export default function Login() {
     setShowForgotPassword(false);
     setPhone("");
   };
+
+  useEffect(() => {
+    if (showPhoneLogin && auth) {
+      setTimeout(async () => {
+        const container = document.querySelector("#recaptcha-container");
+        if (container) {
+          try {
+            await initReCAPTCHA("recaptcha-container", () => {
+              setIsRecaptchaVerified(true); // ✅ Đánh dấu đã xác thực
+            }).catch(console.error);
+          } catch (err) {
+            console.error("reCAPTCHA init error", err);
+          }
+        }
+      }, 0);
+    }
+  }, [showPhoneLogin]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-6 px-4 bg-gray-50">
@@ -182,143 +216,145 @@ export default function Login() {
               }}
             >
               {!showPhoneLogin ? (
-                <form
-                  className="space-y-6"
-                  onSubmit={(e) => handleSubmit(e, "login")}
-                >
-                  <div className="mb-12">
-                    <h3 className="text-slate-900 text-3xl text-center font-semibold">
-                      Sign in
-                    </h3>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="text-slate-800 text-sm font-medium mb-2 block"
-                    >
-                      Email
-                    </label>
-                    <motion.input
-                      name="email"
-                      id="email"
-                      type="text"
-                      onChange={handleInputLoginChange}
-                      value={userLogin.email ?? ""}
-                      required
-                      disabled={isLoading}
-                      className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
-                      placeholder="Enter your email"
-                      whileFocus={{ scale: 1.02 }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="text-slate-800 text-sm font-medium mb-2 block"
-                    >
-                      Password
-                    </label>
-                    <div className="relative">
+                <div>
+                  <form
+                    className="space-y-6"
+                    onSubmit={(e) => handleSubmit(e, "login")}
+                  >
+                    <div className="mb-12">
+                      <h3 className="text-slate-900 text-3xl text-center font-semibold">
+                        Sign in
+                      </h3>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="text-slate-800 text-sm font-medium mb-2 block"
+                      >
+                        Email
+                      </label>
                       <motion.input
-                        name="password"
-                        id="password"
-                        type={showPassword ? "text" : "password"}
+                        name="email"
+                        id="email"
+                        type="text"
                         onChange={handleInputLoginChange}
-                        value={userLogin.password ?? ""}
+                        value={userLogin.email ?? ""}
                         required
                         disabled={isLoading}
                         className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
-                        placeholder="Enter password"
+                        placeholder="Enter your email"
                         whileFocus={{ scale: 1.02 }}
                       />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="password"
+                        className="text-slate-800 text-sm font-medium mb-2 block"
+                      >
+                        Password
+                      </label>
+                      <div className="relative">
+                        <motion.input
+                          name="password"
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          onChange={handleInputLoginChange}
+                          value={userLogin.password ?? ""}
+                          required
+                          disabled={isLoading}
+                          className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
+                          placeholder="Enter password"
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
+                          className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 disabled:opacity-50"
+                        >
+                          {showPassword ? (
+                            <EyeIcon className="fill-gray-500 " />
+                          ) : (
+                            <EyeCloseIcon className="fill-gray-500" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    {loginError && (
+                      <div className="text-red-600 text-sm text-center mt-3 font-medium">
+                        {loginError}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center">
+                        <input
+                          id="remember-me"
+                          name="remember-me"
+                          type="checkbox"
+                          disabled={isLoading}
+                          className="h-4 w-4 shrink-0 text-blue-600 focus:ring-blue-500 border-slate-300 rounded disabled:opacity-50"
+                        />
+                        <label
+                          htmlFor="remember-me"
+                          className="ml-3 block text-sm text-slate-500"
+                        >
+                          Remember me
+                        </label>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={toggleForgotPassword}
                         disabled={isLoading}
-                        className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 disabled:opacity-50"
+                        className="text-blue-600 hover:underline font-medium text-sm disabled:opacity-50"
                       >
-                        {showPassword ? (
-                          <EyeIcon className="fill-gray-500 " />
-                        ) : (
-                          <EyeCloseIcon className="fill-gray-500" />
-                        )}
+                        Forgot your password?
                       </button>
                     </div>
-                  </div>
-                  {loginError && (
-                    <div className="text-red-600 text-sm text-center mt-3 font-medium">
-                      {loginError}
-                    </div>
-                  )}
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center">
-                      <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        disabled={isLoading}
-                        className="h-4 w-4 shrink-0 text-blue-600 focus:ring-blue-500 border-slate-300 rounded disabled:opacity-50"
-                      />
-                      <label
-                        htmlFor="remember-me"
-                        className="ml-3 block text-sm text-slate-500"
-                      >
-                        Remember me
-                      </label>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={toggleForgotPassword}
+                    <motion.button
+                      type="submit"
                       disabled={isLoading}
-                      className="text-blue-600 hover:underline font-medium text-sm disabled:opacity-50"
+                      variants={{
+                        hover: {
+                          scale: 1.05,
+                          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                        },
+                      }}
+                      whileHover={!isLoading ? "hover" : undefined}
+                      whileTap={!isLoading ? { scale: 0.95 } : undefined}
+                      className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-400 relative"
                     >
-                      Forgot your password?
-                    </button>
-                  </div>
-                  <motion.button
-                    type="submit"
-                    disabled={isLoading}
-                    variants={{
-                      hover: {
-                        scale: 1.05,
-                        boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
-                      },
-                    }}
-                    whileHover={!isLoading ? "hover" : undefined}
-                    whileTap={!isLoading ? { scale: 0.95 } : undefined}
-                    className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-400 relative"
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="opacity-0">Sign in</span>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </>
-                    ) : (
-                      "Sign in"
-                    )}
-                  </motion.button>
-                </form>
+                      {isLoading ? (
+                        <>
+                          <span className="opacity-0">Sign in</span>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <svg
+                              className="animate-spin h-5 w-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </>
+                      ) : (
+                        "Sign in"
+                      )}
+                    </motion.button>
+                  </form>
+                </div>
               ) : (
                 <form
                   className="space-y-6"
@@ -348,21 +384,32 @@ export default function Login() {
                       onChange={(e) => setPhone(e.target.value)}
                     />
                   </div>
+                  <div id="recaptcha-container"></div>
                   <motion.button
                     type="submit"
+                    disabled={!isRecaptchaVerified || isSendingOtp}
                     variants={{
                       hover: {
                         scale: 1.05,
                         boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
                       },
                     }}
-                    whileHover="hover"
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+                    whileHover={
+                      !isRecaptchaVerified || isSendingOtp ? undefined : "hover"
+                    }
+                    whileTap={
+                      !isRecaptchaVerified || isSendingOtp
+                        ? undefined
+                        : { scale: 0.95 }
+                    }
+                    className={`w-full mt-4 shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white transition duration-300 ${
+                      !isRecaptchaVerified || isSendingOtp
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    } focus:outline-none`}
                   >
-                    Send OTP
+                    {isSendingOtp ? "Đang gửi..." : "Gửi OTP"}
                   </motion.button>
-                  <div id="recaptcha-container"></div>
                 </form>
               )}
               <div className="flex items-center w-full my-4">
