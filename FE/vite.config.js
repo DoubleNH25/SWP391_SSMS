@@ -17,5 +17,8 @@ export default defineConfig({
         alias: {
             "@": path.resolve(__dirname, "src"),
         },
-    },
+    },server: {
+    host: "127.0.0.1", // ✅ Đây là dòng quan trọng để reCAPTCHA hoạt động ổn định
+    port: 5173,         // (Tùy chọn) bạn có thể chỉ định cổng, nếu cần
+  },
 });

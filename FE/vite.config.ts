@@ -19,4 +19,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  server: {
+    host: "127.0.0.1", // ✅ Thêm dòng này
+    port: 5173,         // (Tùy chọn: chỉ định cổng cụ thể)
+  },
 });
