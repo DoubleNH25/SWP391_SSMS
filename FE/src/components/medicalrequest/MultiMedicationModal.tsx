@@ -9,6 +9,7 @@ import Label from "@/components/ui/form/Label";
 import { Student } from "@/types/Student";
 import { DateUtils } from "@/utils/DateUtils";
 import { showToast } from "../ui/Toast";
+import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
 
 interface Medication {
   id: string;
@@ -148,7 +149,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate medications
     const validMedications = medications.filter(
       (med) =>
@@ -164,8 +165,34 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       return;
     }
 
-    onSubmit(validMedications);
-    handleClose();
+    // Map dữ liệu sang format API
+    const medicalRequestItems = validMedications.map((med) => ({
+      medicationName: med.medicationName,
+      form: med.form,
+      dosage: med.dosage,
+      route: med.route,
+      frequency: med.frequency,
+      totalQuantity: Number(med.totalQuantity),
+      timeToAdminister: med.timeToAdminister.filter((t) => t),
+      startDate: med.startDate,
+      endDate: med.endDate,
+      notes: med.note,
+    }));
+
+    const payload = {
+      studentId,
+      parentId,
+      medicalRequestItems,
+    };
+
+    try {
+      await FecthCreateMedicalRequest(payload);
+      showToast.success("Tạo đơn thuốc thành công!");
+      onSubmit(validMedications); // Gọi lại để cập nhật UI bên ngoài nếu cần
+      handleClose();
+    } catch (err: any) {
+      showToast.error(err.message || "Tạo đơn thuốc thất bại. Vui lòng thử lại.");
+    }
   };
 
   const handleClose = () => {
