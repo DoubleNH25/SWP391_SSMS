@@ -126,6 +126,10 @@ namespace SMMS.Application.Services.Implements
 				_repositoryManager.HealthProfileRepository.Update(oldProfile);
 			}
 
+			string? parentNote = oldProfiles
+				.OrderByDescending(p => p.CreatedTime)
+				.FirstOrDefault()?.ParentNote;
+
 			var newProfile = new HealthProfile
 			{
 				StudentId = record.StudentId,
@@ -135,7 +139,8 @@ namespace SMMS.Application.Services.Implements
 				BMI = record.BMI,
 				AbnormalNote = record.AbnormalNote,
 				CreatedBy = "System",
-				CreatedTime = DateTimeOffset.UtcNow
+				CreatedTime = DateTimeOffset.UtcNow,
+				ParentNote = parentNote
 			};
 			_repositoryManager.HealthProfileRepository.Create(newProfile);
 		}

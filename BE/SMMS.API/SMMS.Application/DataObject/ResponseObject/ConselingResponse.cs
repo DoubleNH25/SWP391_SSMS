@@ -1,6 +1,4 @@
-﻿
-
-using SMMS.Domain.Enum;
+﻿using SMMS.Domain.Enum;
 
 namespace SMMS.Application.DataObject.ResponseObject
 {
@@ -19,5 +17,6 @@ namespace SMMS.Application.DataObject.ResponseObject
 		public DateTimeOffset? UpdatedTime { get; set; }
 		public string? UpdatedBy { get; set; }
 		public ApprovalStatus Status { get; set; }
+		public string? ParentRejectNote { get; set; }
 	}
 }

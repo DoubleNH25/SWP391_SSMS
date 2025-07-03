@@ -34,5 +34,7 @@ namespace SMMS.Domain.Entity
         public string Note { get; set; }
         public DateTime MeetingDate { get; set; }
         public ApprovalStatus Status { get; set; }
+
+        public string? ParentRejectNote { get; set; }
     }
 }

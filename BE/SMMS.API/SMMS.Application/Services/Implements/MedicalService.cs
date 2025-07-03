@@ -6,6 +6,7 @@ using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
+using SMMS.Application.Helpers.Implements;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -13,11 +14,13 @@ namespace SMMS.Application.Services.Implements
     {
 		private readonly IRepositoryManager _repositoryManager;
 		private readonly INotificationService _notificationService;
+		private readonly CloudinaryService _cloudinaryService;
 
-		public MedicalService(IRepositoryManager repositoryManager, INotificationService notificationService)
+		public MedicalService(IRepositoryManager repositoryManager, INotificationService notificationService, CloudinaryService cloudinaryService)
 		{
 			_repositoryManager = repositoryManager;
 			_notificationService = notificationService;
+			_cloudinaryService = cloudinaryService;
 		}
 
 
@@ -576,6 +579,12 @@ namespace SMMS.Application.Services.Implements
                         CreatedBy = userId
                     };
 
+                    if (item.Image != null)
+                    {
+                        var imageUrl = await _cloudinaryService.UploadImageAsync(item.Image);
+                        medicalRequest.ImageUrl = imageUrl;
+                    }
+
                     medicalRequests.Add(medicalRequest);
                     _repositoryManager.MedicalRequestRepository.Create(medicalRequest);
 
@@ -653,7 +662,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -703,6 +713,7 @@ namespace SMMS.Application.Services.Implements
                     Notes = medicalRequest.Notes,
                     Status = medicalRequest.Status,
                     CreatedTime = medicalRequest.CreatedTime,
+                    ImageUrl = medicalRequest.ImageUrl,
                     Administrations = medicalRequest.MedicationRequestAdministrations?.Select(a => new MedicationAdministrationResponse
                     {
                         Id = a.Id,
@@ -771,6 +782,12 @@ namespace SMMS.Application.Services.Implements
                 medicalRequest.LastUpdatedBy = userId;
                 medicalRequest.LastUpdatedTime = DateTimeOffset.Now;
 
+                if (request.Image != null)
+                {
+                    var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
+                    medicalRequest.ImageUrl = imageUrl;
+                }
+
                 // Cập nhật status nếu cần
                 if (medicalRequest.RemainingQuantity == 0)
                 {
@@ -809,6 +826,7 @@ namespace SMMS.Application.Services.Implements
                     Notes = medicalRequest.Notes,
                     Status = medicalRequest.Status,
                     CreatedTime = medicalRequest.CreatedTime,
+                    ImageUrl = medicalRequest.ImageUrl,
                     Administrations = medicalRequest.MedicationRequestAdministrations?.Select(a => new MedicationAdministrationResponse
                     {
                         Id = a.Id,
@@ -908,7 +926,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -951,7 +970,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -1251,7 +1271,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)

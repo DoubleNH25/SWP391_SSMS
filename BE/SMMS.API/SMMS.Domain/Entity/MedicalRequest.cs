@@ -66,6 +66,8 @@ namespace SMMS.Domain.Entity
         [Required]
         public string Status { get; set; } = "Active";
 
+        public string? ImageUrl { get; set; } // Link ảnh đơn thuốc hoặc liên quan
+
         // Navigation property
         public virtual ICollection<MedicationRequestAdministration> MedicationRequestAdministrations { get; set; }
     }

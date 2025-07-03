@@ -23,5 +23,7 @@ namespace SMMS.Application.DataObject.ResponseObject
         public int TotalAdministrations { get; set; }
         public int CompletedAdministrations { get; set; }
         public DateTime? LastAdministeredAt { get; set; }
+
+        public string? ImageUrl { get; set; } // Link ảnh đơn thuốc hoặc liên quan
     }
 }
