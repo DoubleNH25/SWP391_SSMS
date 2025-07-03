@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SMMS.Application.DataObject.RequestObject
 {
@@ -44,5 +45,7 @@ namespace SMMS.Application.DataObject.RequestObject
         public DateTime EndDate { get; set; }
 
         public string? Notes { get; set; }
+
+        public IFormFile? Image { get; set; } // Ảnh đơn thuốc hoặc liên quan
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using SMMS.Application.DataObject.ResponseObject;
+﻿using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
@@ -71,7 +70,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId)
+		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId, string? parentRejectNote)
 		{
 			var schedule = _repositoryManager.ConselingRepository
 				.FindByCondition(cs => cs.Id == conselingScheduleId && cs.ParentId == parentId, true)
@@ -79,6 +78,10 @@ namespace SMMS.Application.Services.Implements
 			if (schedule == null) return false;
 
 			schedule.Status = status;
+			if (status == ApprovalStatus.Rejected)
+			{
+				schedule.ParentRejectNote = parentRejectNote;
+			}
 			schedule.LastUpdatedBy = parentId;
 			schedule.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConselingRepository.Update(schedule);
@@ -126,7 +129,8 @@ namespace SMMS.Application.Services.Implements
 					CreatedTime = schedule.CreatedTime,
 					CreatedBy = schedule.CreatedBy,
 					UpdatedTime = schedule.LastUpdatedTime,
-					UpdatedBy = schedule.LastUpdatedBy
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
 				});
 			}
 			return responses;
@@ -162,7 +166,8 @@ namespace SMMS.Application.Services.Implements
 					CreatedTime = schedule.CreatedTime,
 					CreatedBy = schedule.CreatedBy,
 					UpdatedTime = schedule.LastUpdatedTime,
-					UpdatedBy = schedule.LastUpdatedBy
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
 				});
 			}
 			return responses;

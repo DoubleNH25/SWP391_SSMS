@@ -12,8 +12,8 @@ using SMMS.Infrastructure.Context;
 namespace SMMS.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250624080628_init")]
-    partial class init
+    [Migration("20250703080821_NewUpdatedAfterReivew")]
+    partial class NewUpdatedAfterReivew
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,6 +180,9 @@ namespace SMMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ParentRejectNote")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -250,15 +253,15 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "42561153-4fc7-4a2f-938d-7b61d062e118",
-                            CreatedBy = "5eb048c7-8d1b-4907-a764-d31951cfa251",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3157), new TimeSpan(0, 0, 0, 0, 0)),
+                            Id = "d0d7fd7a-4153-416f-aeae-cc9597c13e41",
+                            CreatedBy = "7b476d02-42ac-4bed-aab8-93ea4c483239",
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8349), new TimeSpan(0, 0, 0, 0, 0)),
                             Description = "Nha Cai Hang Dau So 1 Dong Nam A",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Name = "Bet88",
                             ScheduledDate = new DateTime(2024, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Status = 0,
-                            UserId = "5eb048c7-8d1b-4907-a764-d31951cfa251"
+                            UserId = "7b476d02-42ac-4bed-aab8-93ea4c483239"
                         });
                 });
 
@@ -304,12 +307,12 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a46384f7-2cb1-4f30-b26f-be4b2c345d06",
+                            Id = "5c4e5339-01ed-4202-bcf0-3105f58861e7",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3221), new TimeSpan(0, 0, 0, 0, 0)),
-                            HealthActivityId = "42561153-4fc7-4a2f-938d-7b61d062e118",
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8416), new TimeSpan(0, 0, 0, 0, 0)),
+                            HealthActivityId = "d0d7fd7a-4153-416f-aeae-cc9597c13e41",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            SchoolClassId = "5dc5695d-fa89-4868-a491-295a193d9035"
+                            SchoolClassId = "82b7f52f-30bf-4a31-a522-18141c517447"
                         });
                 });
 
@@ -421,6 +424,9 @@ namespace SMMS.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("LastUpdatedTime")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("ParentNote")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("StudentId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -441,29 +447,29 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "5db6262d-dab5-4bdd-b060-a5c40ad3f555",
+                            Id = "cf392ce2-265a-4239-93db-faff2fecb03c",
                             AbnormalNote = "None",
                             BMI = 20.5,
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3104), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8254), new TimeSpan(0, 0, 0, 0, 0)),
                             Dental = "No cavities",
                             Hearing = "Normal",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            StudentId = "43add8a1-bf31-41c4-a2a2-fb88f9297d4d",
+                            StudentId = "8a6bb4de-1d72-44f6-950e-7df94f5bd7b9",
                             VaccinationHistory = "Fully using Rocket1h",
                             Vision = "20/20"
                         },
                         new
                         {
-                            Id = "f0fa89af-065a-43f9-8266-6d57b6e797a7",
+                            Id = "031a3887-9cc5-4bee-9c50-cef4256036c7",
                             AbnormalNote = "Monitor dental health",
                             BMI = 19.800000000000001,
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3112), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8263), new TimeSpan(0, 0, 0, 0, 0)),
                             Dental = "Minor cavities",
                             Hearing = "Normal",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            StudentId = "6b994363-b5f6-4413-bef0-e722309115b5",
+                            StudentId = "e15271db-e1df-4cee-93d4-877392148bf3",
                             VaccinationHistory = "Fully using Rocket24/7",
                             Vision = "20/25"
                         });
@@ -553,6 +559,9 @@ namespace SMMS.Infrastructure.Migrations
 
                     b.Property<int>("Frequency")
                         .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastUpdatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -666,9 +675,9 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "517f5e42-e142-40ae-a9ce-af3709af63ef",
+                            Id = "91337070-d805-4e91-a4c5-efa44e4ec146",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3363), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8685), new TimeSpan(0, 0, 0, 0, 0)),
                             DetailInformation = "A supplement for enhancing health and vitality",
                             ExpiryDate = new DateTime(2025, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
@@ -678,9 +687,9 @@ namespace SMMS.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = "dda70569-8148-4b98-a9f4-c52439672989",
+                            Id = "50b49ed7-7d67-4d2e-ab50-70e28a6ecf77",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3371), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8696), new TimeSpan(0, 0, 0, 0, 0)),
                             DetailInformation = "A supplement for enhancing health and vitality",
                             ExpiryDate = new DateTime(2026, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
@@ -690,9 +699,9 @@ namespace SMMS.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = "a83b386f-4429-4376-b2f8-65f091fa0e60",
+                            Id = "415337a4-b9b1-4bcc-b406-0cad52be2c4b",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3376), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8702), new TimeSpan(0, 0, 0, 0, 0)),
                             DetailInformation = "A supplement for enhancing health and vitality",
                             ExpiryDate = new DateTime(2026, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
@@ -702,9 +711,9 @@ namespace SMMS.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = "11ecc00e-c42c-481e-8395-2c859366559d",
+                            Id = "491ac80d-6114-46f0-a299-12f527eae242",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3407), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8717), new TimeSpan(0, 0, 0, 0, 0)),
                             DetailInformation = "A supplement for enhancing health and vitality",
                             ExpiryDate = new DateTime(2026, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
@@ -714,9 +723,9 @@ namespace SMMS.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = "a5780575-0a47-45a5-9233-00eee8312e8f",
+                            Id = "b6c0fff6-1d50-496b-b5c3-3e3bf07743a3",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3411), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8720), new TimeSpan(0, 0, 0, 0, 0)),
                             DetailInformation = "A supplement for enhancing health and vitality",
                             ExpiryDate = new DateTime(2026, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
@@ -915,34 +924,34 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "fa6725ff-fdcb-4387-8a69-81d574ce7fc6",
+                            Id = "971d1580-c72f-4202-81b8-72c6fd2a93cc",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6162), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7753), new TimeSpan(0, 0, 0, 0, 0)),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             RoleName = "Admin"
                         },
                         new
                         {
-                            Id = "2daa2f90-8219-4cc6-82ee-1e62330987c6",
+                            Id = "c06b3052-6744-484c-b51f-896e3bb0be76",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6166), new TimeSpan(0, 0, 0, 0, 0)),
-                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6166), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7756), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7757), new TimeSpan(0, 0, 0, 0, 0)),
                             RoleName = "Manager"
                         },
                         new
                         {
-                            Id = "ab16b5df-da9d-4752-8296-c8bb255f3336",
+                            Id = "826ee8ba-81e3-4d2a-be23-81b91d48ad4e",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6170), new TimeSpan(0, 0, 0, 0, 0)),
-                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6171), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7761), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7762), new TimeSpan(0, 0, 0, 0, 0)),
                             RoleName = "Nurse"
                         },
                         new
                         {
-                            Id = "a826145d-b586-4701-b1b4-528f48d022fc",
+                            Id = "f74f0873-47ab-4039-bd11-57f15f28caa0",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6174), new TimeSpan(0, 0, 0, 0, 0)),
-                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 26, 935, DateTimeKind.Unspecified).AddTicks(6174), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7764), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastUpdatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 792, DateTimeKind.Unspecified).AddTicks(7765), new TimeSpan(0, 0, 0, 0, 0)),
                             RoleName = "Parent"
                         });
                 });
@@ -988,21 +997,21 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "5dc5695d-fa89-4868-a491-295a193d9035",
+                            Id = "82b7f52f-30bf-4a31-a522-18141c517447",
                             ClassName = "Class 10A",
                             ClassRoom = "Room 101",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(2863), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8048), new TimeSpan(0, 0, 0, 0, 0)),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Quantity = 30
                         },
                         new
                         {
-                            Id = "2d3d807d-60cf-438b-a118-0a59b93dea16",
+                            Id = "d319498e-0883-4e2f-a271-aa294031dc5b",
                             ClassName = "Class 10B",
                             ClassRoom = "Room 102",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(2866), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8052), new TimeSpan(0, 0, 0, 0, 0)),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Quantity = 28
                         });
@@ -1076,28 +1085,28 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "43add8a1-bf31-41c4-a2a2-fb88f9297d4d",
-                            ClassId = "5dc5695d-fa89-4868-a491-295a193d9035",
+                            Id = "8a6bb4de-1d72-44f6-950e-7df94f5bd7b9",
+                            ClassId = "82b7f52f-30bf-4a31-a522-18141c517447",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(2921), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8122), new TimeSpan(0, 0, 0, 0, 0)),
                             DateOfBirth = new DateTime(2010, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FullName = "Nguyen Van A",
                             Gender = "Male",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            ParentId = "747c9843-657b-473e-a340-406fe5d934a3",
+                            ParentId = "af84f767-4c3b-41b2-a7ca-d14f877480ca",
                             StudentNumber = 0
                         },
                         new
                         {
-                            Id = "6b994363-b5f6-4413-bef0-e722309115b5",
-                            ClassId = "2d3d807d-60cf-438b-a118-0a59b93dea16",
+                            Id = "e15271db-e1df-4cee-93d4-877392148bf3",
+                            ClassId = "d319498e-0883-4e2f-a271-aa294031dc5b",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(2964), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8125), new TimeSpan(0, 0, 0, 0, 0)),
                             DateOfBirth = new DateTime(2010, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FullName = "Tran Thi B",
                             Gender = "Female",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            ParentId = "747c9843-657b-473e-a340-406fe5d934a3",
+                            ParentId = "af84f767-4c3b-41b2-a7ca-d14f877480ca",
                             StudentNumber = 0
                         });
                 });
@@ -1157,51 +1166,51 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "36829671-692c-48b0-99d0-46fd81c2a764",
+                            Id = "4ad6f400-cd78-440e-a553-5ea03b308e7d",
                             CreatedBy = "SeedData",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 49, DateTimeKind.Unspecified).AddTicks(9911), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 20, 910, DateTimeKind.Unspecified).AddTicks(1060), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "admin@gmail.com",
                             FullName = "KICM vippro",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Password = "$2a$11$tt/5IsDXvnm0/qEoPU3IO.zzxw5QABHYNgx3GBHL5TFHBAuTBf83K",
+                            Password = "$2a$11$2vDZAIOyJqWXkUOu8BqWPu04MFeHCpSqeSr1NbWUPIW8aa/9dz98O",
                             Phone = "0987654321",
-                            RoleId = "fa6725ff-fdcb-4387-8a69-81d574ce7fc6"
+                            RoleId = "971d1580-c72f-4202-81b8-72c6fd2a93cc"
                         },
                         new
                         {
-                            Id = "5eb048c7-8d1b-4907-a764-d31951cfa251",
+                            Id = "7b476d02-42ac-4bed-aab8-93ea4c483239",
                             CreatedBy = "SeedData",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 164, DateTimeKind.Unspecified).AddTicks(787), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 27, DateTimeKind.Unspecified).AddTicks(6704), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "nurse@gmail.com",
                             FullName = "Jack97",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Password = "$2a$11$oMvw1UqOvN3wylHI49KeQeTm9Jy9HlivsTIirMtFBcGtUck7y/3z2",
+                            Password = "$2a$11$SEzXZOSCAfzZuaHwTALkaOf4CpNnuzBcjUFKwJ0JPJjVbaDoj3taK",
                             Phone = "0912345678",
-                            RoleId = "ab16b5df-da9d-4752-8296-c8bb255f3336"
+                            RoleId = "826ee8ba-81e3-4d2a-be23-81b91d48ad4e"
                         },
                         new
                         {
-                            Id = "6b91844f-aadd-469f-aa28-9555642826bb",
+                            Id = "017ce373-28cd-4e88-b579-d4d9e5ba3101",
                             CreatedBy = "SeedData",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 277, DateTimeKind.Unspecified).AddTicks(7401), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 148, DateTimeKind.Unspecified).AddTicks(6108), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "manager@gmail.com",
                             FullName = "FireFly",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Password = "$2a$11$vytDUgNFsUxsNYipO/3Hqu07aS1AjrroaFJzKLfHST9eydt1aHXAO",
+                            Password = "$2a$11$CXg7iNDuGmaYYaUQdnfjgOjEs153F04VaV9zhgGXyMd/i0BfvCFyK",
                             Phone = "0987651234",
-                            RoleId = "2daa2f90-8219-4cc6-82ee-1e62330987c6"
+                            RoleId = "c06b3052-6744-484c-b51f-896e3bb0be76"
                         },
                         new
                         {
-                            Id = "747c9843-657b-473e-a340-406fe5d934a3",
+                            Id = "af84f767-4c3b-41b2-a7ca-d14f877480ca",
                             CreatedBy = "SeedData",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(2165), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(7293), new TimeSpan(0, 0, 0, 0, 0)),
                             Email = "parent@gmail.com",
                             FullName = "KietBap",
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Password = "$2a$11$z7g5i9rdXM8MEFjBaRzuxeG6HEZ7ypHBjRYJSav8c9RAhS4FQ0SaK",
+                            Password = "$2a$11$a4wX0721vAwHLfV409UNwOGhi/T6CZmLHN.j.F8TUu8yS5MCt1S3S",
                             Phone = "0987051234",
-                            RoleId = "a826145d-b586-4701-b1b4-528f48d022fc"
+                            RoleId = "f74f0873-47ab-4039-bd11-57f15f28caa0"
                         });
                 });
 
@@ -1265,16 +1274,16 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "38dcc4d8-65be-4ad9-98aa-522d46716261",
-                            CreatedBy = "5eb048c7-8d1b-4907-a764-d31951cfa251",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3274), new TimeSpan(0, 0, 0, 0, 0)),
+                            Id = "14cffa39-8494-4897-93a5-7f5161ce7d8f",
+                            CreatedBy = "7b476d02-42ac-4bed-aab8-93ea4c483239",
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8472), new TimeSpan(0, 0, 0, 0, 0)),
                             EXP = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             MFG = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "KT88",
                             StartDate = new DateTime(2024, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Status = 0,
-                            UserId = "5eb048c7-8d1b-4907-a764-d31951cfa251",
+                            UserId = "7b476d02-42ac-4bed-aab8-93ea4c483239",
                             VaccineName = "Nha Cai Hang Dau So 1 Chau Au",
                             VaccineType = "Flu"
                         });
@@ -1322,12 +1331,12 @@ namespace SMMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "5e5323fb-11fe-401b-bc75-c9cfcef013d0",
+                            Id = "3e91bdcf-11b0-4e00-bdf7-cccd154a879e",
                             CreatedBy = "System",
-                            CreatedTime = new DateTimeOffset(new DateTime(2025, 6, 24, 8, 6, 27, 392, DateTimeKind.Unspecified).AddTicks(3308), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedTime = new DateTimeOffset(new DateTime(2025, 7, 3, 8, 8, 21, 263, DateTimeKind.Unspecified).AddTicks(8619), new TimeSpan(0, 0, 0, 0, 0)),
                             LastUpdatedTime = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            SchoolClassId = "2d3d807d-60cf-438b-a118-0a59b93dea16",
-                            VaccinationCampaignId = "38dcc4d8-65be-4ad9-98aa-522d46716261"
+                            SchoolClassId = "d319498e-0883-4e2f-a271-aa294031dc5b",
+                            VaccinationCampaignId = "14cffa39-8494-4897-93a5-7f5161ce7d8f"
                         });
                 });
 

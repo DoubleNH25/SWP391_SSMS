@@ -1,6 +1,4 @@
-﻿
-
-namespace SMMS.Application.DataObject.ResponseObject
+﻿namespace SMMS.Application.DataObject.ResponseObject
 {
 	public class HealthProfileResponse
 	{
@@ -12,5 +10,6 @@ namespace SMMS.Application.DataObject.ResponseObject
 		public double BMI { get; set; }
 		public string? AbnormalNote { get; set; }
 		public string? VaccinationHistory { get; set; }
+		public string? ParentNote { get; set; }
 	}
 }

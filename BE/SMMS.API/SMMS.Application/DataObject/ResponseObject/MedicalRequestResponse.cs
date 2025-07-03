@@ -32,6 +32,8 @@ namespace SMMS.Application.DataObject.ResponseObject
         public string Status { get; set; }
         public DateTimeOffset CreatedTime { get; set; }
         
+        public string? ImageUrl { get; set; } // Link ảnh đơn thuốc hoặc liên quan
+        
         // Lịch sử cho thuốc
         public List<MedicationAdministrationResponse> Administrations { get; set; }
     }
