@@ -10,7 +10,7 @@ import {
   TimeIcon,
   CheckCircleIcon,
 } from "@/components/icons";
-import { Home as HomeIcon } from "lucide-react";
+import { Home as HomeIcon, AlertTriangle } from "lucide-react";
 import { useSidebar } from "@/components/context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
