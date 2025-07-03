@@ -1,8 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/auth/Login";
 import ConfirmOTP from "@/pages/auth/ConfirmOTP";
@@ -51,6 +47,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/profile" element={<EditProfile />} />
+          <Route path="/blog" element={<Blog />} />
           <Route index element={<Home />} />
           <Route path="/" element={<Home />} />
           <Route
