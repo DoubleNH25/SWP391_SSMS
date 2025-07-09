@@ -1,6 +1,7 @@
 import Footer from "@/components/layout/FooterHome";
 import { HeaderHome } from "@/components/layout/HeaderHome";
 import { motion } from "framer-motion";
+import BlogFlashCard from "@/components/BlogFlashCard";
 
 const features = [
   {
@@ -148,6 +149,37 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Section: Blog Flash Cards */}
+      <section id="blog-section" className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-blue-700">
+              Bài viết mới nhất
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Khám phá những thông tin y tế, dinh dưỡng và hoạt động mới nhất từ
+              hệ thống y tế trường học
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="mb-12"
+          >
+            <BlogFlashCard autoPlayInterval={6000} maxBlogs={5} />
+          </motion.div>
         </div>
       </section>
 

@@ -4,12 +4,14 @@ export interface HealthProfile {
   vision: string;
   hearing: string;
   dental: string;
+  height: number;
+  weight: number;
   bmi: number;
   abnormalNote: string;
   vaccinationHistory: string;
 }
 
-export interface ClassRoom{
+export interface ClassRoom {
   id: string;
   className: string;
   classRoom: string;
@@ -20,18 +22,19 @@ export interface Student {
   id: string;
   fullName: string;
   gender: string;
-  dateOfBirth: string; 
+  dateOfBirth: string;
   classId: string;
   studentClass: ClassRoom;
   image: string | null;
   healthProfile: HealthProfile;
 }
 
-
 export interface HealthProfileUpdate {
   vision: string;
   hearing: string;
   dental: string;
+  height: number;
+  weight: number;
   bmi: number;
   abnormalNote: string;
   vaccinationHistory: string;

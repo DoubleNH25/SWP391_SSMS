@@ -13,17 +13,7 @@ export function HeaderHome() {
   const payload = DecodeJWT();
   const role =
     payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-  const userName =
-    payload?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ||
-    payload?.email ||
-    "Người dùng";
   const isLoggedIn = !!payload && !!role;
-
-  const handleSignOut = async (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.removeItem("token");
-    navigate("/");
-  };
 
   const handleScrollTo =
     (id: string, anchor: "about" | "contact") => (e: React.MouseEvent) => {
@@ -117,30 +107,53 @@ export function HeaderHome() {
             </a>
           </li>
           <li>
-            <a
-              href="/blog"
-              onClick={(e) => {
-                e.preventDefault();
-                setAnchorActive(null);
-                navigate("/blog");
-              }}
-              className={`font-medium relative group transition-colors duration-300
-                ${
-                  isActive("/blog")
-                    ? "text-blue-600"
-                    : "text-gray-900 hover:text-blue-600"
-                }
-              `}
-            >
-              Blog
-              <span
-                className={`
-                absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                ${isActive("/blog") ? "w-full" : "w-0"}
-                group-hover:w-full
-              `}
-              ></span>
-            </a>
+            {location.pathname === "/" ? (
+              <a
+                href="#blog-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setAnchorActive(null);
+                  const el = document.getElementById("blog-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`font-medium relative group transition-colors duration-300
+                  text-gray-900 hover:text-blue-600
+                `}
+              >
+                Blog
+                <span
+                  className={`
+                  absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
+                  group-hover:w-full
+                `}
+                ></span>
+              </a>
+            ) : (
+              <a
+                href="/blog"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setAnchorActive(null);
+                  navigate("/blog");
+                }}
+                className={`font-medium relative group transition-colors duration-300
+                  ${
+                    isActive("/blog")
+                      ? "text-blue-600"
+                      : "text-gray-900 hover:text-blue-600"
+                  }
+                `}
+              >
+                Blog
+                <span
+                  className={`
+                  absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
+                  ${isActive("/blog") ? "w-full" : "w-0"}
+                  group-hover:w-full
+                `}
+                ></span>
+              </a>
+            )}
           </li>
           <li>
             <a

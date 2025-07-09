@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Eye, Plus, Pencil, Trash, UserCircle } from "lucide-react";
+import { getBlogPreview } from "@/utils/stripHtml";
+import defaultBlogImg from "@/assets/images.jpg";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import {
   FetchAllBlogs,
@@ -13,8 +15,20 @@ import {
 } from "@/services/BlogService";
 import { BlogResponse, BlogRequest } from "@/types/Blog";
 import { showToast } from "@/components/ui/Toast";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { useLocation } from "react-router-dom";
+
+// Lấy thumbnail cho blog card: ưu tiên blog.image, sau đó ảnh đầu tiên trong content, cuối cùng là ảnh mặc định
+function getBlogThumbnail(blog: BlogResponse) {
+  if (blog.image) return blog.image;
+  const match = blog.content.match(/<img[^>]+src=["']([^"'>]+)["']/i);
+  if (match && match[1]) return match[1];
+  return defaultBlogImg;
+}
 
 export default function Blog() {
+  const location = useLocation();
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -31,6 +45,18 @@ export default function Blog() {
     image: null as File | null,
   });
   const [formLoading, setFormLoading] = useState(false);
+
+  // React Quill toolbar cấu hình để hỗ trợ chèn ảnh
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["blockquote", "code-block"],
+      ["link", "image"],
+      ["clean"],
+    ],
+  };
 
   // Get current user role
   const payload = DecodeJWT();
@@ -52,6 +78,19 @@ export default function Blog() {
   useEffect(() => {
     fetchBlogs();
   }, []);
+
+  // Tự động mở modal xem chi tiết nếu có id trên URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const blogId = params.get("id");
+    if (blogId && blogs.length > 0) {
+      const found = blogs.find((b) => b.id === blogId);
+      if (found) {
+        setSelectedBlog(found);
+        setIsViewModalOpen(true);
+      }
+    }
+  }, [location.search, blogs]);
 
   const fetchBlogs = async () => {
     setLoading(true);
@@ -80,19 +119,12 @@ export default function Blog() {
     });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      image: e.target.files ? e.target.files[0] : null,
-    });
-  };
-
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, title: e.target.value });
   };
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData({ ...formData, content: e.target.value });
+  const handleContentChange = (value: string) => {
+    setFormData({ ...formData, content: value });
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -272,32 +304,44 @@ export default function Blog() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Blog cards */}
-        {blogs.map((blog) => (
-          <div
-            key={blog.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            {blog.image && (
+        {blogs.length === 0 ? (
+          <div className="col-span-3 text-center py-16 text-gray-400 text-lg font-medium">
+            Chưa có bài viết nào.
+          </div>
+        ) : (
+          blogs.map((blog) => (
+            <div
+              key={blog.id}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
+            >
               <img
-                src={blog.image}
+                src={getBlogThumbnail(blog)}
                 alt={blog.title}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 object-cover object-center rounded-t-2xl"
               />
-            )}
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {blog.title}
-              </h3>
-              <p className="text-gray-600 text-sm mb-4">
-                {truncateContent(blog.content)}
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-gray-500 text-sm">
-                  <UserCircle className="w-4 h-4" />
-                  <span>{blog.userName}</span>
-                </div>
-                <div className="flex items-center gap-2">
+              <div className="flex-1 flex flex-col p-5">
+                <h3 className="font-bold text-lg mb-2 text-gray-900 line-clamp-2">
+                  {blog.title}
+                </h3>
+                {(() => {
+                  const preview = getBlogPreview(
+                    truncateContent(blog.content, 120)
+                  );
+                  return preview ? (
+                    <div className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {preview}
+                    </div>
+                  ) : null;
+                })()}
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs">
+                    <UserCircle className="w-4 h-4" />
+                    <span>{blog.userName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400 text-xs">
+                    <Eye className="w-4 h-4" />
+                    <span>{blog.view}</span>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -331,8 +375,8 @@ export default function Blog() {
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Modals */}
@@ -345,7 +389,7 @@ export default function Blog() {
           resetForm();
         }}
       >
-        <div className="p-6">
+        <div className="p-6 max-w-xl w-full mx-auto">
           <h2 className="text-2xl font-bold mb-6">
             {isCreateModalOpen ? "Tạo bài viết mới" : "Chỉnh sửa bài viết"}
           </h2>
@@ -366,12 +410,14 @@ export default function Blog() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nội dung
               </label>
-              <textarea
+              <ReactQuill
                 value={formData.content}
                 onChange={handleContentChange}
                 placeholder="Nhập nội dung bài viết"
-                rows={6}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                theme="snow"
+                modules={quillModules}
+                className="bg-white rounded-md border border-input"
+                style={{ minHeight: 180 }}
               />
             </div>
             <div>
@@ -390,17 +436,7 @@ export default function Blog() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hình ảnh
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
+            {/* Đã bỏ mục upload hình ảnh, chỉ chèn ảnh trong nội dung bằng React Quill */}
             <div className="flex justify-end gap-2 mt-6">
               <Button
                 variant="outline"
