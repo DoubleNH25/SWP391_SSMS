@@ -369,7 +369,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">📏 Chiều cao:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                            student.healthProfile.height != null
+                            student.healthProfile.height !== undefined &&
+                            student.healthProfile.height !== null &&
+                            String(student.healthProfile.height) !== "" &&
+                            String(student.healthProfile.height) !== "0"
                               ? `${student.healthProfile.height} cm`
                               : "Chưa cập nhật"}
                           </span>
@@ -378,7 +381,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">⚖️ Cân nặng:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                            student.healthProfile.weight != null
+                            student.healthProfile.weight !== undefined &&
+                            student.healthProfile.weight !== null &&
+                            String(student.healthProfile.weight) !== "" &&
+                            String(student.healthProfile.weight) !== "0"
                               ? `${student.healthProfile.weight} kg`
                               : "Chưa cập nhật"}
                           </span>
@@ -477,13 +483,12 @@ export default function HealthProfiles() {
                 Chiều cao (cm)
               </Label>
               <Input
-                type="number"
+                type="text"
                 name="height"
                 value={formData.height}
                 onChange={handleInputChange}
                 className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Ví dụ: 170"
-                min={0}
               />
             </div>
             <div>
@@ -491,13 +496,12 @@ export default function HealthProfiles() {
                 Cân nặng (kg)
               </Label>
               <Input
-                type="number"
+                type="text"
                 name="weight"
                 value={formData.weight}
                 onChange={handleInputChange}
                 className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Ví dụ: 65"
-                min={0}
               />
             </div>
             <div>

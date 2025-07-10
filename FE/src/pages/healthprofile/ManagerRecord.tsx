@@ -1,5 +1,11 @@
-import { FecthHealthCheckup, FecthVaccinationRecords } from "@/services/HealthProfileService";
-import { MedicalHealthCheckupRecord, MedicalVaccinationRecord } from "@/types/MedicalRecord";
+import {
+  FecthHealthCheckup,
+  FecthVaccinationRecords,
+} from "@/services/HealthProfileService";
+import {
+  MedicalHealthCheckupRecord,
+  MedicalVaccinationRecord,
+} from "@/types/MedicalRecord";
 import { useCallback, useEffect, useState } from "react";
 import {
   ChevronDownIcon,
@@ -29,9 +35,14 @@ export default function ManagerRecord() {
   const [healthCheckup, setHealthCheckup] = useState<
     MedicalHealthCheckupRecord[]
   >([]);
-  const [vaccinationRecords, setVaccinationRecords] = useState<MedicalVaccinationRecord[]>([]);
+  const [vaccinationRecords, setVaccinationRecords] = useState<
+    MedicalVaccinationRecord[]
+  >([]);
   const [filteredRecords, setFilteredRecords] = useState<
-    (MedicalHealthCheckupRecord & { recordType: 'healthCheckup' } | MedicalVaccinationRecord & { recordType: 'vaccination' })[]
+    (
+      | (MedicalHealthCheckupRecord & { recordType: "healthCheckup" })
+      | (MedicalVaccinationRecord & { recordType: "vaccination" })
+    )[]
   >([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -110,15 +121,6 @@ export default function ManagerRecord() {
   // Logic: Khi xác nhận/từ chối, luôn gửi conselingScheduleId lấy từ selectedConseling.id
   const handleSubmit = useCallback(
     async (status: string) => {
-      const actionText = status === "Approved" ? "xác nhận" : "từ chối";
-      const userConfirmed = window.confirm(
-        `Bạn có chắc chắn muốn ${actionText} lịch tư vấn này không?`
-      );
-
-      if (!userConfirmed) {
-        return;
-      }
-
       if (!selectedConseling?.id) {
         showToast.error("Không tìm thấy lịch tư vấn phù hợp!");
         return;
@@ -186,36 +188,42 @@ export default function ManagerRecord() {
   useEffect(() => {
     // Combine health checkup and vaccination records with type indicators
     const combinedRecords = [
-      ...healthCheckup.map(record => ({ ...record, recordType: 'healthCheckup' as const })),
-      ...vaccinationRecords.map(record => ({ ...record, recordType: 'vaccination' as const }))
+      ...healthCheckup.map((record) => ({
+        ...record,
+        recordType: "healthCheckup" as const,
+      })),
+      ...vaccinationRecords.map((record) => ({
+        ...record,
+        recordType: "vaccination" as const,
+      })),
     ];
 
     let filtered = [...combinedRecords];
 
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(
-        (record) => {
-          if (record.recordType === 'healthCheckup') {
-            return record.studentName
+      filtered = filtered.filter((record) => {
+        if (record.recordType === "healthCheckup") {
+          return (
+            record.studentName
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
-              (record.nurseName || "")
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
-          } else {
-            return record.studentName
+            (record.nurseName || "")
               .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-          }
+              .includes(searchQuery.toLowerCase())
+          );
+        } else {
+          return record.studentName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
         }
-      );
+      });
     }
 
     // Apply status filter (only for health checkup records with consultation schedules)
     if (selectedStatus !== "all") {
       filtered = filtered.filter((record) => {
-        if (record.recordType === 'healthCheckup') {
+        if (record.recordType === "healthCheckup") {
           const schedule = conselingSchedules.find(
             (c) => c.healthCheckupId === record.healthCheckUpId
           );
@@ -228,9 +236,11 @@ export default function ManagerRecord() {
     // Apply abnormal status filter (only for health checkup records)
     if (selectedAbnormalStatus !== "all") {
       filtered = filtered.filter((record) => {
-        if (record.recordType === 'healthCheckup') {
+        if (record.recordType === "healthCheckup") {
           const isAbnormal = hasAbnormalities(record);
-          return selectedAbnormalStatus === "abnormal" ? isAbnormal : !isAbnormal;
+          return selectedAbnormalStatus === "abnormal"
+            ? isAbnormal
+            : !isAbnormal;
         }
         return true; // Vaccination records don't have abnormal status
       });
@@ -244,7 +254,11 @@ export default function ManagerRecord() {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
       filtered = filtered.filter((record) => {
-        const recordDate = new Date(record.recordType === 'healthCheckup' ? record.recordDate : record.vaccinatedAt);
+        const recordDate = new Date(
+          record.recordType === "healthCheckup"
+            ? record.recordDate
+            : record.vaccinatedAt
+        );
         recordDate.setHours(0, 0, 0, 0);
         return recordDate >= start;
       });
@@ -254,7 +268,11 @@ export default function ManagerRecord() {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
       filtered = filtered.filter((record) => {
-        const recordDate = new Date(record.recordType === 'healthCheckup' ? record.recordDate : record.vaccinatedAt);
+        const recordDate = new Date(
+          record.recordType === "healthCheckup"
+            ? record.recordDate
+            : record.vaccinatedAt
+        );
         recordDate.setHours(0, 0, 0, 0);
         return recordDate <= end;
       });
@@ -262,8 +280,12 @@ export default function ManagerRecord() {
 
     // Apply sorting
     filtered.sort((a, b) => {
-      const dateA = new Date(a.recordType === 'healthCheckup' ? a.recordDate : a.vaccinatedAt).getTime();
-      const dateB = new Date(b.recordType === 'healthCheckup' ? b.recordDate : b.vaccinatedAt).getTime();
+      const dateA = new Date(
+        a.recordType === "healthCheckup" ? a.recordDate : a.vaccinatedAt
+      ).getTime();
+      const dateB = new Date(
+        b.recordType === "healthCheckup" ? b.recordDate : b.vaccinatedAt
+      ).getTime();
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
 
@@ -489,8 +511,8 @@ export default function ManagerRecord() {
                       {selectedStatus === "Pending"
                         ? "chờ xác nhận"
                         : selectedStatus === "Approved"
-                          ? "đã xác nhận"
-                          : "đã từ chối"}
+                        ? "đã xác nhận"
+                        : "đã từ chối"}
                     </span>
                   )}
                   {selectedStatus !== "all" &&
@@ -512,11 +534,11 @@ export default function ManagerRecord() {
                     <span className="font-medium">
                       {startDate && endDate
                         ? `từ ${DateUtils.customFormatDateOnly(
-                          startDate
-                        )} đến ${DateUtils.customFormatDateOnly(endDate)}`
+                            startDate
+                          )} đến ${DateUtils.customFormatDateOnly(endDate)}`
                         : startDate
-                          ? `từ ${DateUtils.customFormatDateOnly(startDate)}`
-                          : `đến ${DateUtils.customFormatDateOnly(endDate)}`}
+                        ? `từ ${DateUtils.customFormatDateOnly(startDate)}`
+                        : `đến ${DateUtils.customFormatDateOnly(endDate)}`}
                     </span>
                   )}
                 </span>
@@ -531,21 +553,24 @@ export default function ManagerRecord() {
         >
           {paginatedRecords.map((item) => {
             // Type guard to check if it's a health checkup record
-            const isHealthCheckup = 'healthCheckUpId' in item;
+            const isHealthCheckup = "healthCheckUpId" in item;
 
             if (isHealthCheckup) {
               // Render health checkup record
-              const healthCheckupItem = item as MedicalHealthCheckupRecord & { recordType: 'healthCheckup' };
+              const healthCheckupItem = item as MedicalHealthCheckupRecord & {
+                recordType: "healthCheckup";
+              };
               const schedule = conselingSchedules.find(
                 (c) => c.healthCheckupId === healthCheckupItem.healthCheckUpId
               );
               return (
                 <div
                   key={healthCheckupItem.healthCheckUpId}
-                  className={`relative bg-white rounded-xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${hasAbnormalities(healthCheckupItem)
-                    ? "border-orange-200 ring-1 ring-orange-100"
-                    : "border-gray-200"
-                    }`}
+                  className={`relative bg-white rounded-xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${
+                    hasAbnormalities(healthCheckupItem)
+                      ? "border-orange-200 ring-1 ring-orange-100"
+                      : "border-gray-200"
+                  }`}
                 >
                   {/* Status Indicators */}
                   <div className="absolute top-[1rem] right-[13%] flex flex-col items-end gap-[2.3rem] z-10">
@@ -596,12 +621,16 @@ export default function ManagerRecord() {
                         </h3>
                         <p className="text-sm text-gray-500 mb-3">
                           Ngày khám:{" "}
-                          {DateUtils.customFormatDateOnly(healthCheckupItem.recordDate)}
+                          {DateUtils.customFormatDateOnly(
+                            healthCheckupItem.recordDate
+                          )}
                         </p>
                         <div className="flex items-center text-sm text-gray-600">
                           <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></div>
                           <span className="font-medium">Y tá:</span>
-                          <span className="ml-2 truncate">{healthCheckupItem.nurseName}</span>
+                          <span className="ml-2 truncate">
+                            {healthCheckupItem.nurseName}
+                          </span>
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-gray-400">
@@ -628,10 +657,11 @@ export default function ManagerRecord() {
                                 ? "Có lịch tư vấn chờ xác nhận"
                                 : "Xem lịch tư vấn"
                             }
-                            className={`group w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${schedule.status === "Pending"
-                              ? "text-amber-700 bg-amber-100 hover:bg-amber-200 ring-amber-300 shadow-amber-200"
-                              : "text-blue-600 bg-blue-50 hover:bg-blue-100 ring-blue-300"
-                              }`}
+                            className={`group w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${
+                              schedule.status === "Pending"
+                                ? "text-amber-700 bg-amber-100 hover:bg-amber-200 ring-amber-300 shadow-amber-200"
+                                : "text-blue-600 bg-blue-50 hover:bg-blue-100 ring-blue-300"
+                            }`}
                           >
                             <CalendarIcon className="w-5 h-5" />
                             <span className="font-medium text-sm">
@@ -681,10 +711,11 @@ export default function ManagerRecord() {
 
                         {hasAbnormalities(healthCheckupItem) && (
                           <div
-                            className={`bg-white p-4 rounded-lg border-l-4 ${hasAbnormalities(healthCheckupItem)
-                              ? "border-orange-400 bg-orange-50/50"
-                              : "border-gray-200"
-                              }`}
+                            className={`bg-white p-4 rounded-lg border-l-4 ${
+                              hasAbnormalities(healthCheckupItem)
+                                ? "border-orange-400 bg-orange-50/50"
+                                : "border-gray-200"
+                            }`}
                           >
                             <div className="flex items-start gap-2">
                               {hasAbnormalities(healthCheckupItem) && (
@@ -708,7 +739,9 @@ export default function ManagerRecord() {
               );
             } else {
               // Render vaccination record
-              const vaccinationItem = item as MedicalVaccinationRecord & { recordType: 'vaccination' };
+              const vaccinationItem = item as MedicalVaccinationRecord & {
+                recordType: "vaccination";
+              };
               return (
                 <div
                   key={vaccinationItem.id}
@@ -727,7 +760,9 @@ export default function ManagerRecord() {
                         <div className="flex items-center text-sm text-gray-600">
                           <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
                           <span className="font-medium">Vaccine:</span>
-                          <span className="ml-2 truncate">{vaccinationItem.vaccineName}</span>
+                          <span className="ml-2 truncate">
+                            {vaccinationItem.vaccineName}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -845,10 +880,11 @@ export default function ManagerRecord() {
               <Button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-gray-200 hover:bg-gray-50"
-                  }`}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === page
+                    ? "bg-blue-600 text-white"
+                    : "bg-white border border-gray-200 hover:bg-gray-50"
+                }`}
               >
                 {page}
               </Button>

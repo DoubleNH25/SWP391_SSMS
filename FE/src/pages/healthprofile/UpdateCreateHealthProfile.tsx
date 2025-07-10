@@ -34,7 +34,6 @@ export default function UpdateCreateHealthProfile() {
     vaccinationHistory: "",
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -44,12 +43,12 @@ export default function UpdateCreateHealthProfile() {
     try {
       const response = await FecthStudentById(studentId);
       setStudent(response);
-    } catch (err) {
-      setError(
-        err instanceof Error && err.message.includes("authenticated")
-          ? "Vui lòng đăng nhập để xem hồ sơ sức khỏe."
-          : "Không thể lấy dữ liệu hồ sơ sức khỏe. Vui lòng thử lại sau."
-      );
+    } catch {
+      // setError(
+      //   err instanceof Error && err.message.includes("authenticated")
+      //     ? "Vui lòng đăng nhập để xem hồ sơ sức khỏe."
+      //     : "Không thể lấy dữ liệu hồ sơ sức khỏe. Vui lòng thử lại sau."
+      // );
     } finally {
       setLoading(false);
     }
@@ -69,28 +68,31 @@ export default function UpdateCreateHealthProfile() {
     setHealthProfile(null);
   }, []);
 
-  const fetchHealthProfile = useCallback(async (studentId: string) => {
-    setLoading(true);
-    try {
-      const response = await FecthHealthProfileByStudentId(studentId);
-      setHealthProfile(response);
-      const data = {
-        vision: response?.vision || "",
-        hearing: response?.hearing || "",
-        dental: response?.dental || "",
-        height: response?.height || 0,
-        weight: response?.weight || 0,
-        bmi: response?.bmi || 0,
-        abnormalNote: response?.abnormalNote || "",
-        vaccinationHistory: response?.vaccinationHistory || "",
-      };
-      setFormData(data);
-    } catch (err) {
-      clearFormData();
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchHealthProfile = useCallback(
+    async (studentId: string) => {
+      setLoading(true);
+      try {
+        const response = await FecthHealthProfileByStudentId(studentId);
+        setHealthProfile(response);
+        const data = {
+          vision: response?.vision || "",
+          hearing: response?.hearing || "",
+          dental: response?.dental || "",
+          height: response?.height || 0,
+          weight: response?.weight || 0,
+          bmi: response?.bmi || 0,
+          abnormalNote: response?.abnormalNote || "",
+          vaccinationHistory: response?.vaccinationHistory || "",
+        };
+        setFormData(data);
+      } catch {
+        clearFormData();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [clearFormData]
+  );
 
   const handleDelete = useCallback(async () => {
     try {
@@ -99,7 +101,7 @@ export default function UpdateCreateHealthProfile() {
       setTimeout(() => {
         showToast.success("Xóa thành công");
       }, 100);
-    } catch (error) {
+    } catch {
       showToast.error("Xóa thất bại");
     }
   }, [studentId, navigate]);
@@ -151,7 +153,7 @@ export default function UpdateCreateHealthProfile() {
             showToast.success("Tạo hồ sơ sức khỏe thành công");
           }, 100);
         }
-      } catch (error) {
+      } catch {
         showToast.error("Cập nhật thất bại");
       }
     },
@@ -161,7 +163,6 @@ export default function UpdateCreateHealthProfile() {
   return (
     <>
       {loading && <div>Loading...</div>}
-      {error && <div>{error}</div>}
       {student && (
         <div className="flex flex-col gap-4 p-6 bg-white rounded-lg shadow-md mx-auto w-3/4 mt-5">
           <PageHeader title="Cập nhật hồ sơ sức khỏe" icon={<PencilIcon />} />
@@ -238,21 +239,31 @@ export default function UpdateCreateHealthProfile() {
                     <div className="w-1/3">
                       <Label>Chiều cao (cm)</Label>
                       <Input
-                        type="number"
-                        value={formData?.height || healthProfile?.height || ""}
+                        type="text"
+                        value={
+                          formData?.height !== undefined
+                            ? String(formData.height)
+                            : healthProfile?.height !== undefined
+                            ? String(healthProfile.height)
+                            : ""
+                        }
                         onChange={handleInputChange}
                         name="height"
-                        min={0}
                       />
                     </div>
                     <div className="w-1/3">
                       <Label>Cân nặng (kg)</Label>
                       <Input
-                        type="number"
-                        value={formData?.weight || healthProfile?.weight || ""}
+                        type="text"
+                        value={
+                          formData?.weight !== undefined
+                            ? String(formData.weight)
+                            : healthProfile?.weight !== undefined
+                            ? String(healthProfile.weight)
+                            : ""
+                        }
                         onChange={handleInputChange}
                         name="weight"
-                        min={0}
                       />
                     </div>
                     <div className="w-1/3">
@@ -261,7 +272,6 @@ export default function UpdateCreateHealthProfile() {
                         type="number"
                         value={formData?.bmi || healthProfile?.bmi || ""}
                         name="bmi"
-                        readOnly
                         disabled
                       />
                     </div>
