@@ -134,6 +134,8 @@ namespace SMMS.Infrastructure.Context
                     .WithMany(r => r.HealthCheckupRecords)
                     .HasForeignKey(ur => ur.HealthActivityId)
                     .OnDelete(DeleteBehavior.Restrict);
+                hcr.Property(e => e.Weight).HasColumnType("float");
+                hcr.Property(e => e.Height).HasColumnType("float");
             });
 
             // ConselingSchedule - Student, MedicalStaff, Parent, HealthCheckup (N-1)
@@ -460,6 +462,7 @@ namespace SMMS.Infrastructure.Context
 						Name = "Rocket1s",
 						Quantity = 100,
                         DetailInformation = "A supplement for enhancing health and vitality",
+						Supplier = "PharmaCorp",
 						ExpiryDate = new DateTime(2025, 12, 31),
 						Status = MedicalStockStatus.Available,
 						CreatedBy = "System",
@@ -471,6 +474,7 @@ namespace SMMS.Infrastructure.Context
 						Name = "Rocket1m",
 						Quantity = 50,
 						DetailInformation = "A supplement for enhancing health and vitality",
+						Supplier = "MediSupply",
 						ExpiryDate = new DateTime(2026, 6, 30),
 						Status = MedicalStockStatus.Available,
 						CreatedBy = "System",
@@ -483,6 +487,7 @@ namespace SMMS.Infrastructure.Context
 						Name = "Rocket1h",
 						Quantity = 50,
 						DetailInformation = "A supplement for enhancing health and vitality",
+						Supplier = "HealthPlus",
 						ExpiryDate = new DateTime(2026, 6, 30),
 						Status = MedicalStockStatus.Available,
 						CreatedBy = "System",
@@ -495,6 +500,7 @@ namespace SMMS.Infrastructure.Context
 						Name = "Rocket12h",
 						Quantity = 50,
 						DetailInformation = "A supplement for enhancing health and vitality",
+						Supplier = "VitaCare",
 						ExpiryDate = new DateTime(2026, 6, 30),
 						Status = MedicalStockStatus.Available,
 						CreatedBy = "System",
@@ -507,6 +513,7 @@ namespace SMMS.Infrastructure.Context
 						Name = "Rocket-24/7",
 						Quantity = 50,
 						DetailInformation = "A supplement for enhancing health and vitality",
+						Supplier = "WellnessPharma",
 						ExpiryDate = new DateTime(2026, 6, 30),
 						Status = MedicalStockStatus.Available,
 						CreatedBy = "System",

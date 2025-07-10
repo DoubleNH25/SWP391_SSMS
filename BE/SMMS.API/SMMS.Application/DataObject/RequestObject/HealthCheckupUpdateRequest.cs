@@ -10,6 +10,8 @@ namespace SMMS.Application.DataObject.RequestObject
 		public string? Hearing { get; set; }
 		public string? Dental { get; set; }
 		public double BMI { get; set; }
+		public double Weight { get; set; }
+		public double Height { get; set; }
 		public string? AbnormalNote { get; set; }
 		public CheckingStatus CheckingStatus { get; set; }
 	}
