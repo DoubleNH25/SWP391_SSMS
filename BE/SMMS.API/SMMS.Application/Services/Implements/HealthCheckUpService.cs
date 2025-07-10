@@ -86,6 +86,8 @@ namespace SMMS.Application.Services.Implements
 			record.Hearing = request.Hearing ?? string.Empty;
 			record.Dental = request.Dental ?? string.Empty;
 			record.BMI = request.BMI;
+			record.Weight = request.Weight;
+			record.Height = request.Height;
 			record.AbnormalNote = request.AbnormalNote ?? string.Empty;
 			record.RecordDate = DateTimeOffset.UtcNow.DateTime;
 			record.CheckingStatus = request.CheckingStatus;
@@ -137,6 +139,8 @@ namespace SMMS.Application.Services.Implements
 				Hearing = record.Hearing,
 				Dental = record.Dental,
 				BMI = record.BMI,
+				Weight = record.Weight,
+				Height = record.Height,
 				AbnormalNote = record.AbnormalNote,
 				CreatedBy = "System",
 				CreatedTime = DateTimeOffset.UtcNow,
@@ -164,6 +168,8 @@ namespace SMMS.Application.Services.Implements
 						Hearing = hcr.Hearing,
 						Dental = hcr.Dental,
 						BMI = hcr.BMI,
+						Weight = hcr.Weight,
+						Height = hcr.Height,
 						AbnormalNote = hcr.AbnormalNote,
 						RecordDate = hcr.RecordDate,
 						Time = hcr.Time,
@@ -198,6 +204,8 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,
@@ -232,6 +240,8 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,
@@ -267,6 +277,8 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,
@@ -301,6 +313,8 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,

@@ -27,6 +27,8 @@ namespace SMMS.Domain.Entity
         public DateTime Time { get; set; }
 		public DateTime RecordDate { get; set; }
         public bool IsLatest { get; set; }
+        public double Weight { get; set; }
+        public double Height { get; set; }
 
         public CheckingStatus CheckingStatus { get; set; }
 
