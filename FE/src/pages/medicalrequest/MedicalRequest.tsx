@@ -20,6 +20,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationModal";
+import {
+  FecthMedicalRequest,
+  FecthMedicalRequestById,
+  FecthMedicalRequestByStudent,
+  FecthMedicalRequestByParent,
+  FecthMedicalRequestByDate,
+  FecthMedicalRequestToday,
+  FecthMedicalRequestSearch
+} from "@/services/MedicalRequest";
+import { ListMedicalRequestViewModel, MedicalRequestViewModel } from "@/types/MedicalRequest";
+import { Modal } from "@/components/ui/modal";
+import UpdateMedicationModal from "@/components/medicalrequest/UpdateMedicationModal";
+import { FecthUpdateMedicalRequest } from "@/services/MedicalRequest";
+import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmationModal";
+import { FecthDeleteMedicalRequest } from "@/services/MedicalRequest";
 
 export default function MedicalRequest() {
   const navigate = useNavigate();
@@ -45,6 +60,26 @@ export default function MedicalRequest() {
   const [showMedicationModal, setShowMedicationModal] = useState(false);
   const [selectedStudentForModal, setSelectedStudentForModal] =
     useState<Student | null>(null);
+
+  const [medicalRequests, setMedicalRequests] = useState<ListMedicalRequestViewModel[]>([]);
+  const [medicalRequestsLoading, setMedicalRequestsLoading] = useState(false);
+
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [medicalRequestDetail, setMedicalRequestDetail] = useState<MedicalRequestViewModel | null>(null);
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateRequest, setUpdateRequest] = useState<any>({});
+  const [updating, setUpdating] = useState(false);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDeleteRequest, setSelectedDeleteRequest] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [filterStudent, setFilterStudent] = useState("");
+  const [filterParent, setFilterParent] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [advancedSearch, setAdvancedSearch] = useState({ keyword: "" });
 
   const fetchParent = useCallback(async () => {
     setLoading(true);
@@ -185,10 +220,114 @@ export default function MedicalRequest() {
     [selectedStudentForModal]
   );
 
+  const fetchMedicalRequests = useCallback(async () => {
+    setMedicalRequestsLoading(true);
+    try {
+      const data = await FecthMedicalRequest();
+      setMedicalRequests(data || []);
+    } catch (err) {
+      setMedicalRequests([]);
+    } finally {
+      setMedicalRequestsLoading(false);
+    }
+  }, []);
+
+  const handleShowDetail = async (id: string) => {
+    setDetailLoading(true);
+    setShowDetailModal(true);
+    try {
+      const detail = await FecthMedicalRequestById(id);
+      setMedicalRequestDetail(detail);
+    } catch (err) {
+      setMedicalRequestDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    if (!medicalRequestDetail) return;
+    setUpdateRequest({
+      parentName: medicalRequestDetail.parentName,
+      phoneNumber: medicalRequestDetail.phoneNumber,
+      studentName: medicalRequestDetail.studentName,
+      medicationName: medicalRequestDetail.medicationName,
+      form: "",
+      dosage: "",
+      route: "",
+      frequency: 1,
+      totalQuantity: medicalRequestDetail.totalQuantity,
+      timeToAdminister: medicalRequestDetail.timeToAdminister,
+      startDate: medicalRequestDetail.startDate,
+      endDate: medicalRequestDetail.endDate,
+      note: medicalRequestDetail.notes,
+    });
+    setShowUpdateModal(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (!medicalRequestDetail) return;
+    setUpdating(true);
+    try {
+      // Map lại dữ liệu đúng format API
+      const payload = {
+        studentId: medicalRequestDetail.studentId,
+        parentId: medicalRequestDetail.parentId,
+        medicalRequestItems: [
+          {
+            medicationName: updateRequest.medicationName,
+            form: updateRequest.form,
+            dosage: updateRequest.dosage,
+            route: updateRequest.route,
+            frequency: updateRequest.frequency,
+            totalQuantity: Number(updateRequest.totalQuantity),
+            timeToAdminister: updateRequest.timeToAdminister,
+            startDate: updateRequest.startDate,
+            endDate: updateRequest.endDate,
+            notes: updateRequest.note,
+          },
+        ],
+      };
+      await FecthUpdateMedicalRequest(medicalRequestDetail.id, payload);
+      setShowUpdateModal(false);
+      setShowDetailModal(false);
+      await fetchMedicalRequests();
+      await handleShowDetail(medicalRequestDetail.id);
+    } catch (err: any) {
+      alert(err.message || "Cập nhật đơn thuốc thất bại");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDeleteClick = (req: any) => {
+    setSelectedDeleteRequest({
+      medicationRequestId: req.id,
+      studentName: req.studentName,
+      medicationName: req.medicationName,
+    });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDeleteRequest?.medicationRequestId) return;
+    setDeleting(true);
+    try {
+      await FecthDeleteMedicalRequest(selectedDeleteRequest.medicationRequestId);
+      setShowDeleteModal(false);
+      await fetchMedicalRequests();
+    } catch (err: any) {
+      alert(err.message || "Xóa đơn thuốc thất bại");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     fetchParent();
     fetchAllStudents();
-  }, [fetchParent, fetchAllStudents]);
+    fetchMedicalRequests();
+  }, [fetchParent, fetchAllStudents, fetchMedicalRequests]);
 
   useEffect(() => {
     filterParents();
@@ -519,7 +658,102 @@ export default function MedicalRequest() {
           setSelectedStudentForModal(null);
         }}
         selectedStudent={selectedStudentForModal}
-        onSubmit={handleMedicationSubmit}
+        onSubmit={(medications) => {
+          fetchMedicalRequests(); // Refresh list after create
+        }}
+      />
+
+      {/* Danh sách đơn thuốc */}
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold mb-4">Danh sách đơn thuốc</h2>
+        {medicalRequestsLoading ? (
+          <div>Đang tải...</div>
+        ) : medicalRequests.length === 0 ? (
+          <div>Không có đơn thuốc nào.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead>
+                <tr>
+                  <th className="px-3 py-2 border-b">Học sinh</th>
+                  <th className="px-3 py-2 border-b">Lớp</th>
+                  <th className="px-3 py-2 border-b">Phụ huynh</th>
+                  <th className="px-3 py-2 border-b">Thuốc</th>
+                  <th className="px-3 py-2 border-b">Số lượng tổng</th>
+                  <th className="px-3 py-2 border-b">Số lượng còn lại</th>
+                  <th className="px-3 py-2 border-b">Trạng thái</th>
+                  <th className="px-3 py-2 border-b">Ngày tạo</th>
+                  <th className="px-3 py-2 border-b">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {medicalRequests.map((req) => (
+                  <tr key={req.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleShowDetail(req.id)}>
+                    <td className="px-3 py-2">{req.studentName}</td>
+                    <td className="px-3 py-2">{req.studentClass}</td>
+                    <td className="px-3 py-2">{req.parentName}</td>
+                    <td className="px-3 py-2">{req.medicationName}</td>
+                    <td className="px-3 py-2">{req.totalQuantity}</td>
+                    <td className="px-3 py-2">{req.remainingQuantity}</td>
+                    <td className="px-3 py-2">{req.status}</td>
+                    <td className="px-3 py-2">{new Date(req.createdTime).toLocaleDateString("vi-VN")}</td>
+                    <td className="px-3 py-2">
+                      <button onClick={e => { e.stopPropagation(); handleDeleteClick(req); }} className="text-red-600 hover:underline">Xóa</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal xem chi tiết đơn thuốc */}
+      <Modal isOpen={showDetailModal} onClose={() => { setShowDetailModal(false); setMedicalRequestDetail(null); }}>
+        <div className="p-6 min-w-[350px] max-w-[500px]">
+          <h3 className="text-lg font-semibold mb-4">Chi tiết đơn thuốc</h3>
+          {detailLoading ? (
+            <div>Đang tải...</div>
+          ) : !medicalRequestDetail ? (
+            <div>Không tìm thấy thông tin đơn thuốc.</div>
+          ) : (
+            <div className="space-y-2">
+              <div><b>Học sinh:</b> {medicalRequestDetail.studentName}</div>
+              <div><b>Lớp:</b> {medicalRequestDetail.studentClass}</div>
+              <div><b>Phụ huynh:</b> {medicalRequestDetail.parentName}</div>
+              <div><b>Thuốc:</b> {medicalRequestDetail.medicationName}</div>
+              <div><b>Số lượng tổng:</b> {medicalRequestDetail.totalQuantity}</div>
+              <div><b>Số lượng còn lại:</b> {medicalRequestDetail.remainingQuantity}</div>
+              <div><b>Thời gian dùng:</b> {medicalRequestDetail.timeToAdminister?.join(", ")}</div>
+              <div><b>Ngày bắt đầu:</b> {medicalRequestDetail.startDate}</div>
+              <div><b>Ngày kết thúc:</b> {medicalRequestDetail.endDate}</div>
+              <div><b>Trạng thái:</b> {medicalRequestDetail.status}</div>
+              <div><b>Ngày tạo:</b> {new Date(medicalRequestDetail.createdTime).toLocaleDateString("vi-VN")}</div>
+              <div><b>Ghi chú:</b> {medicalRequestDetail.notes || "-"}</div>
+              <div className="pt-4 flex justify-end">
+                <button onClick={handleEdit} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Sửa</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal cập nhật đơn thuốc */}
+      <UpdateMedicationModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        updateRequest={updateRequest}
+        setUpdateRequest={setUpdateRequest}
+        onConfirm={handleConfirmUpdate}
+        medicationForms={["Viên nén", "Siro", "Thuốc nhỏ mắt", "Kem bôi", "Viên con nhộng", "Thuốc tiêm", "Thuốc mỡ", "Thuốc đặt", "Thuốc hít", "Vắc-xin"]}
+        routes={["Uống", "Tiêm", "Bôi ngoài da", "Nhỏ mắt", "Đặt", "Hít"]}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        selectedRequest={selectedDeleteRequest}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

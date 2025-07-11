@@ -129,13 +129,13 @@ export default function ConfirmOTP() {
                 {isVerified ? (
                   <div className="flex flex-col items-center mt-4">
                     <span className="text-green-600 font-semibold">
-                      Tài khoản đã được xác thực ✅
+                      Xác thực thành công ✅
                     </span>
                     <button
                       className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                       onClick={() => navigate("/")}
                     >
-                      Về trang chủ
+                      Quay về trang chủ
                     </button>
                   </div>
                 ) : (
@@ -209,7 +209,7 @@ export default function ConfirmOTP() {
                     href="/login"
                     className="text-blue-600 font-bold hover:text-blue-800 ml-1"
                   >
-                    Đăng nhập
+                    Đăng nhập lại
                   </a>
                 </span>
               </div>
@@ -223,7 +223,7 @@ export default function ConfirmOTP() {
             <h3 className="text-lg font-semibold mb-4">Xác minh bảo mật</h3>
             <div id="recaptcha-container" className="flex justify-center" />
             <p className="mt-4 text-sm text-gray-500">
-              Vui lòng hoàn thành CAPTCHA để tiếp tục.
+              Vui lòng hoàn thành xác minh CAPTCHA để tiếp tục.
             </p>
           </div>
         </div>

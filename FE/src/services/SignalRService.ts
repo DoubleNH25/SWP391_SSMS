@@ -1,11 +1,18 @@
 // src/services/signalRService.ts
-import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr";
+import {
+  HubConnectionBuilder,
+  HubConnection,
+  LogLevel,
+} from "@microsoft/signalr";
 
 let connection: HubConnection | null = null;
 
-export const startSignalRConnection = async (token: string, onNotification: (data: any) => void) => {
+export const startSignalRConnection = async (
+  token: string,
+  onNotification: (data: unknown) => void
+) => {
   connection = new HubConnectionBuilder()
-    .withUrl("https://localhost:7172/notificationHub", {
+    .withUrl("https://localhost:7172/notificationHub", {                //https://systemmms.ddns.net:5000/notificationHub
       accessTokenFactory: () => token,
     })
     .withAutomaticReconnect()

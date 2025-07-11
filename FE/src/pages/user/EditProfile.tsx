@@ -77,7 +77,7 @@ export default function EditProfile() {
 
     const handleCancel = (e: React.FormEvent) => {
         e.preventDefault();
-        navigate("/");
+        navigate(-1);
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -19,11 +19,13 @@ export default function CreateMedical() {
     quantity: 0,
     expiryDate: "",
     detailInformation: "",
+    supplier: "",
   });
   const [errors, setErrors] = useState({
     name: "",
     quantity: "",
     expiryDate: "",
+    supplier: "",
   });
 
   const handleInputChange = useCallback(
@@ -56,6 +58,7 @@ export default function CreateMedical() {
       name: "",
       quantity: "",
       expiryDate: "",
+      supplier: "",
     };
 
     if (!formData.name.trim()) {
@@ -68,6 +71,10 @@ export default function CreateMedical() {
     }
     if (!formData.expiryDate) {
       newErrors.expiryDate = "Vui lòng chọn hạn sử dụng";
+      isValid = false;
+    }
+    if (!formData.supplier.trim()) {
+      newErrors.supplier = "Vui lòng nhập tên nhà cung cấp";
       isValid = false;
     }
 
@@ -170,6 +177,20 @@ export default function CreateMedical() {
             />
             {errors.expiryDate && (
               <span className="text-sm text-red-500">{errors.expiryDate}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="supplier">Nhà cung cấp</Label>
+            <Input
+              id="supplier"
+              type="text"
+              name="supplier"
+              placeholder="Nhập tên nhà cung cấp"
+              value={formData.supplier}
+              onChange={handleInputChange}
+            />
+            {errors.supplier && (
+              <span className="text-sm text-red-500">{errors.supplier}</span>
             )}
           </div>
           <div className="flex flex-col gap-2">

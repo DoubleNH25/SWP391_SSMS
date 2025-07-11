@@ -2,35 +2,10 @@ import React from "react";
 import { Clock, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
-
-interface MedicationRequest {
-  uid: string;
-  medicationRequestId: string;
-  studentId: string;
-  parentId: string;
-  parentName: string;
-  phoneNumber: string;
-  medicationName: string;
-  form: string;
-  dosage: string;
-  route: string;
-  frequency: number;
-  totalQuantity: number;
-  remainingQuantity: number;
-  timeToAdminister: string[];
-  startDate: string;
-  endDate: string;
-  note: string;
-  status: string;
-  createdBy: string;
-  createdDate: string;
-  studentName: string;
-}
-
-
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 
 interface MedicationScheduleTabProps {
-  requests: MedicationRequest[];
+  requests: ListMedicalRequestViewModel[];
   scheduleSearchTerm: string;
   setScheduleSearchTerm: (term: string) => void;
   scheduleStartDate: string;
@@ -43,7 +18,7 @@ interface MedicationScheduleTabProps {
   setScheduleItemsPerPage: (items: number) => void;
   scheduleSortOrder: "asc" | "desc";
   setScheduleSortOrder: (order: "asc" | "desc") => void;
-  onOpenConfirmModal: (request: MedicationRequest) => void;
+  onOpenConfirmModal: (request: ListMedicalRequestViewModel) => void;
   onClearFilters: () => void;
   onSort: () => void;
   onItemsPerPageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -75,8 +50,12 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
       if (scheduleStartDate || scheduleEndDate) {
         const requestStart = new Date(req.startDate);
         const requestEnd = new Date(req.endDate);
-        const filterStart = scheduleStartDate ? new Date(scheduleStartDate) : null;
-        const filterEnd = scheduleEndDate ? new Date(scheduleEndDate + "T23:59:59.999Z") : null;
+        const filterStart = scheduleStartDate
+          ? new Date(scheduleStartDate)
+          : null;
+        const filterEnd = scheduleEndDate
+          ? new Date(scheduleEndDate + "T23:59:59.999Z")
+          : null;
 
         if (filterStart && filterEnd) {
           return requestStart <= filterEnd && requestEnd >= filterStart;
@@ -90,12 +69,12 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
     })
     .flatMap((request) =>
       request.timeToAdminister.map((time) => ({
-        id: `${request.uid}-${time}`,
+        id: `${request.id}-${time}`,
         time: time,
         studentName: request.studentName,
         medicationName: request.medicationName,
         dosage: request.dosage,
-        requestId: request.uid,
+        requestId: request.id,
         remainingQuantity: request.remainingQuantity,
       }))
     );
@@ -229,9 +208,20 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Search className="w-4 h-4" />
                 <span>
-                  Hiển thị <span className="font-medium text-gray-900">{scheduleTotalItems}</span> kết quả
+                  Hiển thị{" "}
+                  <span className="font-medium text-gray-900">
+                    {scheduleTotalItems}
+                  </span>{" "}
+                  kết quả
                   {scheduleSearchTerm && (
-                    <span> cho "<span className="font-medium text-gray-900">{scheduleSearchTerm}</span>"</span>
+                    <span>
+                      {" "}
+                      cho "
+                      <span className="font-medium text-gray-900">
+                        {scheduleSearchTerm}
+                      </span>
+                      "
+                    </span>
                   )}
                 </span>
               </div>
@@ -273,7 +263,7 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
                 <Button
                   onClick={() => {
                     const request = requests.find(
-                      (req) => req.uid === item.requestId
+                      (req) => req.id === item.requestId
                     );
                     if (request) onOpenConfirmModal(request);
                   }}
@@ -307,19 +297,15 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-700">
               Hiển thị{" "}
-              <span className="font-medium">
-                {scheduleStartIndex + 1}
-              </span>{" "}
-              đến{" "}
+              <span className="font-medium">{scheduleStartIndex + 1}</span> đến{" "}
               <span className="font-medium">
                 {Math.min(
                   scheduleCurrentPage * scheduleItemsPerPage,
                   scheduleTotalItems
                 )}
               </span>{" "}
-              của{" "}
-              <span className="font-medium">{scheduleTotalItems}</span>{" "}
-              kết quả
+              của <span className="font-medium">{scheduleTotalItems}</span> kết
+              quả
             </div>
 
             <div className="flex items-center gap-4">

@@ -45,6 +45,10 @@ export default function ConselingScheduleAbnormal() {
   const [consultTime, setConsultTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sentStudents, setSentStudents] = useState<ConselingSchedulesAND[]>([]);
+  // 1. Thêm state cho parentRejectNote và showRejectInput
+  const [parentRejectNote, setParentRejectNote] = useState("");
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectError, setRejectError] = useState("");
 
   const fetchAbnormalStudents = async () => {
     try {
@@ -521,20 +525,65 @@ export default function ConselingScheduleAbnormal() {
             <div className="flex justify-end gap-3 mt-8">
               <button
                 type="button"
-                onClick={closeConsultModal}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                onClick={() => setShowRejectInput(true)}
+                className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 disabled={isSubmitting}
               >
-                Hủy
+                Từ chối
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Đang gửi..." : "Đặt lịch tư vấn"}
+                {isSubmitting ? "Đang gửi..." : "Xác nhận"}
               </button>
             </div>
+            {showRejectInput && (
+              <div className="mt-4">
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lý do phụ huynh từ chối lịch tư vấn
+                </Label>
+                <textarea
+                  className="w-full h-20 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={parentRejectNote}
+                  onChange={(e) => setParentRejectNote(e.target.value)}
+                  placeholder="Nhập lý do từ chối..."
+                />
+                {rejectError && (
+                  <div className="text-red-600 text-sm mt-1">{rejectError}</div>
+                )}
+                <div className="flex justify-end gap-3 mt-2">
+                  <button
+                    type="button"
+                    className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      if (!parentRejectNote.trim()) {
+                        setRejectError("Vui lòng nhập lý do từ chối!");
+                        return;
+                      }
+                      // TODO: Gửi lý do từ chối lên server tại đây
+                      setRejectError("");
+                      setShowRejectInput(false);
+                      setParentRejectNote("");
+                      closeConsultModal();
+                      showToast.success("Đã từ chối lịch tư vấn!");
+                    }}
+                  >
+                    Xác nhận từ chối
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    onClick={() => setShowRejectInput(false)}
+                    disabled={isSubmitting}
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </Modal>

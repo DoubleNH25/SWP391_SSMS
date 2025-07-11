@@ -22,12 +22,14 @@ export default function UpdateMedical() {
     quantity: 0,
     expiryDate: "",
     detailInformation: "",
+    supplier: "",
     status: "Available",
   });
   const [errors, setErrors] = useState({
     name: "",
     quantity: "",
     expiryDate: "",
+    supplier: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export default function UpdateMedical() {
         quantity: response.quantity || 0,
         expiryDate: response.expiryDate || "",
         detailInformation: response.detailInformation || "",
+        supplier: response.supplier || "",
         status: "Available",
       });
       setError(null);
@@ -89,6 +92,7 @@ export default function UpdateMedical() {
       quantity: "",
       expiryDate: "",
       status: "",
+      supplier: "",
     };
 
     if (!formData.name.trim()) {
@@ -107,6 +111,10 @@ export default function UpdateMedical() {
       newErrors.status = "Vui lòng chọn trạng thái";
       isValid = false;
     }
+    if (!formData.supplier.trim()) {
+      newErrors.supplier = "Vui lòng nhập tên nhà cung cấp";
+      isValid = false;
+    }
     setErrors(newErrors);
     return isValid;
   }, [formData]);
@@ -123,6 +131,7 @@ export default function UpdateMedical() {
           quantity: formData.quantity,
           expiryDate: DateUtils.customFormatDateForBackend(formData.expiryDate),
           detailInformation: formData.detailInformation,
+          supplier: formData.supplier,
           status: formData.status as "Available" | "OutOfStock",
         };
         await FecthUpdateMedical(medicalId!, medicalUpdate);
@@ -237,6 +246,20 @@ export default function UpdateMedical() {
             />
             {errors.expiryDate && (
               <span className="text-sm text-red-500">{errors.expiryDate}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="supplier">Nhà cung cấp</Label>
+            <Input
+              id="supplier"
+              type="text"
+              name="supplier"
+              placeholder="Nhập tên nhà cung cấp"
+              value={formData.supplier}
+              onChange={handleInputChange}
+            />
+            {errors.supplier && (
+              <span className="text-sm text-red-500">{errors.supplier}</span>
             )}
           </div>
           <div className="flex flex-col gap-2">

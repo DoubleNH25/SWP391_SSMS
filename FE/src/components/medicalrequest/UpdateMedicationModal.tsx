@@ -7,31 +7,17 @@ import Select from "@/components/ui/form/Select";
 import DatePicker from "@/components/ui/form/DateField";
 import Label from "@/components/ui/form/Label";
 import { DateUtils } from "@/utils/DateUtils";
-
-interface UpdateRequest {
-  parentName?: string;
-  phoneNumber?: string;
-  studentName?: string;
-  medicationName?: string;
-  form?: string;
-  dosage?: string;
-  route?: string;
-  frequency?: number;
-  totalQuantity?: string | number;
-  timeToAdminister?: string[];
-  startDate?: string;
-  endDate?: string;
-  note?: string;
-}
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 
 interface UpdateMedicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  updateRequest: UpdateRequest;
-  setUpdateRequest: (request: UpdateRequest) => void;
+  updateRequest: Partial<ListMedicalRequestViewModel>;
+  setUpdateRequest: React.Dispatch<
+    React.SetStateAction<Partial<ListMedicalRequestViewModel>>
+  >;
   onConfirm: () => void;
   medicationForms: string[];
-  routes: string[];
 }
 
 const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
@@ -41,7 +27,6 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
   setUpdateRequest,
   onConfirm,
   medicationForms,
-  routes,
 }) => {
   return (
     <Modal
@@ -65,20 +50,6 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
                       setUpdateRequest({
                         ...updateRequest,
                         parentName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="updatePhoneNumber">Số điện thoại</Label>
-                  <Input
-                    id="updatePhoneNumber"
-                    type="tel"
-                    value={updateRequest.phoneNumber || ""}
-                    onChange={(e) =>
-                      setUpdateRequest({
-                        ...updateRequest,
-                        phoneNumber: e.target.value,
                       })
                     }
                   />
@@ -147,20 +118,6 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
                     placeholder="2 viên/lần, 5ml/lần..."
                   />
                 </div>
-                <div>
-                  <Label htmlFor="updateRoute">Cách dùng</Label>
-                  <Select
-                    options={routes.map((route) => ({
-                      value: route,
-                      label: route,
-                    }))}
-                    placeholder="Chọn cách dùng"
-                    onChange={(value) =>
-                      setUpdateRequest({ ...updateRequest, route: value })
-                    }
-                    defaultValue={updateRequest.route || ""}
-                  />
-                </div>
               </div>
             </div>
             <div className="w-[1px] bg-gray-300 self-stretch" />
@@ -191,7 +148,7 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
                     onChange={(e) =>
                       setUpdateRequest({
                         ...updateRequest,
-                        totalQuantity: e.target.value,
+                        totalQuantity: Number(e.target.value),
                       })
                     }
                   />
@@ -282,7 +239,9 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
                       if (selectedDates.length > 0) {
                         setUpdateRequest({
                           ...updateRequest,
-                          startDate: DateUtils.customFormatDateOnly(selectedDates[0]),
+                          startDate: DateUtils.customFormatDateOnly(
+                            selectedDates[0]
+                          ),
                         });
                       }
                     }}
@@ -300,30 +259,15 @@ const UpdateMedicationModal: React.FC<UpdateMedicationModalProps> = ({
                       if (selectedDates.length > 0) {
                         setUpdateRequest({
                           ...updateRequest,
-                          endDate: DateUtils.customFormatDateOnly(selectedDates[0]),
+                          endDate: DateUtils.customFormatDateOnly(
+                            selectedDates[0]
+                          ),
                         });
                       }
                     }}
                     defaultDate={updateRequest.endDate}
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="updateNote">Ghi chú</Label>
-                <textarea
-                  id="updateNote"
-                  value={updateRequest.note || ""}
-                  onChange={(e) =>
-                    setUpdateRequest({
-                      ...updateRequest,
-                      note: e.target.value,
-                    })
-                  }
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ghi chú thêm về cách sử dụng thuốc..."
-                />
               </div>
             </div>
           </div>
