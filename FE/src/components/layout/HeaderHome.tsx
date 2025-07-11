@@ -19,16 +19,23 @@ export function HeaderHome() {
     (id: string, anchor: "about" | "contact") => (e: React.MouseEvent) => {
       e.preventDefault();
       setAnchorActive(anchor);
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+
+      if (location.pathname !== "/") {
+        // Navigate về trang chủ và gửi thông tin cần scroll
+        navigate("/", { state: { scrollToId: id, anchorTarget: anchor } });
+      } else {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
     };
 
   const isActive = (path: string) =>
     location.pathname === path && !anchorActive;
 
   return (
-    <header className="fixed w-full py-3 top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 transition-all duration-300">
-      <div className="max-w-6xl mx-auto px-6 flex justify-between items-center h-18">
+    <header className="fixed w-full py-4 top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all duration-500 shadow-sm">
+      <div className="max-w-7xl mx-auto px-8 flex justify-between items-center h-16">
+        {/* Logo Section */}
         <a
           href="/"
           onClick={(e) => {
@@ -43,175 +50,158 @@ export function HeaderHome() {
               }, 100);
             }
           }}
-          className="flex items-center text-2xl font-bold text-blue-600 hover:text-blue-500 transition-colors duration-300"
+          className="flex items-center text-2xl font-bold text-blue-600 hover:text-blue-500 transition-all duration-500 group"
         >
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3 text-white text-xl">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mr-4 text-white text-xl shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-500">
             🎓
           </div>
-          THPT Nguyễn Du
+          <span className="tracking-tight">THPT Nguyễn Du</span>
         </a>
-        <ul className="hidden md:flex items-center space-x-8">
-          <li>
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                setAnchorActive(null);
-                if (location.pathname === "/") {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                } else {
-                  navigate("/");
-                  setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }, 100);
-                }
-              }}
-              className={`font-medium relative group transition-colors duration-300
-                ${
-                  isActive("/")
-                    ? "text-blue-600"
-                    : "text-gray-900 hover:text-blue-600"
-                }
-              `}
-            >
-              Trang Chủ
-              <span
-                className={`
-                absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                ${isActive("/") ? "w-full" : "w-0"}
-                group-hover:w-full
-              `}
-              ></span>
-            </a>
-          </li>
-          <li>
-            <a
-              href="#footer-contact"
-              onClick={handleScrollTo("footer-contact", "about")}
-              className={`font-medium relative group transition-colors duration-300
-                ${
-                  anchorActive === "about"
-                    ? "text-blue-600"
-                    : "text-gray-900 hover:text-blue-600"
-                }
-              `}
-            >
-              Giới Thiệu
-              <span
-                className={`
-                absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                ${anchorActive === "about" ? "w-full" : "w-0"}
-                group-hover:w-full
-              `}
-              ></span>
-            </a>
-          </li>
-          <li>
-            {location.pathname === "/" ? (
+
+        {/* Navigation Menu */}
+        <nav className="hidden md:flex items-center">
+          <ul className="flex items-center space-x-1">
+            <li>
               <a
-                href="#blog-section"
+                href="/"
                 onClick={(e) => {
                   e.preventDefault();
                   setAnchorActive(null);
-                  const el = document.getElementById("blog-section");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                  if (location.pathname === "/") {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    navigate("/");
+                    setTimeout(() => {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }, 100);
+                  }
                 }}
-                className={`font-medium relative group transition-colors duration-300
-                  text-gray-900 hover:text-blue-600
+                className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
+                  ${
+                    isActive("/")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600"
+                  }
                 `}
               >
-                Blog
+                Trang Chủ
                 <span
                   className={`
-                  absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                  group-hover:w-full
+                  transform -translate-x-1/2 h-0.5 bg-blue-600 rounded-full transition-all duration-300
+                  ${isActive("/") ? "w-6" : "w-0"}
+                  group-hover:w-6
                 `}
                 ></span>
               </a>
-            ) : (
+            </li>
+            <li>
+              <a
+                href="#features"
+                onClick={handleScrollTo("features", "about")}
+                className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
+                  ${
+                    anchorActive === "about"
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600"
+                  }
+                `}
+              >
+                Giới Thiệu
+                <span
+                  className={`
+                  transform -translate-x-1/2 h-0.5 bg-blue-600 rounded-full transition-all duration-300
+                  ${anchorActive === "about" ? "w-6" : "w-0"}
+                  group-hover:w-6
+                `}
+                ></span>
+              </a>
+            </li>
+            <li>
               <a
                 href="/blog"
                 onClick={(e) => {
                   e.preventDefault();
                   setAnchorActive(null);
                   navigate("/blog");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`font-medium relative group transition-colors duration-300
-                  ${
-                    isActive("/blog")
-                      ? "text-blue-600"
-                      : "text-gray-900 hover:text-blue-600"
-                  }
-                `}
+                className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
+                    ${
+                      isActive("/blog")
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600"
+                    }
+                  `}
               >
                 Blog
                 <span
                   className={`
-                  absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                  ${isActive("/blog") ? "w-full" : "w-0"}
-                  group-hover:w-full
-                `}
-                ></span>
-              </a>
-            )}
-          </li>
-          <li>
-            <a
-              href="#footer-contact"
-              onClick={handleScrollTo("footer-contact", "contact")}
-              className={`font-medium relative group transition-colors duration-300
-                ${
-                  anchorActive === "contact"
-                    ? "text-blue-600"
-                    : "text-gray-900 hover:text-blue-600"
-                }
-              `}
-            >
-              Liên Hệ
-              <span
-                className={`
-                absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-                ${anchorActive === "contact" ? "w-full" : "w-0"}
-                group-hover:w-full
-              `}
-              ></span>
-            </a>
-          </li>
-          {isLoggedIn && (
-            <li>
-              <a
-                href="/dashboard"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setAnchorActive(null);
-                  navigate("/dashboard");
-                }}
-                className={`
-        font-medium relative group transition-colors duration-300
-        ${
-          location.pathname === "/dashboard" && !anchorActive
-            ? "text-blue-600"
-            : "text-gray-900 hover:text-blue-600"
-        }
-      `}
-              >
-                Dashboard
-                <span
-                  className={`
-          absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300
-          ${
-            location.pathname === "/dashboard" && !anchorActive
-              ? "w-full"
-              : "w-0"
-          }
-          group-hover:w-full
-        `}
+                    transform -translate-x-1/2 h-0.5 bg-blue-600 rounded-full transition-all duration-300
+                    ${isActive("/blog") ? "w-6" : "w-0"}
+                    group-hover:w-6
+                  `}
                 ></span>
               </a>
             </li>
-          )}
-          {!isLoggedIn ? (
             <li>
+              <a
+                href="#footer-contact"
+                onClick={handleScrollTo("footer-contact", "contact")}
+                className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
+                  ${
+                    anchorActive === "contact"
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600"
+                  }
+                `}
+              >
+                Liên Hệ
+                <span
+                  className={`
+                  transform -translate-x-1/2 h-0.5 bg-blue-600 rounded-full transition-all duration-300
+                  ${anchorActive === "contact" ? "w-6" : "w-0"}
+                  group-hover:w-6
+                `}
+                ></span>
+              </a>
+            </li>
+            {isLoggedIn && (
+              <li>
+                <a
+                  href="/dashboard"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAnchorActive(null);
+                    navigate("/dashboard");
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
+                    ${
+                      location.pathname === "/dashboard" && !anchorActive
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600"
+                    }
+                  `}
+                >
+                  Dashboard
+                  <span
+                    className={`
+                     transform -translate-x-1/2 h-0.5 bg-blue-600 rounded-full transition-all duration-300
+                    ${
+                      location.pathname === "/dashboard" && !anchorActive
+                        ? "w-6"
+                        : "w-0"
+                    }
+                    group-hover:w-6
+                  `}
+                  ></span>
+                </a>
+              </li>
+            )}
+          </ul>
+
+          {/* Login/User Section */}
+          <div className="ml-6 pl-6 border-gray-200">
+            {!isLoggedIn ? (
               <a
                 href="/login"
                 onClick={(e) => {
@@ -219,16 +209,33 @@ export function HeaderHome() {
                   setAnchorActive(null);
                   navigate("/login");
                 }}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-500 hover:-translate-y-0.5 transition-all duration-300 shadow-md hover:shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl font-medium hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:scale-105 transition-all duration-300 shadow-md"
                 id="loginBtn"
               >
                 Đăng Nhập
               </a>
-            </li>
-          ) : (
-            <UserDropdown />
-          )}
-        </ul>
+            ) : (
+              <UserDropdown />
+            )}
+          </div>
+        </nav>
+
+        {/* Mobile Menu Button (placeholder for future implementation) */}
+        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+          <svg
+            className="w-6 h-6 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
       </div>
     </header>
   );

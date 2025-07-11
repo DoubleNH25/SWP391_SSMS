@@ -46,8 +46,8 @@ export default function AddStudent() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error && err.message.includes('authenticated')
-        ? 'Please log in to fetch parent data.'
-        : 'Failed to fetch parent data. Please try again.');
+        ? 'Vui lòng đăng nhập để tải dữ liệu phụ huynh.'
+        : 'Không thể tải dữ liệu phụ huynh. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function AddStudent() {
       || !formData.gender
       || !formData.classId
       || !formData.dateOfBirth) {
-      setError("All fields are required.");
+      setError("Tất cả các trường đều bắt buộc.");
       return;
     }
     setLoading(true);
@@ -130,8 +130,8 @@ export default function AddStudent() {
         throw new Error('Creation failed');
       }
     } catch (err) {
-      setError(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      showToast.error(`Failed to create student: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(`Không thể tạo học sinh: ${err instanceof Error ? err.message : 'Lỗi không xác định'}`);
+      showToast.error(`Không thể tạo học sinh: ${err instanceof Error ? err.message : 'Lỗi không xác định'}`);
     } finally {
       setLoading(false);
     }
@@ -145,25 +145,25 @@ export default function AddStudent() {
   return (
     <div className="p-6 bg-white">
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-gray-500">Đang tải...</div>
       ) : error ? (
         <div role="alert" className="text-center text-red-500 p-4 bg-red-100 rounded">
           <p>{error}</p>
           {error.includes('authenticated') ? (
             <button
               onClick={() => window.location.href = '/login'}
-              aria-label="Log in to continue"
+              aria-label="Đăng nhập để tiếp tục"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Log In
+              Đăng nhập
             </button>
           ) : (
             <button
               onClick={handleGetParent}
-              aria-label="Retry fetching parent data"
+              aria-label="Thử lại tải dữ liệu phụ huynh"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retry
+              Thử lại
             </button>
           )}
         </div>
@@ -171,7 +171,7 @@ export default function AddStudent() {
         <>
           <div className="px-6 py-5">
             <h3 className="text-base font-medium text-gray-800">
-              Add New Student
+              Thêm học sinh mới
             </h3>
             {error && <p className="text-red-500">{error}</p>}
           </div>
@@ -180,29 +180,29 @@ export default function AddStudent() {
               <div className="space-y-6">
                 <div className="space-y-6">
                   <div>
-                    <Label>Parent</Label>
+                    <Label>Phụ huynh</Label>
                     <SearchableSelect
                       options={parentOptions}
-                      placeholder="Select a parent"
+                      placeholder="Chọn phụ huynh"
                       onChange={handleParentChange}
                       className="w-full"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="input-name">Full Name</Label>
+                    <Label htmlFor="input-name">Họ và tên</Label>
                     <Input
                       type="text"
                       name="fullName"
                       id="input-name"
                       onChange={handleInputChange}
                       value={formData.fullName}
-                      placeholder="Please enter name" />
+                      placeholder="Nhập họ và tên" />
                   </div>
                   <div>
-                    <Label>Gender</Label>
+                    <Label>Giới tính</Label>
                     <Select
-                      options={options}
-                      placeholder="Select an option"
+                      options={[{ value: "Male", label: "Nam" }, { value: "Female", label: "Nữ" }]}
+                      placeholder="Chọn giới tính"
                       onChange={handleSelectChange}
                       className="dark:bg-dark-900"
                     />
@@ -210,25 +210,24 @@ export default function AddStudent() {
                   <div>
                     <DatePicker
                       id="date-picker"
-                      label="Date Picker Input"
-                      placeholder="Select a date"
+                      label="Ngày sinh"
+                      placeholder="Chọn ngày sinh"
                       onChange={(dates, currentDateString) => {
-                        console.log(dates);
                         setFormData((prev) => ({ ...prev, dateOfBirth: currentDateString }));
                       }}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="input-class">Class</Label>
+                    <Label htmlFor="input-class">Lớp học</Label>
                     <SearchableSelect
                       options={classOptions}
-                      placeholder="Select a class"
+                      placeholder="Chọn lớp học"
                       onChange={handleClassChange}
                       className="w-full"
                     />
                   </div>
                   <div>
-                    <Label>Upload image</Label>
+                    <Label>Tải lên ảnh</Label>
                     <input
                       type="file"
                       onChange={handleFileChange}
@@ -241,7 +240,7 @@ export default function AddStudent() {
                   type="submit"
                   className="mt-4 bg-blue-600 w-[10%] hover:bg-blue-700 text-white py-2 rounded"
                 >
-                  {loading ? 'Saving...' : 'Save'}
+                  {loading ? 'Đang lưu...' : 'Lưu'}
                 </button>
                 <button
                   onClick={handleCancel}
@@ -249,7 +248,7 @@ export default function AddStudent() {
                   type="button"
                   className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                 >
-                  Cancel
+                  Hủy
                 </button>
               </div>
             </div>

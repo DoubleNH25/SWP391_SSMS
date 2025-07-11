@@ -12,7 +12,7 @@ export const startSignalRConnection = async (
   onNotification: (data: unknown) => void
 ) => {
   connection = new HubConnectionBuilder()
-    .withUrl("https://systemmms.ddns.net:5000/notificationHub", {
+    .withUrl("https://localhost:7172/notificationHub", {                //https://systemmms.ddns.net:5000/notificationHub
       accessTokenFactory: () => token,
     })
     .withAutomaticReconnect()

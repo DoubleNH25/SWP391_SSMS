@@ -1,7 +1,7 @@
-import Footer from "@/components/layout/FooterHome";
-import { HeaderHome } from "@/components/layout/HeaderHome";
 import { motion } from "framer-motion";
 import BlogFlashCard from "@/components/BlogFlashCard";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 const features = [
   {
@@ -56,9 +56,27 @@ export default function Home() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
+  const location = useLocation();
+
+  useEffect(() => {
+    const scrollToId = location.state?.scrollToId;
+    if (scrollToId) {
+      const timeout = setTimeout(() => {
+        const el = document.getElementById(scrollToId);
+        if (el) {
+          const yOffset = -80; // offset tránh bị header che
+          const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 100); // chờ Home render xong
+
+      // cleanup để tránh memory leak nếu rời khỏi trang
+      return () => clearTimeout(timeout);
+    }
+  }, [location.state]);
+
   return (
     <div>
-      <HeaderHome />
       {/* Hero Section */}
       <section className="min-h-[70vh] flex items-center bg-gradient-to-br from-blue-50 to-white relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-20">
@@ -201,8 +219,6 @@ export default function Home() {
           </a>
         </div>
       </section>
-
-      <Footer id="footer-contact" />
     </div>
   );
 }

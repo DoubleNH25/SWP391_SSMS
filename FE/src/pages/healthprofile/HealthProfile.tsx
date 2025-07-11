@@ -121,8 +121,7 @@ export default function HealthProfiles() {
       setErrorModal(null);
     } catch (err) {
       setErrorModal(
-        `Failed to update user: ${
-          err instanceof Error ? err.message : "Unknown error"
+        `Failed to update user: ${err instanceof Error ? err.message : "Unknown error"
         }`
       );
     } finally {
@@ -369,10 +368,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">📏 Chiều cao:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                            student.healthProfile.height !== undefined &&
-                            student.healthProfile.height !== null &&
-                            String(student.healthProfile.height) !== "" &&
-                            String(student.healthProfile.height) !== "0"
+                              student.healthProfile.height !== undefined &&
+                              student.healthProfile.height !== null &&
+                              String(student.healthProfile.height) !== "" &&
+                              String(student.healthProfile.height) !== "0"
                               ? `${student.healthProfile.height} cm`
                               : "Chưa cập nhật"}
                           </span>
@@ -381,10 +380,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">⚖️ Cân nặng:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                            student.healthProfile.weight !== undefined &&
-                            student.healthProfile.weight !== null &&
-                            String(student.healthProfile.weight) !== "" &&
-                            String(student.healthProfile.weight) !== "0"
+                              student.healthProfile.weight !== undefined &&
+                              student.healthProfile.weight !== null &&
+                              String(student.healthProfile.weight) !== "" &&
+                              String(student.healthProfile.weight) !== "0"
                               ? `${student.healthProfile.weight} kg`
                               : "Chưa cập nhật"}
                           </span>
@@ -479,43 +478,45 @@ export default function HealthProfiles() {
               />
             </div>
             <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Chiều cao (cm)
-              </Label>
-              <Input
-                type="text"
-                name="height"
-                value={formData.height}
-                onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Ví dụ: 170"
-              />
-            </div>
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                Cân nặng (kg)
-              </Label>
-              <Input
-                type="text"
-                name="weight"
-                value={formData.weight}
-                onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Ví dụ: 65"
-              />
-            </div>
-            <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                BMI
-              </Label>
-              <input
-                type="number"
-                value={String(formData?.bmi ?? "")}
-                name="bmi"
-                readOnly
-                disabled
-                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-100 text-gray-700"
-              />
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  Chiều cao (cm)
+                </Label>
+                <Input
+                  type="number"
+                  name="height"
+                  value={formData.height}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Ví dụ: 170"
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cân nặng (kg)
+                </Label>
+                <Input
+                  type="number"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Ví dụ: 65"
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  BMI
+                </Label>
+                <input
+                  type="number"
+                  value={String(formData?.bmi ?? "")}
+                  name="bmi"
+                  readOnly
+                  disabled
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-100 text-gray-700"
+                />
+              </div>
             </div>
             <div className="md:col-span-2">
               <Label className="block text-sm font-medium text-gray-700 mb-2">
