@@ -834,10 +834,10 @@ export default function Unauthorized() {
 
       <div className="flex flex-col items-center gap-4">
         <h1 className="text-3xl font-medium text-center">
-          Bạn không được phép
+          Không có quyền truy cập
         </h1>
         <p className="text-xl text-center">
-          Bạn đã cố gắng truy cập vào một trang mà bạn không được phép trước.
+          Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu bạn nghĩ đây là nhầm lẫn.
         </p>
       </div>
       <div className="flex justify-center gap-4 mt-6">
@@ -845,17 +845,17 @@ export default function Unauthorized() {
           onClick={() => window.history.back()}
           className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 transition"
         >
-          ← Quay lại
+          ← Quay lại trang trước
         </button>
 
         <button
           onClick={() => {
             // Chuyển hướng đến trang login
-            window.location.href = "/login";
+            window.location.href = "/dang-nhap";
           }}
           className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
         >
-          Đăng nhập
+          Đăng nhập lại
         </button>
       </div>
     </div>

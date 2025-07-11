@@ -108,7 +108,13 @@ export default function BlogFlashCard({
       {/* Main Flash Card */}
       <div
         className="relative h-96 overflow-hidden rounded-2xl shadow-2xl cursor-pointer"
-        onClick={() => navigate(`/blog?id=${blogs[currentIndex].id}`)}
+        onClick={() => {
+          const blogId = blogs?.[currentIndex]?.id;
+          if (blogId) {
+            navigate(`blog/viewblog/${blogId}`);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
         title="Xem chi tiết bài viết"
       >
         <AnimatePresence mode="wait" initial={false} custom={direction}>

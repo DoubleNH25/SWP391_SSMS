@@ -54,8 +54,20 @@ import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import { ReactComponent as NextIcon } from "./next.svg?react";
+import { ReactComponent as DashboardIcon } from "./dashboard.svg?react";
+import { ReactComponent as HomeIcon } from "./home.svg?react";
+import { ReactComponent as BlogIcon } from "./blog-writing-svgrepo-com.svg?react";
+import { ReactComponent as RequestIcon } from "./request-approval-svgrepo-com.svg?react";
+import { ReactComponent as StethoscopeIcon} from "./stethoscope-svgrepo-com.svg?react";
+import { ReactComponent as BackIcon } from "./back-entrance-exit-logout-quit-svgrepo-com.svg?react";
 
 export {
+  BackIcon,
+  StethoscopeIcon,
+  RequestIcon,
+  BlogIcon,
+  HomeIcon,
+  DashboardIcon,
   NextIcon, 
   ErrorHexaIcon,
   AlertHexaIcon,

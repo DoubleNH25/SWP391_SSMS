@@ -9,11 +9,12 @@ export async function FetchAllBlogs(): Promise<BlogResponse[]> {
   return response.data;
 }
 
-export async function FetchBlogById(id: string): Promise<BlogResponse> {
+export async function FetchBlogById(blogId: string): Promise<BlogResponse> {
   const response = await ApiClient<BlogResponse>({
     method: "GET",
-    endpoint: `/blogs/${id}`,
+    endpoint: `/blogs/${blogId}`,
   });
+  console.log(response.data);
   return response.data;
 }
 

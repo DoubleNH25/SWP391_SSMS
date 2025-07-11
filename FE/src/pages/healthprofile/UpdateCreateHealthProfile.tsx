@@ -111,10 +111,10 @@ export default function UpdateCreateHealthProfile() {
       const { name, value, type } = e.target;
       setFormData(
         (prev) =>
-          ({
-            ...prev,
-            [name]: type === "number" ? Number(value) : value,
-          } as HealthProfileUpdate)
+        ({
+          ...prev,
+          [name]: type === "number" ? Number(value) : value,
+        } as HealthProfileUpdate)
       );
     },
     []
@@ -236,6 +236,8 @@ export default function UpdateCreateHealthProfile() {
                         name="dental"
                       />
                     </div>
+                  </div>
+                  <div className="flex flex-row gap-2">
                     <div className="w-1/3">
                       <Label>Chiều cao (cm)</Label>
                       <Input
@@ -244,8 +246,8 @@ export default function UpdateCreateHealthProfile() {
                           formData?.height !== undefined
                             ? String(formData.height)
                             : healthProfile?.height !== undefined
-                            ? String(healthProfile.height)
-                            : ""
+                              ? String(healthProfile.height)
+                              : ""
                         }
                         onChange={handleInputChange}
                         name="height"
@@ -259,8 +261,8 @@ export default function UpdateCreateHealthProfile() {
                           formData?.weight !== undefined
                             ? String(formData.weight)
                             : healthProfile?.weight !== undefined
-                            ? String(healthProfile.weight)
-                            : ""
+                              ? String(healthProfile.weight)
+                              : ""
                         }
                         onChange={handleInputChange}
                         name="weight"
@@ -289,8 +291,8 @@ export default function UpdateCreateHealthProfile() {
                     name="abnormalNote"
                   />
                   <Label>Lịch sử tiêm chủng</Label>
-                  <Input
-                    type="text"
+                  <textarea
+                    className="w-full border border-gray-300 rounded-md p-2"
                     value={
                       formData?.vaccinationHistory ||
                       healthProfile?.vaccinationHistory ||
@@ -307,7 +309,7 @@ export default function UpdateCreateHealthProfile() {
                 type="submit"
                 className="mt-4 bg-blue-600 w-[10%] hover:bg-blue-700 text-white py-2 rounded"
               >
-                {loading ? "Saving..." : "Save"}
+                {loading ? "Đang lưu..." : "Lưu"}
               </Button>
               {healthProfile && (
                 <Button
@@ -315,7 +317,7 @@ export default function UpdateCreateHealthProfile() {
                   onClick={handleDelete}
                   className="mt-4 bg-red-600 ml-4 w-[10%] hover:bg-red-700 text-white py-2 rounded"
                 >
-                  {loading ? "Deleting..." : "Delete"}
+                  {loading ? "Đang xóa..." : "Xóa"}
                 </Button>
               )}
               <Button
@@ -324,7 +326,7 @@ export default function UpdateCreateHealthProfile() {
                 type="button"
                 className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
               >
-                Cancel
+                Hủy
               </Button>
             </div>
           </form>

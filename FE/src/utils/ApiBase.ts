@@ -10,7 +10,7 @@ async function ApiClient<T, D = unknown>({
   endpoint,
   data,
   headers = {},
-  baseURL = "https://systemmms.ddns.net:5000/api", // https://localhost:7172/api  https://systemmms.ddns.net:5000/api
+  baseURL = "https://localhost:7172/api", // https://localhost:7172/api  https://systemmms.ddns.net:5000/api
   requiresToken = true,
   contentType = "application/json",
 }: ApiRequestConfig<D>): Promise<ApiResponse<T>> {

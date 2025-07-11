@@ -261,7 +261,7 @@ export default function ApprovedEventManager() {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
                     <Label className="text-sm font-medium text-gray-700">
-                      View Type
+                      Loại sự kiện
                     </Label>
                     <Select
                       options={viewOptions}

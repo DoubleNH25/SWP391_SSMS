@@ -25,6 +25,7 @@ export default function Login() {
   const [phone, setPhone] = useState<string>("");
   const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [countryCode, setCountryCode] = useState<string>("+84");
 
   const handleInputLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,36 +45,28 @@ export default function Login() {
     try {
       switch (formType) {
         case "phone": {
-          if (!isRecaptchaVerified) {
-            setError("Vui lòng xác minh reCAPTCHA trước khi gửi OTP");
+          let sendPhone = phone;
+          const code = countryCode;
+          if (!sendPhone) {
+            setError("Vui lòng nhập số điện thoại");
             return;
           }
-          if (isSendingOtp) return;
-
-          setIsSendingOtp(true);
-          try {
-            const phone = (e.target as HTMLFormElement).phone.value;
-            setPhone(phone);
-            if (!phone) {
-              setError("Vui lòng nhập số điện thoại");
-              return;
-            }
-            // Validate phone number format
-            const phoneRegex = /^[0-9]{10,11}$/;
-            if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
-              setError(
-                "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10-11 số"
-              );
-              return;
-            }
-
-            await sendOTP(phone);
-            navigate("/confirm-otp", { state: { phone } });
-          } catch (err) {
-            setError("Lỗi khi gửi OTP. Vui lòng thử lại.");
-          } finally {
-            setIsSendingOtp(false);
+          // Nếu bắt đầu bằng 0 thì thay thế bằng mã vùng
+          if (sendPhone.startsWith("0")) {
+            sendPhone = code + sendPhone.substring(1);
+          } else {
+            sendPhone = code + sendPhone;
           }
+          // Validate phone number format (sau khi ghép mã vùng)
+          const phoneRegex = /^\+\d{10,13}$/;
+          if (!phoneRegex.test(sendPhone)) {
+            setError(
+              "Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng."
+            );
+            return;
+          }
+          await sendOTP(sendPhone);
+          navigate("/confirm-otp", { state: { phone: sendPhone } });
           break;
         }
         case "login": {
@@ -223,7 +216,7 @@ export default function Login() {
                   >
                     <div className="mb-12">
                       <h3 className="text-slate-900 text-3xl text-center font-semibold">
-                        Sign in
+                        Đăng nhập
                       </h3>
                     </div>
                     <div>
@@ -242,7 +235,7 @@ export default function Login() {
                         required
                         disabled={isLoading}
                         className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
-                        placeholder="Enter your email"
+                        placeholder="Nhập email"
                         whileFocus={{ scale: 1.02 }}
                       />
                     </div>
@@ -251,7 +244,7 @@ export default function Login() {
                         htmlFor="password"
                         className="text-slate-800 text-sm font-medium mb-2 block"
                       >
-                        Password
+                        Mật khẩu
                       </label>
                       <div className="relative">
                         <motion.input
@@ -263,7 +256,7 @@ export default function Login() {
                           required
                           disabled={isLoading}
                           className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600 disabled:bg-slate-100 disabled:text-slate-500"
-                          placeholder="Enter password"
+                          placeholder="Nhập mật khẩu"
                           whileFocus={{ scale: 1.02 }}
                         />
                         <button
@@ -298,7 +291,7 @@ export default function Login() {
                           htmlFor="remember-me"
                           className="ml-3 block text-sm text-slate-500"
                         >
-                          Remember me
+                          Ghi nhớ đăng nhập
                         </label>
                       </div>
                       <button
@@ -307,7 +300,7 @@ export default function Login() {
                         disabled={isLoading}
                         className="text-blue-600 hover:underline font-medium text-sm disabled:opacity-50"
                       >
-                        Forgot your password?
+                        Quên mật khẩu?
                       </button>
                     </div>
                     <motion.button
@@ -325,7 +318,7 @@ export default function Login() {
                     >
                       {isLoading ? (
                         <>
-                          <span className="opacity-0">Sign in</span>
+                          <span className="opacity-0">Đăng nhập</span>
                           <div className="absolute inset-0 flex items-center justify-center">
                             <svg
                               className="animate-spin h-5 w-5 text-white"
@@ -350,7 +343,7 @@ export default function Login() {
                           </div>
                         </>
                       ) : (
-                        "Sign in"
+                        "Đăng nhập"
                       )}
                     </motion.button>
                   </form>
@@ -362,7 +355,7 @@ export default function Login() {
                 >
                   <div className="mb-12">
                     <h3 className="text-slate-900 text-3xl text-center font-semibold">
-                      Sign in with Phone
+                      Đăng nhập bằng SĐT
                     </h3>
                   </div>
                   <div>
@@ -370,7 +363,7 @@ export default function Login() {
                       htmlFor="phone"
                       className="text-slate-800 text-sm font-medium mb-2 block"
                     >
-                      Phone
+                      Số điện thoại
                     </label>
                     <motion.input
                       name="phone"
@@ -378,7 +371,7 @@ export default function Login() {
                       type="tel"
                       required
                       className="w-full text-sm text-slate-800 border border-slate-300 pl-4 pr-10 py-3 rounded-lg outline-blue-600"
-                      placeholder="Enter your phone"
+                      placeholder="Nhập số điện thoại (chỉ chấp nhận số Việt Nam)"
                       whileFocus={{ scale: 1.02 }}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
@@ -415,44 +408,10 @@ export default function Login() {
               <div className="flex items-center w-full my-4">
                 <div className="flex-grow h-px bg-gray-300" />
                 <span className="px-4 text-sm text-gray-500 whitespace-nowrap">
-                  or sign up with
+                  hoặc đăng nhập bằng
                 </span>
                 <div className="flex-grow h-px bg-gray-300" />
               </div>
-              <motion.button
-                type="button"
-                variants={{
-                  hover: {
-                    scale: 1.05,
-                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
-                  },
-                }}
-                whileHover="hover"
-                whileTap={{ scale: 0.95 }}
-                className="w-full font-bold shadow-sm rounded-lg py-3 text-gray-800 flex border-2 items-center justify-center transition-all duration-300 ease-in-out focus:outline-none"
-              >
-                <div className="bg-white rounded-full">
-                  <svg className="w-4" viewBox="0 0 533.5 544.3">
-                    <path
-                      d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z"
-                      fill="#4285f4"
-                    />
-                    <path
-                      d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z"
-                      fill="#34a853"
-                    />
-                    <path
-                      d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z"
-                      fill="#fbbc04"
-                    />
-                    <path
-                      d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z"
-                      fill="#ea4335"
-                    />
-                  </svg>
-                </div>
-                <span className="ml-4">Sign In with Google</span>
-              </motion.button>
               {!showPhoneLogin && (
                 <motion.button
                   type="button"
@@ -476,29 +435,29 @@ export default function Login() {
                       <path d="m27.728 20.384-4.242-4.242a1.982 1.982 0 0 0-1.413-.586h-.002c-.534 0-1.036.209-1.413.586L17.83 18.97l-8.485-8.485 2.828-2.828c.78-.78.78-2.05-.001-2.83L7.929.585A1.986 1.986 0 0 0 6.516 0h-.001C5.98 0 5.478.209 5.101.587L.858 4.83C.729 4.958-.389 6.168.142 8.827c.626 3.129 3.246 7.019 7.787 11.56 6.499 6.499 10.598 7.937 12.953 7.937 1.63 0 2.426-.689 2.604-.867l4.242-4.242c.378-.378.587-.881.586-1.416 0-.534-.208-1.037-.586-1.415zm-5.656 5.658c-.028.028-3.409 2.249-12.729-7.07C-.178 9.452 2.276 6.243 2.272 6.244L6.515 2l4.243 4.244-3.535 3.535a.999.999 0 0 0 0 1.414l9.899 9.899a.999.999 0 0 0 1.414 0l3.535-3.536 4.243 4.244-4.242 4.242z" />
                     </svg>
                   </div>
-                  <span className="ml-4">Sign In with Phone Number</span>
+                  <span className="ml-4">Đăng nhập bằng SĐT</span>
                 </motion.button>
               )}
               {showPhoneLogin && (
                 <p className="text-sm mt-6 text-center text-slate-500">
-                  Use password instead?{" "}
+                  Dùng mật khẩu?{' '}
                   <button
                     type="button"
                     onClick={togglePhoneLogin}
                     className="text-blue-600 font-medium hover:underline"
                   >
-                    Sign in with Password
+                    Đăng nhập bằng mật khẩu
                   </button>
                 </p>
               )}
               <p className="text-sm mt-6 text-center text-slate-500">
-                Don't have an account?{" "}
+                Chưa có tài khoản?{' '}
                 <button
                   type="button"
                   onClick={toggleForm}
                   className="text-blue-600 font-medium hover:underline"
                 >
-                  Register here
+                  Đăng ký ngay
                 </button>
               </p>
             </motion.div>
@@ -539,20 +498,19 @@ export default function Login() {
               }}
             >
               <h2 className="lg:text-5xl text-3xl font-bold lg:leading-[57px] text-slate-900">
-                Seamless Registration for Exclusive Access
+                Đăng ký tài khoản dễ dàng
               </h2>
               <p className="text-sm mt-6 text-slate-500 leading-relaxed">
-                Create your account effortlessly with our intuitive registration
-                form. Join now to unlock exclusive features.
+                Tạo tài khoản của bạn nhanh chóng với biểu mẫu đăng ký trực quan. Tham gia ngay để trải nghiệm các tính năng độc quyền.
               </p>
               <p className="text-sm mt-12 text-slate-500">
-                Already have an account?{" "}
+                Đã có tài khoản?{' '}
                 <button
                   type="button"
                   onClick={toggleForm}
                   className="text-blue-600 font-medium hover:underline"
                 >
-                  Sign in here
+                  Đăng nhập
                 </button>
               </p>
             </motion.div>
@@ -567,7 +525,7 @@ export default function Login() {
               onSubmit={(e) => handleSubmit(e, "register")}
             >
               <h3 className="text-slate-900 text-center lg:text-3xl text-2xl font-bold mb-8">
-                Register
+                Đăng ký
               </h3>
               <div className="space-y-3">
                 <div>
@@ -582,7 +540,7 @@ export default function Login() {
                     type="email"
                     required
                     className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                    placeholder="Enter Email"
+                    placeholder="Nhập email"
                     whileFocus={{ scale: 1.02 }}
                   />
                 </div>
@@ -591,14 +549,14 @@ export default function Login() {
                     htmlFor="phone"
                     className="text-sm text-slate-800 font-medium mb-2 block"
                   >
-                    Phone
+                    Số điện thoại
                   </label>
                   <motion.input
                     name="phone"
                     type="tel"
                     required
                     className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                    placeholder="Enter Phone"
+                    placeholder="Nhập số điện thoại"
                     whileFocus={{ scale: 1.02 }}
                   />
                 </div>
@@ -607,14 +565,14 @@ export default function Login() {
                     htmlFor="name"
                     className="text-sm text-slate-800 font-medium mb-2 block"
                   >
-                    Full Name
+                    Họ và tên
                   </label>
                   <motion.input
                     name="name"
                     type="text"
                     required
                     className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                    placeholder="Enter Name"
+                    placeholder="Nhập họ và tên"
                     whileFocus={{ scale: 1.02 }}
                   />
                 </div>
@@ -623,7 +581,7 @@ export default function Login() {
                     htmlFor="password"
                     className="text-sm text-slate-800 font-medium mb-2 block"
                   >
-                    Password
+                    Mật khẩu
                   </label>
                   <div className="relative">
                     <motion.input
@@ -631,7 +589,7 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       required
                       className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                      placeholder="Enter Password"
+                      placeholder="Nhập mật khẩu"
                       whileFocus={{ scale: 1.02 }}
                     />
                     <button
@@ -652,7 +610,7 @@ export default function Login() {
                     htmlFor="re-password"
                     className="text-sm text-slate-800 font-medium mb-2 block"
                   >
-                    Confirm Password
+                    Xác nhận mật khẩu
                   </label>
                   <div className="relative">
                     <motion.input
@@ -660,7 +618,7 @@ export default function Login() {
                       type={showConfimPassword ? "text" : "password"}
                       required
                       className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                      placeholder="Confirm Password"
+                      placeholder="Xác nhận mật khẩu"
                       whileFocus={{ scale: 1.02 }}
                     />
                     <button
@@ -682,7 +640,7 @@ export default function Login() {
                     onClick={toggleForgotPassword}
                     className="text-blue-600 hover:underline font-medium text-sm"
                   >
-                    Forgot your password?
+                    Quên mật khẩu?
                   </button>
                 </div>
               </div>
@@ -698,12 +656,12 @@ export default function Login() {
                 whileTap={{ scale: 0.95 }}
                 className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none mt-5"
               >
-                Register
+                Đăng ký
               </motion.button>
               <div className="flex items-center w-full my-4">
                 <div className="flex-grow h-px bg-gray-300" />
                 <span className="px-4 text-sm text-gray-500 whitespace-nowrap">
-                  or sign up with
+                  hoặc đăng ký bằng
                 </span>
                 <div className="flex-grow h-px bg-gray-300" />
               </div>
@@ -739,7 +697,7 @@ export default function Login() {
                     />
                   </svg>
                 </div>
-                <span className="ml-4">Sign Up with Google</span>
+                <span className="ml-4">Đăng ký với Google</span>
               </motion.button>
               <motion.button
                 type="button"
@@ -763,7 +721,7 @@ export default function Login() {
                     <path d="m27.728 20.384-4.242-4.242a1.982 1.982 0 0 0-1.413-.586h-.002c-.534 0-1.036.209-1.413.586L17.83 18.97l-8.485-8.485 2.828-2.828c.78-.78.78-2.05-.001-2.83L7.929.585A1.986 1.986 0 0 0 6.516 0h-.001C5.98 0 5.478.209 5.101.587L.858 4.83C.729 4.958-.389 6.168.142 8.827c.626 3.129 3.246 7.019 7.787 11.56 6.499 6.499 10.598 7.937 12.953 7.937 1.63 0 2.426-.689 2.604-.867l4.242-4.242c.378-.378.587-.881.586-1.416 0-.534-.208-1.037-.586-1.415zm-5.656 5.658c-.028.028-3.409 2.249-12.729-7.07C-.178 9.452 2.276 6.243 2.272 6.244L6.515 2l4.243 4.244-3.535 3.535a.999.999 0 0 0 0 1.414l9.899 9.899a.999.999 0 0 0 1.414 0l3.535-3.536 4.243 4.244-4.242 4.242z" />
                   </svg>
                 </div>
-                <span className="ml-4">Sign Up with Phone Number</span>
+                <span className="ml-4">Đăng ký bằng SĐT</span>
               </motion.button>
             </motion.form>
           </motion.div>
@@ -788,20 +746,19 @@ export default function Login() {
               }}
             >
               <h2 className="lg:text-5xl text-3xl font-bold lg:leading-[57px] text-slate-900">
-                Recover Your Account
+                Khôi phục tài khoản
               </h2>
               <p className="text-sm mt-6 text-slate-500 leading-relaxed">
-                Enter your email to receive a one-time password to reset your
-                account.
+                Nhập email để nhận mã OTP đặt lại mật khẩu tài khoản.
               </p>
               <p className="text-sm mt-12 text-slate-500">
-                Back to{" "}
+                Quay lại{' '}
                 <button
                   type="button"
                   onClick={toggleForgotPassword}
                   className="text-blue-600 font-medium hover:underline"
                 >
-                  Sign in
+                  Đăng nhập
                 </button>
               </p>
             </motion.div>
@@ -816,7 +773,7 @@ export default function Login() {
               onSubmit={(e) => handleSubmit(e, "forgotPassword")}
             >
               <h3 className="text-slate-900 text-center lg:text-3xl text-2xl font-bold mb-8">
-                Forgot Password
+                Quên mật khẩu
               </h3>
               <div className="space-y-3">
                 <div>
@@ -831,7 +788,7 @@ export default function Login() {
                     type="email"
                     required
                     className="bg-slate-100 w-full text-sm text-slate-800 px-4 py-3 rounded-md outline-0 border border-gray-200 focus:border-blue-600 focus:bg-transparent"
-                    placeholder="Enter Email"
+                    placeholder="Nhập email"
                     whileFocus={{ scale: 1.02 }}
                   />
                 </div>
@@ -848,12 +805,12 @@ export default function Login() {
                 whileTap={{ scale: 0.95 }}
                 className="w-full shadow-sm py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none mt-5"
               >
-                Send OTP
+                Gửi OTP
               </motion.button>
               <div className="flex items-center w-full my-4">
                 <div className="flex-grow h-px bg-gray-300" />
                 <span className="px-4 text-sm text-gray-500 whitespace-nowrap">
-                  or sign up with
+                  hoặc đăng nhập bằng
                 </span>
                 <div className="flex-grow h-px bg-gray-300" />
               </div>
@@ -889,7 +846,7 @@ export default function Login() {
                     />
                   </svg>
                 </div>
-                <span className="ml-4">Sign In with Google</span>
+                <span className="ml-4">Đăng nhập với Google</span>
               </motion.button>
               <motion.button
                 type="button"
@@ -913,7 +870,7 @@ export default function Login() {
                     <path d="m27.728 20.384-4.242-4.242a1.982 1.982 0 0 0-1.413-.586h-.002c-.534 0-1.036.209-1.413.586L17.83 18.97l-8.485-8.485 2.828-2.828c.78-.78.78-2.05-.001-2.83L7.929.585A1.986 1.986 0 0 0 6.516 0h-.001C5.98 0 5.478.209 5.101.587L.858 4.83C.729 4.958-.389 6.168.142 8.827c.626 3.129 3.246 7.019 7.787 11.56 6.499 6.499 10.598 7.937 12.953 7.937 1.63 0 2.426-.689 2.604-.867l4.242-4.242c.378-.378.587-.881.586-1.416 0-.534-.208-1.037-.586-1.415zm-5.656 5.658c-.028.028-3.409 2.249-12.729-7.07C-.178 9.452 2.276 6.243 2.272 6.244L6.515 2l4.243 4.244-3.535 3.535a.999.999 0 0 0 0 1.414l9.899 9.899a.999.999 0 0 0 1.414 0l3.535-3.536 4.243 4.244-4.242 4.242z" />
                   </svg>
                 </div>
-                <span className="ml-4">Sign In with Phone Number</span>
+                <span className="ml-4">Đăng nhập bằng SĐT</span>
               </motion.button>
             </motion.form>
           </motion.div>

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/auth/Login";
 import ConfirmOTP from "@/pages/auth/ConfirmOTP";
-import Blog from "@/pages/Blog";
+import Blog from "@/pages/blog/Blog";
 import Calendar from "@/pages/Calendar";
 import UserManager from "@/pages/user/ManagerUser";
 import AddUser from "@/pages/user/AddUser";
@@ -37,6 +37,10 @@ import ConselingScheduleAbnormal from "@/pages/conselingshedules/ConselingSchedu
 import ManagerMedicalIncident from "@/pages/medicalincident/ManagerMedicalIncident";
 import { ToastProvider } from "@/components/ui/Toast";
 import Home from "@/pages/Home";
+import AddBlog from "@/pages/blog/AddBlog";
+import BlogDetails from "@/pages/blog/BlogDetails";
+import EditBlog from "@/pages/blog/EditBlog";
+import HomeLayout from "@/components/layout/HomeLayout";
 
 function App() {
   return (
@@ -47,9 +51,20 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
           <Route path="/profile" element={<EditProfile />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route index element={<Home />} />
-          <Route path="/" element={<Home />} />
+          <Route element={<HomeLayout />}>
+            <Route path="/blog" element={<Blog />} />
+            <Route path="blog/viewblog/:blogId" element={<BlogDetails />} />
+            <Route index element={<Home />} />
+            <Route path="/" element={<Home />} />
+            <Route
+              path="blog/viewblogbyAdmin/:blogId"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <BlogDetails />
+                </PrivateRoute>
+              }
+            />
+          </Route>
           <Route
             path="/dashboard/*"
             element={
@@ -62,7 +77,30 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="blog" element={<Blog />} />
-
+            <Route
+              path="blog/add-blog"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <AddBlog />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="blog/edit-blog/:blogId"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <EditBlog />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="blog/viewblogbyAdmin/:blogId"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <BlogDetails />
+                </PrivateRoute>
+              }
+            />
             {/*User*/}
             <Route
               path="user"
