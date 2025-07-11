@@ -9,6 +9,7 @@ export interface HealthProfile {
   bmi: number;
   abnormalNote: string;
   vaccinationHistory: string;
+  parentNote: string;
 }
 
 export interface ClassRoom {
@@ -38,4 +39,5 @@ export interface HealthProfileUpdate {
   bmi: number;
   abnormalNote: string;
   vaccinationHistory: string;
+  parentNote: string;
 }

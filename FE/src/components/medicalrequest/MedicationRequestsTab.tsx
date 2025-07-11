@@ -2,9 +2,7 @@ import React from "react";
 import {
   Clock,
   User,
-  Phone,
   Pill,
-  FileText,
   Search,
   Edit,
   Trash2,
@@ -14,33 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
 import Select from "@/components/ui/form/Select";
-
-interface MedicationRequest {
-  uid: string;
-  medicationRequestId: string;
-  studentId: string;
-  parentId: string;
-  parentName: string;
-  phoneNumber: string;
-  medicationName: string;
-  form: string;
-  dosage: string;
-  route: string;
-  frequency: number;
-  totalQuantity: number;
-  remainingQuantity: number;
-  timeToAdminister: string[];
-  startDate: string;
-  endDate: string;
-  note: string;
-  status: string;
-  createdBy: string;
-  createdDate: string;
-  studentName: string;
-}
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 
 interface MedicationRequestsTabProps {
-  requests: MedicationRequest[];
+  requests: ListMedicalRequestViewModel[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   filterStatus: string;
@@ -49,9 +24,9 @@ interface MedicationRequestsTabProps {
   setFilterStartDate: (date: string) => void;
   filterEndDate: string;
   setFilterEndDate: (date: string) => void;
-  onOpenConfirmModal: (request: MedicationRequest) => void;
-  onOpenUpdateModal: (request: MedicationRequest) => void;
-  onOpenDeleteModal: (request: MedicationRequest) => void;
+  onOpenConfirmModal: (request: ListMedicalRequestViewModel) => void;
+  onOpenUpdateModal: (request: ListMedicalRequestViewModel) => void;
+  onOpenDeleteModal: (request: ListMedicalRequestViewModel) => void;
   onClearFilters: () => void;
 }
 
@@ -85,7 +60,9 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
       const requestStart = new Date(request.startDate);
       const requestEnd = new Date(request.endDate);
       const filterStart = filterStartDate ? new Date(filterStartDate) : null;
-      const filterEnd = filterEndDate ? new Date(filterEndDate + "T23:59:59.999Z") : null;
+      const filterEnd = filterEndDate
+        ? new Date(filterEndDate + "T23:59:59.999Z")
+        : null;
 
       // If both dates are provided, check for overlap
       if (filterStart && filterEnd) {
@@ -113,7 +90,10 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
             <h2 className="text-lg font-medium text-gray-900">
               Bộ lọc và tìm kiếm
             </h2>
-            {(searchTerm || filterStatus !== "all" || filterStartDate || filterEndDate) && (
+            {(searchTerm ||
+              filterStatus !== "all" ||
+              filterStartDate ||
+              filterEndDate) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -194,7 +174,7 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
           {filteredRequests.map((request) => (
             <div
-              key={request.uid}
+              key={request.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
             >
               <div className="p-6">
@@ -208,7 +188,7 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
                         {request.medicationName}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Mã đơn: {request.medicationRequestId}
+                        Mã đơn: {request.id}
                       </p>
                     </div>
                   </div>
@@ -236,18 +216,12 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
                     <User className="w-4 h-4 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        Học sinh: {request.studentName} 
+                        Học sinh: {request.studentName}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
                         PH: {request.parentName}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm text-gray-600">
-                      {request.phoneNumber}
-                    </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Clock className="w-4 h-4 text-gray-400" />
@@ -259,17 +233,11 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
 
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                   <div className="bg-gray-50 p-3 rounded-lg">
-                    <span className="text-gray-500 block">
-                      Dạng thuốc:
-                    </span>
-                    <p className="font-medium text-gray-900">
-                      {request.form}
-                    </p>
+                    <span className="text-gray-500 block">Dạng thuốc:</span>
+                    <p className="font-medium text-gray-900">{request.form}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
-                    <span className="text-gray-500 block">
-                      Liều lượng:
-                    </span>
+                    <span className="text-gray-500 block">Liều lượng:</span>
                     <p className="font-medium text-gray-900">
                       {request.dosage}
                     </p>
@@ -288,30 +256,10 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
                   </div>
                 </div>
 
-                {request.note && (
-                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                    <div className="flex items-start space-x-2">
-                      <FileText className="w-4 h-4 text-yellow-600 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-yellow-800">
-                          Ghi chú:
-                        </p>
-                        <p className="text-sm text-yellow-700">
-                          {request.note}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="text-sm text-gray-500">
                     <div className="flex flex-col">
-                      <span>Tạo bởi: {request.createdBy}</span>
-                      <div className="mt-1">
-                        <span className="mx-2">•</span>
-                        <span>{request.createdDate}</span>
-                      </div>
+                      <span>{request.createdTime}</span>
                     </div>
                   </div>
                   <div className="flex space-x-2">

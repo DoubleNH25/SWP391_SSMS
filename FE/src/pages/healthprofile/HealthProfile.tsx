@@ -38,6 +38,7 @@ export default function HealthProfiles() {
     bmi: 0,
     abnormalNote: "",
     vaccinationHistory: "",
+    parentNote: "",
   });
   const navigate = useNavigate();
 
@@ -53,10 +54,11 @@ export default function HealthProfiles() {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
+    const numberFields = ["height", "weight", "bmi"];
     setFormData((prev: typeof formData) => ({
       ...prev,
-      [name]: type === "number" ? Number(value) : value,
+      [name]: numberFields.includes(name) ? Number(value) : value,
     }));
   };
 
@@ -82,6 +84,7 @@ export default function HealthProfiles() {
       abnormalNote: selectedStudent.healthProfile?.abnormalNote || "",
       vaccinationHistory:
         selectedStudent.healthProfile?.vaccinationHistory || "",
+      parentNote: selectedStudent.healthProfile?.parentNote || "",
     });
     setSelectedProfileId(studentId);
     setError(null);
@@ -104,7 +107,8 @@ export default function HealthProfiles() {
       formData.height <= 0 ||
       formData.weight <= 0 ||
       !formData.vaccinationHistory.trim() ||
-      !formData.abnormalNote.trim()
+      !formData.abnormalNote.trim() ||
+      !formData.parentNote.trim()
     ) {
       setErrorModal(
         "All fields are required and BMI must be between 0 and 100."
@@ -113,6 +117,7 @@ export default function HealthProfiles() {
     }
     setSubmitting(true);
     try {
+      console.log("formData gửi lên:", formData);
       await FecthUpdateHealthProfile(selectedProfileId, formData);
       showToast.success("Health profile updated successfully");
       fetchData();
@@ -121,7 +126,8 @@ export default function HealthProfiles() {
       setErrorModal(null);
     } catch (err) {
       setErrorModal(
-        `Failed to update user: ${err instanceof Error ? err.message : "Unknown error"
+        `Failed to update user: ${
+          err instanceof Error ? err.message : "Unknown error"
         }`
       );
     } finally {
@@ -368,10 +374,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">📏 Chiều cao:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                              student.healthProfile.height !== undefined &&
-                              student.healthProfile.height !== null &&
-                              String(student.healthProfile.height) !== "" &&
-                              String(student.healthProfile.height) !== "0"
+                            student.healthProfile.height !== undefined &&
+                            student.healthProfile.height !== null &&
+                            String(student.healthProfile.height) !== "" &&
+                            String(student.healthProfile.height) !== "0"
                               ? `${student.healthProfile.height} cm`
                               : "Chưa cập nhật"}
                           </span>
@@ -380,10 +386,10 @@ export default function HealthProfiles() {
                           <span className="text-xs">⚖️ Cân nặng:</span>
                           <span className="font-semibold">
                             {student.healthProfile &&
-                              student.healthProfile.weight !== undefined &&
-                              student.healthProfile.weight !== null &&
-                              String(student.healthProfile.weight) !== "" &&
-                              String(student.healthProfile.weight) !== "0"
+                            student.healthProfile.weight !== undefined &&
+                            student.healthProfile.weight !== null &&
+                            String(student.healthProfile.weight) !== "" &&
+                            String(student.healthProfile.weight) !== "0"
                               ? `${student.healthProfile.weight} kg`
                               : "Chưa cập nhật"}
                           </span>
@@ -542,6 +548,19 @@ export default function HealthProfiles() {
                 onChange={handleInputChange}
                 className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Ví dụ: Up to date"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label className="block text-sm font-medium text-gray-700 mb-2">
+                Ghi chú phụ huynh
+              </Label>
+              <Input
+                type="text"
+                name="parentNote"
+                value={formData.parentNote}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Ví dụ: Không có"
               />
             </div>
           </div>

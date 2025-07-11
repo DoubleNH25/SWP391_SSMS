@@ -432,6 +432,9 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (student == null) return false;
 
+			// Thêm log kiểm tra giá trị height, weight
+			Console.WriteLine($"[DEBUG] UpdateHealthProfileByParentAsync: Height={request.Height}, Weight={request.Weight}");
+
 			// Lấy hồ sơ sức khỏe hiện tại của học sinh (chưa bị xóa mềm)
 			var healthProfile = _repositoryManager.HealthProfileRepository
 				.FindByCondition(hp => hp.StudentId == studentId && hp.DeletedTime == null, true)

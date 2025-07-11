@@ -70,7 +70,7 @@ export default function AddBlog() {
         title: formData.title,
         content: formData.content,
         imageUrl: imageUrl,
-        imageFile:formData.titleImage ?? undefined,
+        imageFile: formData.titleImage ?? undefined,
         // category đã bị loại bỏ
       };
 
@@ -160,7 +160,7 @@ export default function AddBlog() {
             {/* Title Image Upload */}
             <div className="mb-6">
               <Label className="block mb-2 font-semibold text-gray-700">
-                Ảnh tiêu đề (titleImage)
+                Ảnh tiêu đề
               </Label>
               <input
                 type="file"

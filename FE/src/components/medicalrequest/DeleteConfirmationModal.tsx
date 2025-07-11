@@ -2,35 +2,12 @@ import React from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-
-interface MedicationRequest {
-  uid: string;
-  medicationRequestId: string;
-  studentId: string;
-  parentId: string;
-  parentName: string;
-  phoneNumber: string;
-  medicationName: string;
-  form: string;
-  dosage: string;
-  route: string;
-  frequency: number;
-  totalQuantity: number;
-  remainingQuantity: number;
-  timeToAdminister: string[];
-  startDate: string;
-  endDate: string;
-  note: string;
-  status: string;
-  createdBy: string;
-  createdDate: string;
-  studentName: string;
-}
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedRequest: MedicationRequest | null;
+  selectedRequest: ListMedicalRequestViewModel | null;
   onConfirm: () => void;
 }
 
@@ -50,7 +27,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             <Trash2 className="w-6 h-6 text-red-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Xác nhận xóa</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Xác nhận xóa
+            </h2>
             <p className="text-sm text-gray-600">
               Hành động này không thể hoàn tác
             </p>
@@ -64,7 +43,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <div className="space-y-1 text-sm">
             <p>
               <span className="text-gray-600">Mã đơn:</span>{" "}
-              <span className="font-medium">{selectedRequest.medicationRequestId}</span>
+              <span className="font-medium">{selectedRequest.id}</span>
             </p>
             <p>
               <span className="text-gray-600">Học sinh:</span>{" "}
@@ -72,7 +51,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             </p>
             <p>
               <span className="text-gray-600">Thuốc:</span>{" "}
-              <span className="font-medium">{selectedRequest.medicationName}</span>
+              <span className="font-medium">
+                {selectedRequest.medicationName}
+              </span>
             </p>
           </div>
         </div>

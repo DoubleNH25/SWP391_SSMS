@@ -2,35 +2,12 @@ import React from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import Label from "@/components/ui/form/Label";
-
-interface MedicationRequest {
-  uid: string;
-  medicationRequestId: string;
-  studentId: string;
-  parentId: string;
-  parentName: string;
-  phoneNumber: string;
-  medicationName: string;
-  form: string;
-  dosage: string;
-  route: string;
-  frequency: number;
-  totalQuantity: number;
-  remainingQuantity: number;
-  timeToAdminister: string[];
-  startDate: string;
-  endDate: string;
-  note: string;
-  status: string;
-  createdBy: string;
-  createdDate: string;
-  studentName: string;
-}
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 
 interface ConfirmMedicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedRequest: MedicationRequest | null;
+  selectedRequest: ListMedicalRequestViewModel | null;
   confirmNote: string;
   setConfirmNote: (note: string) => void;
   onConfirm: () => void;
@@ -56,11 +33,15 @@ const ConfirmMedicationModal: React.FC<ConfirmMedicationModalProps> = ({
             <div className="space-y-1 text-sm">
               <p>
                 <span className="text-gray-600">Học sinh:</span>{" "}
-                <span className="font-medium">{selectedRequest.studentName}</span>
+                <span className="font-medium">
+                  {selectedRequest.studentName}
+                </span>
               </p>
               <p>
                 <span className="text-gray-600">Thuốc:</span>{" "}
-                <span className="font-medium">{selectedRequest.medicationName}</span>
+                <span className="font-medium">
+                  {selectedRequest.medicationName}
+                </span>
               </p>
               <p>
                 <span className="text-gray-600">Liều lượng:</span>{" "}

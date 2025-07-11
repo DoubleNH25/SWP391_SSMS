@@ -20,13 +20,14 @@ export default function BlogDetails() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       const progress = (scrollTop / docHeight) * 100;
       setReadingProgress(Math.min(Math.max(progress, 0), 100));
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const fetchData = async () => {
@@ -75,14 +76,6 @@ export default function BlogDetails() {
     );
   }
 
-  const categoryLabels: Record<string, string> = {
-    // Đã loại bỏ category
-  };
-  const getCategoryColor = (category?: string) => {
-    // Đã loại bỏ category
-    return "";
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/60 to-white">
       {/* Reading Progress Bar */}
@@ -124,7 +117,9 @@ export default function BlogDetails() {
             </h1>
             {/* Excerpt */}
             {blog.excerpt && (
-              <p className="text-lg text-gray-600 mb-6 font-medium max-w-2xl">{blog.excerpt}</p>
+              <p className="text-lg text-gray-600 mb-6 font-medium max-w-2xl">
+                {blog.excerpt}
+              </p>
             )}
             {/* Meta info */}
             <div className="flex flex-wrap items-center gap-4 mb-10 pb-6 border-b border-gray-100">
