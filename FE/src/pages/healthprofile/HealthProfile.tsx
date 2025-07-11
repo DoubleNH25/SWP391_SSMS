@@ -33,11 +33,22 @@ export default function HealthProfiles() {
     vision: "",
     hearing: "",
     dental: "",
+    height: 0,
+    weight: 0,
     bmi: 0,
     abnormalNote: "",
     vaccinationHistory: "",
   });
   const navigate = useNavigate();
+
+  // Tính BMI tự động khi nhập chiều cao/cân nặng
+  useEffect(() => {
+    if (formData.height && formData.weight) {
+      const heightM = formData.height / 100;
+      const bmi = formData.weight / (heightM * heightM);
+      setFormData((prev) => ({ ...prev, bmi: Number(bmi.toFixed(1)) }));
+    }
+  }, [formData.height, formData.weight]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -51,7 +62,7 @@ export default function HealthProfiles() {
 
   const handleViewHealthProfile = (studentId: string) => {
     navigate(`/dashboard/student/${studentId}/health-checkup-records`);
-  };    
+  };
 
   const handleOpenUpdateModal = (studentId: string) => {
     const selectedStudent = healthProfiles.find(
@@ -65,6 +76,8 @@ export default function HealthProfiles() {
       vision: selectedStudent.healthProfile?.vision || "",
       hearing: selectedStudent.healthProfile?.hearing || "",
       dental: selectedStudent.healthProfile?.dental || "",
+      height: selectedStudent.healthProfile?.height ?? 0,
+      weight: selectedStudent.healthProfile?.weight ?? 0,
       bmi: selectedStudent.healthProfile?.bmi ?? 0,
       abnormalNote: selectedStudent.healthProfile?.abnormalNote || "",
       vaccinationHistory:
@@ -88,8 +101,8 @@ export default function HealthProfiles() {
       !formData.vision.trim() ||
       !formData.hearing.trim() ||
       !formData.dental.trim() ||
-      formData.bmi <= 0 ||
-      formData.bmi > 100 ||
+      formData.height <= 0 ||
+      formData.weight <= 0 ||
       !formData.vaccinationHistory.trim() ||
       !formData.abnormalNote.trim()
     ) {
@@ -108,8 +121,7 @@ export default function HealthProfiles() {
       setErrorModal(null);
     } catch (err) {
       setErrorModal(
-        `Failed to update user: ${
-          err instanceof Error ? err.message : "Unknown error"
+        `Failed to update user: ${err instanceof Error ? err.message : "Unknown error"
         }`
       );
     } finally {
@@ -352,6 +364,30 @@ export default function HealthProfiles() {
                             </span>
                           )}
                         </div>
+                        <div className="flex items-center gap-2 mt-2 text-gray-500">
+                          <span className="text-xs">📏 Chiều cao:</span>
+                          <span className="font-semibold">
+                            {student.healthProfile &&
+                              student.healthProfile.height !== undefined &&
+                              student.healthProfile.height !== null &&
+                              String(student.healthProfile.height) !== "" &&
+                              String(student.healthProfile.height) !== "0"
+                              ? `${student.healthProfile.height} cm`
+                              : "Chưa cập nhật"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <span className="text-xs">⚖️ Cân nặng:</span>
+                          <span className="font-semibold">
+                            {student.healthProfile &&
+                              student.healthProfile.weight !== undefined &&
+                              student.healthProfile.weight !== null &&
+                              String(student.healthProfile.weight) !== "" &&
+                              String(student.healthProfile.weight) !== "0"
+                              ? `${student.healthProfile.weight} kg`
+                              : "Chưa cập nhật"}
+                          </span>
+                        </div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
@@ -442,17 +478,45 @@ export default function HealthProfiles() {
               />
             </div>
             <div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">
-                BMI
-              </Label>
-              <Input
-                type="number"
-                name="bmi"
-                value={formData.bmi}
-                onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Ví dụ: 22.5"
-              />
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  Chiều cao (cm)
+                </Label>
+                <Input
+                  type="number"
+                  name="height"
+                  value={formData.height}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Ví dụ: 170"
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cân nặng (kg)
+                </Label>
+                <Input
+                  type="number"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Ví dụ: 65"
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  BMI
+                </Label>
+                <input
+                  type="number"
+                  value={String(formData?.bmi ?? "")}
+                  name="bmi"
+                  readOnly
+                  disabled
+                  className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-gray-100 text-gray-700"
+                />
+              </div>
             </div>
             <div className="md:col-span-2">
               <Label className="block text-sm font-medium text-gray-700 mb-2">

@@ -57,8 +57,11 @@ export default function Footer(props: React.HTMLAttributes<HTMLDivElement>) {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-400 transition-colors">
-                  Tin tức
+                <a
+                  href="#blog-section"
+                  className="hover:text-blue-400 transition-colors scroll-smooth"
+                >
+                  Blog
                 </a>
               </li>
               <li>

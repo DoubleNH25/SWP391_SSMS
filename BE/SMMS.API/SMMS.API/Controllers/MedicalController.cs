@@ -159,8 +159,8 @@ namespace SMMS.API.Controllers
         //---------------Medical Request----------------
 
         [HttpPost("request")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> CreateMedicalRequest([FromBody] CreateMedicalRequestRequest request)
+        [Authorize(Roles = "Admin,Manager,Nurse,Parent")]
+        public async Task<IActionResult> CreateMedicalRequest([FromForm] CreateMedicalRequestRequest request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var result = await _medicalService.CreateMedicalRequestAsync(userId, request);
@@ -188,7 +188,7 @@ namespace SMMS.API.Controllers
 
         [HttpPut("request/{id}")]
         [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> UpdateMedicalRequest(string id, [FromBody] UpdateMedicalRequestRequest request)
+        public async Task<IActionResult> UpdateMedicalRequest(string id, [FromForm] UpdateMedicalRequestRequest request)
         {
             try
             {

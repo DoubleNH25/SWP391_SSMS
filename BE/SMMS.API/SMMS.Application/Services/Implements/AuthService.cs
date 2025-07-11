@@ -8,6 +8,7 @@ using SMMS.Application.Helpers.Interface;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Interface.Repositories;
+using System.Reflection.Metadata;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -16,11 +17,16 @@ namespace SMMS.Application.Services.Implements
 		private readonly IRepositoryManager _repositoryManager;
 		private readonly IJwtTokenGenerator _jwtTokenGenerator;
         private readonly CloudinaryService _cloudinaryService;
+        private readonly SendMailService _sendMailService;
+        private readonly IRedisCacheService _redisCacheService;
 
-        public AuthService(IRepositoryManager repositoryManager, IJwtTokenGenerator jwtTokenGenerator)
+        public AuthService(IRepositoryManager repositoryManager, IJwtTokenGenerator jwtTokenGenerator, 
+            SendMailService sendMailService, IRedisCacheService redisCacheService)
         {
             _repositoryManager = repositoryManager;
             _jwtTokenGenerator = jwtTokenGenerator;
+            _sendMailService = sendMailService;
+            _redisCacheService = redisCacheService;
         }
         public async Task<AuthResponse> LoginAsync(string email, string password)
         {
@@ -141,6 +147,97 @@ namespace SMMS.Application.Services.Implements
                 throw new Exception($"Error: {ex.Message}");
             }
         }
+
+        public async Task<string> ForgetPasswordAsync(ForgetPasswordModel model)
+        {
+            try
+            {
+                var userExists = _repositoryManager.UserRepository
+                    .FindByCondition(u => u.Email == model.Email, false)
+                    .FirstOrDefault();
+
+                if (userExists == null)
+                {
+                    return "Email không tồn tại trong hệ thống";
+                }
+
+                await _sendMailService.SendOtpAsync(model.Email);
+
+                return "Gửi OTP thành công";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}");
+            }
+        }
+
+        public async Task<string> VerifyOtpAsync(VerifyOtpRequest request)
+        {
+            try
+            {
+                string otpKey = $"otp:{request.Email}";
+                string? cachedOtp = await _redisCacheService.GetAsync(otpKey);
+
+                if (string.IsNullOrEmpty(cachedOtp))
+                    throw new Exception("OTP đã hết hạn hoặc chưa được gửi.");
+
+                if (cachedOtp != request.Otp)
+                    throw new Exception("Mã OTP không đúng.");
+
+                // OTP đúng → xoá OTP khỏi Redis
+                await _redisCacheService.RemoveAsync(otpKey);
+
+                // Sinh reset token và lưu vào Redis trong 15 phút
+                string resetToken = Guid.NewGuid().ToString();
+                string tokenKey = $"reset-token:{request.Email}";
+                await _redisCacheService.SetAsync(tokenKey, resetToken, TimeSpan.FromMinutes(15));
+
+                return resetToken;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}");
+            }
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            try
+            {
+                string tokenKey = $"reset-token:{request.Email}";
+                var tokenInRedis = await _redisCacheService.GetAsync(tokenKey);
+
+                if (tokenInRedis == null || tokenInRedis != request.ResetToken)
+                    throw new Exception("Token không hợp lệ hoặc đã hết hạn.");
+
+                if (request.NewPassword != request.VerifyPassword)
+                    throw new Exception("Mật khẩu xác nhận không khớp với mật khẩu mới.");
+
+                // Tìm user theo email
+                var user = _repositoryManager.UserRepository
+                         .FindByCondition(u => u.Email == request.Email && !u.DeletedTime.HasValue, false)
+                         .FirstOrDefault();
+                if (user == null)
+                    throw new Exception("Người dùng không tồn tại.");
+
+                // Hash mật khẩu mới bằng BCrypt
+                user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                user.LastUpdatedTime = DateTime.Now;
+                user.LastUpdatedBy = user.Id;
+                _repositoryManager.UserRepository.Update(user);
+                await _repositoryManager.SaveAsync();
+
+                // Xoá reset-token sau khi dùng
+                await _redisCacheService.RemoveAsync(tokenKey);
+
+                return "Reset Password successfully";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}");
+            }
+        }
+
 
     }
 }

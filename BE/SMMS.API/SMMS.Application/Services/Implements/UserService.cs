@@ -170,8 +170,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -189,6 +192,8 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
@@ -233,8 +238,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -248,6 +256,8 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
@@ -292,8 +302,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -307,6 +320,8 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
@@ -434,6 +449,7 @@ namespace SMMS.Application.Services.Implements
 					BMI = request.BMI,
 					AbnormalNote = request.AbnormalNote,
 					VaccinationHistory = request.VaccinationHistory,
+					ParentNote = request.ParentNote,
 					CreatedBy = parentId,
 					CreatedTime = DateTimeOffset.UtcNow
 				};
@@ -448,6 +464,7 @@ namespace SMMS.Application.Services.Implements
 				healthProfile.BMI = request.BMI;
 				healthProfile.AbnormalNote = request.AbnormalNote;
 				healthProfile.VaccinationHistory = request.VaccinationHistory;
+				healthProfile.ParentNote = request.ParentNote;
 				healthProfile.LastUpdatedBy = parentId;
 				healthProfile.LastUpdatedTime = DateTimeOffset.UtcNow;
 				_repositoryManager.HealthProfileRepository.Update(healthProfile);
@@ -559,8 +576,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -574,6 +594,8 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,

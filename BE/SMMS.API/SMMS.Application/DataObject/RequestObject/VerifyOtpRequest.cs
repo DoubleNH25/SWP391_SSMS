@@ -3,7 +3,7 @@ namespace SMMS.Application.DataObject.RequestObject
 {
 	public class VerifyOtpRequest
 	{
-		public string? PhoneNumber { get; set; }
-		public string? Otp { get; set; }
-	}
+        public string Email { get; set; } = null!;
+        public string Otp { get; set; } = null!;
+    }
 }

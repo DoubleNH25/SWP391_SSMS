@@ -1,5 +1,4 @@
-﻿
-using SMMS.Domain.Enum;
+﻿using SMMS.Domain.Enum;
 
 namespace SMMS.Application.DataObject.RequestObject
 {
@@ -7,5 +6,6 @@ namespace SMMS.Application.DataObject.RequestObject
 	{
 		public string? ConselingScheduleId { get; set; }
 		public ApprovalStatus Status { get; set; }
+		public string? ParentRejectNote { get; set; }
 	}
 }

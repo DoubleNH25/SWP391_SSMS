@@ -12,6 +12,7 @@ using SMMS.Domain.Interface.Repositories;
 using SMMS.Infrastructure.Context;
 using SMMS.Infrastructure.Hubs;
 using SMMS.Infrastructure.Implements;
+using StackExchange.Redis;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -47,7 +48,7 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowAll", policy =>
 	{
 		policy
-			.WithOrigins("http://localhost:5173")
+			.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
 			.AllowAnyMethod()
 			.AllowAnyHeader()
 			.AllowCredentials();
@@ -59,6 +60,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 	options.MultipartBodyLengthLimit = 104857600; // 100 MB //Ok
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("Redis");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -112,6 +118,9 @@ builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IMedicalService, MedicalService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
+builder.Services.AddScoped<SendMailService>();
+
 
 
 // Infrastructure Services
