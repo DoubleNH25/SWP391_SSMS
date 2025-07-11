@@ -446,6 +446,8 @@ namespace SMMS.Application.Services.Implements
 					Vision = request.Vision ?? string.Empty,
 					Hearing = request.Hearing ?? string.Empty,
 					Dental = request.Dental ?? string.Empty,
+					Weight = request.Weight,
+					Height = request.Height,
 					BMI = request.BMI,
 					AbnormalNote = request.AbnormalNote,
 					VaccinationHistory = request.VaccinationHistory,
@@ -461,6 +463,8 @@ namespace SMMS.Application.Services.Implements
 				healthProfile.Vision = request.Vision ?? string.Empty;
 				healthProfile.Hearing = request.Hearing ?? string.Empty;
 				healthProfile.Dental = request.Dental ?? string.Empty;
+				healthProfile.Weight = request.Weight;
+				healthProfile.Height = request.Height;
 				healthProfile.BMI = request.BMI;
 				healthProfile.AbnormalNote = request.AbnormalNote;
 				healthProfile.VaccinationHistory = request.VaccinationHistory;
