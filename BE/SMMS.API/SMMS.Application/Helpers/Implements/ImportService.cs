@@ -1,4 +1,7 @@
 ﻿using ClosedXML.Excel;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Interface.Repositories;
 
@@ -21,6 +24,8 @@ namespace SMMS.Application.Helpers.Implements
 			var worksheet = workbook.Worksheet(1); // Giả sử dữ liệu nằm ở sheet đầu tiên
 
 			var rows = worksheet.RowsUsed().Skip(1); // Bỏ qua hàng tiêu đề
+
+			var emailTasks = new List<Task>();
 
 			foreach (var row in rows)
 			{
@@ -59,7 +64,7 @@ namespace SMMS.Application.Helpers.Implements
 
 				User? oldParent = null;
 
-				if(student != null)
+				if (student != null)
 				{
 					oldParent = _repositoryManager.UserRepository
 						.FindByCondition(u => u.Id == student.ParentId, true)
@@ -77,17 +82,23 @@ namespace SMMS.Application.Helpers.Implements
 						throw new Exception("Role 'Parent' not found.");
 					}
 
+					// Mật khẩu mặc định
+					var defaultPassword = GenerateRandomPassword(6);
+
 					parentUser = new User
 					{
 						Email = parentEmail,
 						Phone = parentPhone,
 						FullName = parentFullName,
 						RoleId = parentRole.Id,
-						Password = BCrypt.Net.BCrypt.HashPassword("123456"), // Mật khẩu mặc định
+						Password = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
 						CreatedBy = "System",
 						CreatedTime = DateTimeOffset.UtcNow
 					};
 					_repositoryManager.UserRepository.Create(parentUser);
+
+					// them task gui mail
+					emailTasks.Add(SendLoginDetailsEmailAsync(parentEmail, parentFullName, defaultPassword));
 				}
 				else if (parentUser.DeletedBy != null && parentUser.DeletedTime != null)
 				{
@@ -100,7 +111,7 @@ namespace SMMS.Application.Helpers.Implements
 					parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
 					_repositoryManager.UserRepository.Update(parentUser);
 				}
-				else if (parentUser.Phone != parentPhone || parentUser.FullName != parentFullName || parentUser.Email != parentEmail )
+				else if (parentUser.Phone != parentPhone || parentUser.FullName != parentFullName || parentUser.Email != parentEmail)
 				{
 					// Case: Parent exists, not soft-deleted, but phone or full name differs
 					parentUser.Phone = parentPhone;
@@ -161,6 +172,96 @@ namespace SMMS.Application.Helpers.Implements
 				}
 			}
 			await _repositoryManager.SaveAsync();
+
+			await Task.WhenAll(emailTasks);
+		}
+
+		private string GenerateRandomPassword(int length)
+		{
+			const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+			var random = new Random();
+			var password = new char[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				password[i] = validChars[random.Next(validChars.Length)];
+			}
+
+			return new string(password);
+		}
+
+		private async Task SendLoginDetailsEmailAsync(string email, string fullName, string password)
+		{
+			var message = new MimeMessage();
+			message.From.Add(new MailboxAddress("SMMS", "thoaidtse170076@fpt.edu.vn"));
+			message.To.Add(MailboxAddress.Parse(email));
+			message.Subject = "Thông tin đăng nhập SMMS";
+			message.Body = new TextPart("html")
+			{
+				Text = $@"
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f9;
+                    padding: 20px;
+                }}
+                .email-container {{
+                    background-color: #ffffff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }}
+                .email-header {{
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #333;
+                }}
+                .email-body {{
+                    font-size: 16px;
+                    color: #555;
+                }}
+                .footer {{
+                    font-size: 12px;
+                    color: #aaa;
+                    margin-top: 20px;
+                }}
+                .button {{
+                    display: inline-block;
+                    background-color: #007bff;
+                    color: white;
+                    padding: 10px 20px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class='email-container'>
+                <div class='email-header'>Xin chào {fullName},</div>
+                <div class='email-body'>
+                    <p>Chào mừng bạn đến với hệ thống SMMS.</p>
+                    <p>Tài khoản của bạn đã được tạo thành công.</p>
+                    <p><strong>Thông tin đăng nhập của bạn:</strong></p>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Mật khẩu:</strong> {password}</p>
+                    <p>Vui lòng đăng nhập và thay đổi mật khẩu của bạn sau khi đăng nhập.</p>
+                </div>
+                <div class='footer'>
+                    Trân trọng,<br>
+                    SMMS Team
+                </div>
+            </div>
+        </body>
+        </html>"
+			};
+
+			using var client = new SmtpClient();
+			await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+			await client.AuthenticateAsync("thoaidtse170076@fpt.edu.vn", "gnmjhwhbyoovvigw");
+			await client.SendAsync(message);
+			await client.DisconnectAsync(true);
 		}
 	}
 }

@@ -115,7 +115,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpPost("vaccination-campaigns")]
-		[Authorize(Roles = "Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> CreateVaccinationCampaign([FromBody] VaccinationCampaignRequest request)
 		{
 			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
