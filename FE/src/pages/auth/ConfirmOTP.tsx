@@ -1,9 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { VerifyOTPRequest } from "@/types/User";
+import { VerifyOTPRequest, VerifyOTPEmailRequest } from "@/types/User";
 import { useEffect, useState } from "react";
-import { FecthVerifyOTP } from "@/services/AuthService";
+import {
+  FecthVerifyOTP,
+  FecthVerifyEmailOTP,
+  FecthForgetPassword,
+} from "@/services/AuthService";
 import { initReCAPTCHA, sendOTP, verifyOTP } from "@/services/PhoneAuthService";
-//import PhoneAuthService from "@/services/PhoneAuthService";
 
 export default function ConfirmOTP() {
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -12,9 +15,24 @@ export default function ConfirmOTP() {
   const [error, setError] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const { phone, isRegister } = useLocation().state;
+  const { phone, email, isRegister } = useLocation().state || {};
   const [showCaptchaModal, setShowCaptchaModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [otpExpiration, setOtpExpiration] = useState(0);
+
+  // Determine if this is email OTP or phone OTP
+  const isEmailOTP = !!email;
+  const contactInfo = email || phone;
+
+  // Set OTP expiration time based on type
+  useEffect(() => {
+    if (contactInfo) {
+      const expirationTime = isEmailOTP ? 5 * 60 : 1 * 60; // 5 minutes for email, 1 minute for phone
+      setOtpExpiration(expirationTime);
+    }
+  }, [contactInfo, isEmailOTP]);
+
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
 
@@ -26,8 +44,59 @@ export default function ConfirmOTP() {
     if (value && nextInput) nextInput.focus();
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const numbers = pastedData.replace(/\D/g, '').split('').slice(0, 6);
+    
+    if (numbers.length > 0) {
+      const newOtp = [...otp];
+      numbers.forEach((num, index) => {
+        if (index < 6) {
+          newOtp[index] = num;
+        }
+      });
+      setOtp(newOtp);
+      
+      // Focus on the next empty input or the last input
+      const nextEmptyIndex = newOtp.findIndex(digit => digit === '');
+      const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(numbers.length, 5);
+      const nextInput = document.getElementById(`otp-${focusIndex}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
+    }
+  };
+
   const handleResendOTP = async () => {
+    if (isResending || resendCooldown > 0) return;
+    
     try {
+      if (isEmailOTP) {
+        // For email OTP, call the resend email OTP API
+        setIsResending(true);
+        const success = await FecthForgetPassword(email);
+        if (success) {
+          setInfo("Đã gửi lại mã OTP");
+          setIsVerified(false);
+          setOtp(["", "", "", "", "", ""]);
+          setError("");
+          setResendCooldown(30);
+          setOtpExpiration(5 * 60); // Reset to 5 minutes for email
+          setTimeout(() => {
+            document.getElementById("otp-0")?.focus();
+          }, 100);
+        } else {
+          setError("Không thể gửi lại OTP");
+        }
+        setIsResending(false);
+        return;
+      }
+
       setShowCaptchaModal(true);
 
       // ✨ Đợi Modal render xong rồi mới init CAPTCHA
@@ -41,6 +110,7 @@ export default function ConfirmOTP() {
           setOtp(["", "", "", "", "", ""]);
           setError("");
           setResendCooldown(30);
+          setOtpExpiration(1 * 60); // Reset to 1 minute for phone
           setTimeout(() => {
             document.getElementById("otp-0")?.focus();
           }, 100);
@@ -54,48 +124,73 @@ export default function ConfirmOTP() {
       }, 300); // ⚠ Delay giúp Modal render xong trước khi gắn CAPTCHA
     } catch (err) {
       console.error("❌ Lỗi hiển thị CAPTCHA:", err);
+      setIsResending(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    
     setIsSubmitting(true);
 
     if (otp.some((digit) => digit === "")) {
       setError("Vui lòng nhập đầy đủ OTP");
+      setIsSubmitting(false);
       return;
     }
 
     const otpCode = otp.join("");
 
     try {
-      const userCredential = await verifyOTP(otpCode);
-      const idToken = await userCredential.user.getIdToken();
-      console.log("IdToken", idToken);
-      console.log("Phone", phone);
-      const verifyOTPRequest: VerifyOTPRequest = {
-        idToken,
-        phoneNumber: phone,
-      };
-
-      const isSuccess = await FecthVerifyOTP(verifyOTPRequest);
-
-      if (isSuccess) {
+      if (isEmailOTP) {
+        // Handle email OTP verification
+        const data = {
+          email,
+          otp: otpCode,
+        } as VerifyOTPEmailRequest;
+        const resetToken = await FecthVerifyEmailOTP(data);
+        console.log("Reset token", resetToken);
         setIsVerified(true);
-        if (isRegister) {
-          navigate("/login", {
-            state: { message: "Đăng ký thành công. Vui lòng đăng nhập." },
-          });
-        } else {
-          navigate("/");
-        }
+        // Navigate to reset password page with the reset token
+        navigate("/reset-password", {
+          state: {
+            email,
+            resetToken,
+            message: "Xác thực OTP thành công. Vui lòng đặt lại mật khẩu.",
+          },
+        });
       } else {
-        setError("OTP không hợp lệ");
+        // Handle phone OTP verification (existing logic)
+        const userCredential = await verifyOTP(otpCode);
+        const idToken = await userCredential.user.getIdToken();
+        console.log("IdToken", idToken);
+        console.log("Phone", phone);
+        const verifyOTPRequest: VerifyOTPRequest = {
+          idToken,
+          phoneNumber: phone,
+        };
+
+        const isSuccess = await FecthVerifyOTP(verifyOTPRequest);
+
+        if (isSuccess) {
+          setIsVerified(true);
+          if (isRegister) {
+            navigate("/login", {
+              state: { message: "Đăng ký thành công. Vui lòng đăng nhập." },
+            });
+          } else {
+            navigate("/");
+          }
+        } else {
+          setError("OTP không hợp lệ");
+        }
       }
     } catch (err) {
       setError("Lỗi khi xác thực OTP");
-      if (isRegister) {
+      if (isEmailOTP) {
+        navigate("/login", { state: { email } });
+      } else if (isRegister) {
         navigate("/register", { state: { phone } });
       } else {
         navigate("/login", { state: { phone } });
@@ -106,13 +201,27 @@ export default function ConfirmOTP() {
   };
 
   useEffect(() => {
-    if (!phone) navigate("/login");
+    if (!contactInfo) navigate("/login");
     if (resendCooldown === 0) return;
     const timer = setInterval(() => {
       setResendCooldown((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [resendCooldown, phone]);
+  }, [resendCooldown, contactInfo]);
+
+  useEffect(() => {
+    if (otpExpiration === 0) return;
+    const timer = setInterval(() => {
+      setOtpExpiration((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpExpiration]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="h-screen bg-blue-500 py-20 px-3">
@@ -120,8 +229,6 @@ export default function ConfirmOTP() {
         <div className="max-w-md mx-auto md:max-w-lg">
           <div className="w-full">
             <div className="bg-white py-6 px-4 rounded text-center shadow-md">
-              <h1 className="text-2xl font-bold text-gray-800">Xác thực OTP</h1>
-
               <form
                 className="flex flex-col items-center mt-4"
                 onSubmit={handleSubmit}
@@ -142,8 +249,20 @@ export default function ConfirmOTP() {
                   <>
                     <div className="flex flex-col mt-4 text-gray-600">
                       <span>Nhập OTP đã nhận được tại</span>
-                      <span className="font-bold text-black">{phone}</span>
+                      <span className="font-bold text-black">
+                        {contactInfo}
+                      </span>
                     </div>
+
+                    {/* OTP Expiration Timer */}
+                    {otpExpiration > 0 && (
+                      <div className="mt-2 text-sm">
+                        <span className="text-gray-500">Mã OTP hết hạn sau: </span>
+                        <span className={`font-semibold ${otpExpiration <= 30 ? 'text-red-500' : 'text-blue-600'}`}>
+                          {formatTime(otpExpiration)}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex justify-center gap-2 mt-5">
                       {otp.map((digit, index) => (
@@ -153,20 +272,11 @@ export default function ConfirmOTP() {
                           className="w-10 h-10 border rounded text-center text-lg focus:outline-blue-400"
                           type="text"
                           maxLength={1}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || otpExpiration === 0}
                           value={digit}
                           onChange={(e) => handleChange(e.target.value, index)}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === "Backspace" &&
-                              !otp[index] &&
-                              index > 0
-                            ) {
-                              document
-                                .getElementById(`otp-${index - 1}`)
-                                ?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleKeyDown(e, index)}
+                          onPaste={handlePaste}
                         />
                       ))}
                     </div>
@@ -174,27 +284,42 @@ export default function ConfirmOTP() {
                     {/* 🔔 Thông báo */}
                     {info && <p className="text-green-500 mt-2">{info}</p>}
                     {error && <p className="text-red-500 mt-2">{error}</p>}
+                    {otpExpiration === 0 && (
+                      <p className="text-red-500 mt-2">Mã OTP đã hết hạn. Vui lòng gửi lại.</p>
+                    )}
 
                     {/* 🔘 Gửi & resend OTP */}
                     <div className="flex flex-col items-center mt-6">
                       <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="shadow-sm py-2.5 px-10 text-md font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+                        disabled={isSubmitting || otpExpiration === 0}
+                        className="shadow-sm py-2.5 px-10 text-md font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-400 disabled:cursor-not-allowed"
                       >
-                        {isRegister ? "Đăng ký" : "Xác thực tài khoản"}
+                        {isSubmitting
+                          ? "Đang xử lý..."
+                          : otpExpiration === 0
+                          ? "OTP đã hết hạn"
+                          : isEmailOTP
+                          ? "Xác thực OTP"
+                          : isRegister
+                          ? "Đăng ký"
+                          : "Xác thực tài khoản"}
                       </button>
 
                       <span className="mt-4 text-sm text-gray-500">
                         Không nhận được mã?
-                        <a
-                          className="ml-1 text-blue-600 font-semibold hover:text-blue-900 cursor-pointer"
+                        <button
+                          type="button"
                           onClick={handleResendOTP}
+                          disabled={resendCooldown > 0 || isResending}
+                          className="ml-1 text-blue-600 font-semibold hover:text-blue-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {resendCooldown > 0
+                          {isResending
+                            ? "Đang gửi..."
+                            : resendCooldown > 0
                             ? `${resendCooldown}s`
                             : "Gửi lại OTP"}
-                        </a>
+                        </button>
                       </span>
                     </div>
                   </>

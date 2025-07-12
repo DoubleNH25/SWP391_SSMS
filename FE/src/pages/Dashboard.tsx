@@ -35,7 +35,14 @@ const BlogSlider = () => {
     const fetchBlogs = async () => {
       try {
         const data = await FetchAllBlogs();
-        setBlogs(data);
+        const sorted = data
+          .sort(
+            (a, b) =>
+              new Date(b.createdTime).getTime() -
+              new Date(a.createdTime).getTime()
+          ) // sắp xếp mới nhất trước
+          .slice(0, 7);
+        setBlogs(sorted);
       } catch (error) {
         console.error("Không thể tải danh sách bài viết:", error);
       } finally {
@@ -139,15 +146,6 @@ export default function Dashboard() {
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>(
     []
   );
-
-  // Dữ liệu mẫu cho biểu đồ
-  const chartData = [
-    { label: "6A", value: 40 },
-    { label: "7A", value: 60 },
-    { label: "8A", value: 80 },
-    { label: "9A", value: 100 },
-    { label: "10A", value: 70 },
-  ];
 
   useEffect(() => {
     const payload = DecodeJWT();
@@ -349,7 +347,7 @@ export default function Dashboard() {
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-semibold mb-4">
-                Tin mới / Cập nhật y tế
+                Tin mới
               </h2>
               <BlogSlider />
             </div>
@@ -476,19 +474,9 @@ export default function Dashboard() {
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4">
-            Tin mới / Cập nhật y tế
+            Tin mới
           </h2>
-          <div className="h-[300px] flex items-end justify-between gap-4 px-4">
-            {chartData.map((item, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className="w-full bg-blue-500 rounded-t-lg transition-all duration-300 hover:bg-blue-600"
-                  style={{ height: `${item.value}%` }}
-                ></div>
-                <span className="mt-2 text-sm text-gray-600">{item.label}</span>
-              </div>
-            ))}
-          </div>
+          <BlogSlider />
         </div>
       </div>
     </>
@@ -579,7 +567,7 @@ export default function Dashboard() {
       <PageHeader
         title="Bảng điều khiển"
         icon={<LayoutDashboard className="w-6 h-6 text-blue-600" />}
-        description={`Chào mừng trở lại, ${userName}`}
+        description={`Chào mừng trở lại`}
       />
 
       {role === "Admin" && renderAdminDashboard()}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FetchBlogById } from "@/services/BlogService";
+import { FetchBlogById, IncrementBlogView } from "@/services/BlogService";
 import { BlogResponse } from "@/types/Blog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, UserCircle, Calendar } from "lucide-react";
@@ -34,6 +34,7 @@ export default function BlogDetails() {
     if (!blogId) return;
     try {
       const data = await FetchBlogById(blogId);
+      await IncrementBlogView(blogId);
       setBlog(data);
     } catch (error) {
       console.error("Lỗi khi tải blog:", error);

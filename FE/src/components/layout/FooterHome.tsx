@@ -35,7 +35,7 @@ export default function Footer(props: React.HTMLAttributes<HTMLDivElement>) {
               </div>
               <div className="flex items-center gap-4">
                 <Mail className="w-6 h-6 text-blue-400" />
-                <p className="text-lg font-medium">info@nguyendu.edu.vn</p>
+                <p className="text-lg font-medium">info@aaa.edu.vn</p>
               </div>
             </div>
           </div>
