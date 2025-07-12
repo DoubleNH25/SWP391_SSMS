@@ -368,7 +368,7 @@ const Calendar: React.FC = () => {
           return newErrors;
         });
       }
-      
+
       setFormData((prev) => {
         if (prev.type === "medical") {
           return {
@@ -395,7 +395,7 @@ const Calendar: React.FC = () => {
           return newErrors;
         });
       }
-      
+
       setFormData((prev) => {
         if (prev.type === "vaccination") {
           return {
@@ -440,12 +440,12 @@ const Calendar: React.FC = () => {
         | VaccinationCampaignsUpdateCreateViewModel
     ): Record<string, string> => {
       const errors: Record<string, string> = {};
-      
+
       // Validate classes selection for both types
       if (!selectedClasses || selectedClasses.length === 0 || (selectedClasses.length === 1 && selectedClasses[0] === "")) {
         errors.classes = "Phải chọn ít nhất một lớp!";
       }
-      
+
       if (type === "medical") {
         // Validate Medical Event fields
         if (!data.name?.trim()) {
@@ -591,7 +591,7 @@ const Calendar: React.FC = () => {
     // Clear validation errors if all fields are valid
     setValidationErrors({});
     setLoading(true);
-    
+
     try {
       if (selectedEvent) {
         // Update mode
@@ -603,23 +603,8 @@ const Calendar: React.FC = () => {
             payload
           );
           if (success) {
-            setEvents((prev) =>
-              prev.map((event) =>
-                event.id === selectedEvent.id
-                  ? {
-                    ...event,
-                    title: data.name,
-                    start: DateUtils.customFormatDate(data.scheduledDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      description: data.description || "",
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
-                  : event
-              )
-            );
+            // Reload events to get updated data including classIds
+            await fetchEvents();
             showToast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
           }
         } else {
@@ -629,26 +614,8 @@ const Calendar: React.FC = () => {
             payload
           );
           if (success) {
-            setEvents((prev) =>
-              prev.map((event) =>
-                event.id === selectedEvent.id
-                  ? {
-                    ...event,
-                    title: data.name,
-                    start: DateUtils.customFormatDate(data.startDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      vaccineName: data.vaccineName || "",
-                      vaccineType: data.vaccineType || "",
-                      exp: DateUtils.customFormatDate(data.exp),
-                      mfg: DateUtils.customFormatDate(data.mfg),
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
-                  : event
-              )
-            );
+            // Reload events to get updated data including classIds
+            await fetchEvents();
             showToast.success("Cập nhật chiến dịch tiêm chủng thành công");
           }
         }
@@ -709,7 +676,7 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData, selectedEvent, closeModal, loading, validateFormData]);
+  }, [formData, selectedEvent, closeModal, loading, validateFormData, fetchEvents]);
 
   const handleDeleteEvent = useCallback(async () => {
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
@@ -724,9 +691,8 @@ const Calendar: React.FC = () => {
           ? await FecthDeleteMedicalEvents(selectedEvent.id)
           : await FecthDeleteVaccinationCampaign(selectedEvent.id);
       if (success) {
-        setEvents((prev) =>
-          prev.filter((event) => event.id !== selectedEvent.id)
-        );
+        // Reload events to get updated data
+        await fetchEvents();
         showToast.success("Xóa sự kiện thành công");
       }
       closeModal();
@@ -737,7 +703,7 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedEvent, closeModal, loading]);
+  }, [selectedEvent, closeModal, loading, fetchEvents]);
 
   const navigateMonth = useCallback((direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -763,7 +729,7 @@ const Calendar: React.FC = () => {
           return newErrors;
         });
       }
-      
+
       setSelectedClasses(classIds);
       handleMedicalInputChange(
         "classIds",
@@ -812,7 +778,7 @@ const Calendar: React.FC = () => {
           return newErrors;
         });
       }
-      
+
       setSelectedClasses(classIds);
       handleVaccinationInputChange(
         "classIds",
@@ -895,7 +861,7 @@ const Calendar: React.FC = () => {
     const { type, data } = formData;
 
     // Check if at least one class is selected (not empty)
-    const hasValidClasses = selectedClasses && selectedClasses.length > 0 && 
+    const hasValidClasses = selectedClasses && selectedClasses.length > 0 &&
       !(selectedClasses.length === 1 && selectedClasses[0] === "");
 
     if (type === "medical") {
@@ -1028,9 +994,10 @@ const Calendar: React.FC = () => {
 
           <Modal
             isOpen={isOpen}
+            isFullscreen={false}
             onClose={closeModal}
             className={`${formData.type === "medical" ? "" : "max-w-3xl"} 
-          max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}
+          max-w-3xl w-full p-6 bg-white rounded-lg shadow-lg`}
           >
             {viewEventsDate ? (
               ViewEventsModalComponent
