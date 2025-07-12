@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/auth/Login";
 import ConfirmOTP from "@/pages/auth/ConfirmOTP";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
 import Blog from "@/pages/blog/Blog";
 import Calendar from "@/pages/Calendar";
 import UserManager from "@/pages/user/ManagerUser";
@@ -41,6 +43,7 @@ import AddBlog from "@/pages/blog/AddBlog";
 import BlogDetails from "@/pages/blog/BlogDetails";
 import EditBlog from "@/pages/blog/EditBlog";
 import HomeLayout from "@/components/layout/HomeLayout";
+import LoginPhone from "@/pages/auth/LoginPhone";
 
 function App() {
   return (
@@ -49,7 +52,10 @@ function App() {
         <Routes>
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login-phone" element={<LoginPhone />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/confirm-otp" element={<ConfirmOTP />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<EditProfile />} />
           <Route element={<HomeLayout />}>
             <Route path="/blog" element={<Blog />} />
