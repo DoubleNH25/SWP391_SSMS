@@ -176,9 +176,12 @@ export default function Blog() {
             </>
           ) : (
             <>
-              <h1 className="text-3xl font-bold text-blue-700">Bài viết sức khỏe</h1>
+              <h1 className="text-3xl font-bold text-blue-700">
+                Bài viết sức khỏe
+              </h1>
               <p className="text-gray-600 mt-1">
-                Khám phá các bài viết, kiến thức và kinh nghiệm về sức khỏe dành cho bạn
+                Khám phá các bài viết, kiến thức và kinh nghiệm về sức khỏe dành
+                cho bạn
               </p>
             </>
           )}
@@ -198,7 +201,12 @@ export default function Blog() {
         <div className="bg-white shadow-xl rounded-2xl border border-gray-100 px-6 py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
           {/* Search */}
           <div className="flex-1">
-            <label htmlFor="search" className="block text-xs font-medium text-gray-500 mb-1">Tìm kiếm</label>
+            <label
+              htmlFor="search"
+              className="block text-xs font-medium text-gray-500 mb-1"
+            >
+              Tìm kiếm
+            </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -207,7 +215,10 @@ export default function Blog() {
                 id="search"
                 type="text"
                 value={searchTerm}
-                onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Tìm kiếm bài viết..."
                 className="block w-full rounded-lg border border-gray-200 pl-10 pr-10 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition placeholder-gray-400"
               />
@@ -226,7 +237,12 @@ export default function Blog() {
           {/* Đã loại bỏ filter category */}
           {/* Sort */}
           <div className="w-full md:w-56">
-            <label htmlFor="sort" className="block text-xs font-medium text-gray-500 mb-1">Sắp xếp</label>
+            <label
+              htmlFor="sort"
+              className="block text-xs font-medium text-gray-500 mb-1"
+            >
+              Sắp xếp
+            </label>
             <Select
               options={sortOptions}
               defaultValue={sortOption}
@@ -238,7 +254,10 @@ export default function Blog() {
           {/* Clear all */}
           {(searchTerm || sortOption !== "newest") && (
             <button
-              onClick={() => { setSearchTerm(""); setSortOption("newest"); }}
+              onClick={() => {
+                setSearchTerm("");
+                setSortOption("newest");
+              }}
               className="ml-auto flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-400 hover:text-blue-600 transition-colors border border-gray-200"
               title="Xóa tất cả bộ lọc"
             >
@@ -247,12 +266,11 @@ export default function Blog() {
           )}
         </div>
         {/* Filter chips */}
-        {(searchTerm) && (
+        {searchTerm && (
           <div className="flex flex-wrap gap-2 mt-3 ml-1">
             {searchTerm && (
               <span className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium border border-blue-200">
-                <span className="mr-1">Từ khóa:</span>
-                "{searchTerm}"
+                <span className="mr-1">Từ khóa:</span>"{searchTerm}"
                 <button
                   onClick={() => setSearchTerm("")}
                   className="ml-2 rounded-full hover:bg-blue-100 p-0.5 text-blue-500"
@@ -296,10 +314,6 @@ export default function Blog() {
                   <h3 className="font-bold text-lg mb-2 text-gray-900 line-clamp-2">
                     {blog.title}
                   </h3>
-                  <div className="flex items-center gap-2 text-gray-400 text-xs">
-                    <Eye className="w-4 h-4" />
-                    <span>{blog.view}</span>
-                  </div>
                 </div>
                 {(() => {
                   const preview = getBlogPreview(
@@ -312,9 +326,15 @@ export default function Blog() {
                   ) : null;
                 })()}
                 <div className="flex items-center justify-between mt-auto pt-2">
-                  <div className="flex items-center gap-2 text-gray-500 text-xs">
-                    <UserCircle className="w-4 h-4" />
-                    <span>{blog.userName}</span>
+                  <div className="flex gap-2">
+                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                      <UserCircle className="w-4 h-4" />
+                      <span>{blog.userName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400 text-xs p-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{blog.view}</span>
+                    </div>
                   </div>
                   <div className="flex gap-5">
                     {isAdmin && (
@@ -322,9 +342,10 @@ export default function Blog() {
                         variant="outline"
                         className="hover:bg-blue-500 hover:text-white"
                         size="sm"
-                        onClick={() =>
-                          navigate(`/dashboard/blog/edit-blog/${blog.id}`)
-                        }
+                        onClick={(e) => {
+                          navigate(`/dashboard/blog/edit-blog/${blog.id}`);
+                          e.stopPropagation(); // Prevent click event from bubbling to parent div
+                        }}
                       >
                         <Pencil className="w-4 h-4 mr-1" />
                         Sửa
@@ -337,7 +358,10 @@ export default function Blog() {
                         variant="outline"
                         className="hover:bg-red-500 hover:text-white"
                         size="sm"
-                        onClick={() => openDeleteModal(blog)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteModal(blog);
+                        }}
                       >
                         <Trash className="w-4 h-4 mr-1" />
                         Xóa

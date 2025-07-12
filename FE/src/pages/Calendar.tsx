@@ -360,6 +360,15 @@ const Calendar: React.FC = () => {
 
   const handleMedicalInputChange = useCallback(
     (field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
+      // Clear validation error for this field when user starts typing
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+      
       setFormData((prev) => {
         if (prev.type === "medical") {
           return {
@@ -373,11 +382,20 @@ const Calendar: React.FC = () => {
         return prev;
       });
     },
-    []
+    [validationErrors]
   );
 
   const handleVaccinationInputChange = useCallback(
     (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string) => {
+      // Clear validation error for this field when user starts typing
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+      
       setFormData((prev) => {
         if (prev.type === "vaccination") {
           return {
@@ -391,7 +409,7 @@ const Calendar: React.FC = () => {
         return prev;
       });
     },
-    []
+    [validationErrors]
   );
 
   function prepareMedicalData(
@@ -422,6 +440,12 @@ const Calendar: React.FC = () => {
         | VaccinationCampaignsUpdateCreateViewModel
     ): Record<string, string> => {
       const errors: Record<string, string> = {};
+      
+      // Validate classes selection for both types
+      if (!selectedClasses || selectedClasses.length === 0 || (selectedClasses.length === 1 && selectedClasses[0] === "")) {
+        errors.classes = "Phải chọn ít nhất một lớp!";
+      }
+      
       if (type === "medical") {
         // Validate Medical Event fields
         if (!data.name?.trim()) {
@@ -432,9 +456,6 @@ const Calendar: React.FC = () => {
         }
         if (!(data as MedicalEventUpdateCreateViewModel).scheduledDate) {
           errors.scheduledDate = "Ngày dự kiến là bắt buộc!";
-        }
-        if (!selectedClasses || selectedClasses.length === 0) {
-          errors.classes = "Phải chọn ít nhất một lớp!";
         }
 
         // Validate scheduled date
@@ -482,9 +503,6 @@ const Calendar: React.FC = () => {
         }
         if (!(data as VaccinationCampaignsUpdateCreateViewModel).mfg) {
           errors.mfg = "Ngày sản xuất là bắt buộc!";
-        }
-        if (!selectedClasses || selectedClasses.length === 0) {
-          errors.classes = "Phải chọn ít nhất một lớp!";
         }
 
         // Validate dates
@@ -563,12 +581,23 @@ const Calendar: React.FC = () => {
     if (loading) return;
     const { type, data } = formData;
 
+    // Always validate first, even for updates
+    const validationErrors = validateFormData(type, data);
+    if (Object.keys(validationErrors).length > 0) {
+      setValidationErrors(validationErrors);
+      return;
+    }
+
+    // Clear validation errors if all fields are valid
+    setValidationErrors({});
     setLoading(true);
+    
     try {
       if (selectedEvent) {
-        // Update mode - no validation needed
+        // Update mode
         if (type === "medical") {
           const payload = prepareMedicalData(data);
+          console.log(payload);
           const success = await FecthUpdateMedicalEvent(
             selectedEvent.id,
             payload
@@ -624,15 +653,7 @@ const Calendar: React.FC = () => {
           }
         }
       } else {
-        // Create mode - validate all fields
-        const validationErrors = validateFormData(type, data);
-        if (Object.keys(validationErrors).length > 0) {
-          setValidationErrors(validationErrors);
-          return;
-        }
-
-        // Clear validation errors if all fields are valid
-        setValidationErrors({});
+        // Create mode
         if (type === "medical") {
           const payload = prepareMedicalData(data);
           const response = await FecthCreateMedicalEvent(payload);
@@ -734,6 +755,15 @@ const Calendar: React.FC = () => {
     if (!medicalData) return null;
 
     const handleClassChange = (classIds: string[]) => {
+      // Clear class validation error when user selects classes
+      if (validationErrors.classes) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.classes;
+          return newErrors;
+        });
+      }
+      
       setSelectedClasses(classIds);
       handleMedicalInputChange(
         "classIds",
@@ -774,6 +804,15 @@ const Calendar: React.FC = () => {
     if (!vaccinationData) return null;
 
     const handleClassChange = (classIds: string[]) => {
+      // Clear class validation error when user selects classes
+      if (validationErrors.classes) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.classes;
+          return newErrors;
+        });
+      }
+      
       setSelectedClasses(classIds);
       handleVaccinationInputChange(
         "classIds",
@@ -855,12 +894,16 @@ const Calendar: React.FC = () => {
     }
     const { type, data } = formData;
 
+    // Check if at least one class is selected (not empty)
+    const hasValidClasses = selectedClasses && selectedClasses.length > 0 && 
+      !(selectedClasses.length === 1 && selectedClasses[0] === "");
+
     if (type === "medical") {
       return (
         data.name?.trim() &&
         data.description?.trim() &&
         data.scheduledDate &&
-        selectedClasses.length > 0
+        hasValidClasses
       );
     } else if (type === "vaccination") {
       return (
@@ -870,7 +913,7 @@ const Calendar: React.FC = () => {
         data.startDate &&
         data.exp &&
         data.mfg &&
-        selectedClasses.length > 0
+        hasValidClasses
       );
     }
 

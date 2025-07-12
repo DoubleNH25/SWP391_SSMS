@@ -375,17 +375,6 @@ export default function ManagerRecord() {
 
               {/* Sort Control */}
               <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={handleSort}
-                  className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                >
-                  <span>Sắp xếp theo ngày</span>
-                  {sortOrder === "asc" ? (
-                    <ChevronUpIcon className="w-5 h-5" />
-                  ) : (
-                    <ChevronDownIcon className="w-5 h-5" />
-                  )}
-                </Button>
                 {hasActiveFilters && (
                   <button
                     onClick={handleClearFilters}
