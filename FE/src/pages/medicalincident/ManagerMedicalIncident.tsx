@@ -1,461 +1,627 @@
-import React from "react";
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AlertTriangleIcon, Users } from "lucide-react";
+import Label from "@/components/ui/form/Label";
+import PageHeader from "@/components/ui/PageHeader";
 import {
-  Loader2,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  XCircle,
-  Eye,
-  Edit,
-  Trash2,
-} from "lucide-react";
-import { Modal } from "@/components/ui/modal";
-import { useParams } from "react-router-dom";
+  FecthParents,
+  FecthStudents,
+  FecthStudentsByParentId,
+} from "@/services/UserService";
+import { FecthCreateIncident } from "@/services/IncidentService";
+import { showToast } from "@/components/ui/Toast";
+import { ParentViewModel } from "@/types/User";
+import { Student } from "@/types/Student";
+import { useState, useEffect, useCallback } from "react";
+import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import {
-  FecthAllIncidents,
   FetchAllIncidentsWithoutStudentId,
-  FecthDeleteIncident,
-  FecthUpdateIncident,
-  FecthUpdateIncidentStatus,
   Incident,
+  FecthAllIncidents as FetchIncidentsByStudent,
 } from "@/services/IncidentService";
-
-// Map trạng thái số hoặc tiếng Anh sang chữ tiếng Việt
-const mapStatus = (status: string | number): string => {
-  if (typeof status === "number") {
-    switch (status) {
-      case 0:
-        return "Đang đợi";
-      case 1:
-        return "Đã xử lý";
-      case 2:
-        return "Nguy cấp";
-      case 3:
-        return "Đã hủy";
-      default:
-        return "Không xác định";
-    }
-  }
-  // Map status tiếng Anh
-  switch (status) {
-    case "Pending":
-      return "Đang đợi";
-    case "Approved":
-      return "Đã xử lý";
-    case "Urgent":
-      return "Nguy cấp";
-    case "Cancelled":
-      return "Đã hủy";
-    default:
-      return status;
-  }
-};
-
-const statusColor: Record<string, string> = {
-  "Đang đợi": "bg-blue-100 text-blue-700",
-  "Đã xử lý": "bg-green-100 text-green-700",
-  "Nguy cấp": "bg-red-100 text-red-700",
-  "Đã hủy": "bg-gray-100 text-gray-700",
-  "Không xác định": "bg-gray-100 text-gray-700",
-};
-
-const statusIcon: Record<string, React.ReactNode> = {
-  "Đang đợi": <Info className="w-4 h-4 mr-1 text-blue-500" />,
-  "Đã xử lý": <CheckCircle className="w-4 h-4 mr-1 text-green-500" />,
-  "Nguy cấp": <AlertTriangle className="w-4 h-4 mr-1 text-red-500" />,
-  "Đã hủy": <XCircle className="w-4 h-4 mr-1 text-gray-500" />,
-  "Không xác định": <Info className="w-4 h-4 mr-1 text-gray-500" />,
-};
-
-const statusOptions = [
-  { value: "Đang đợi", label: "Đang đợi" },
-  { value: "Đã xử lý", label: "Đã xử lý" },
-  { value: "Nguy cấp", label: "Nguy cấp" },
-  { value: "Đã hủy", label: "Đã hủy" },
-];
+import { Modal } from "@/components/ui/modal";
 
 export default function ManagerMedicalIncident() {
-  const { studentId } = useParams<{ studentId: string }>();
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [parents, setParents] = useState<ParentViewModel[]>([]);
+  const [filteredParents, setFilteredParents] = useState<ParentViewModel[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<Incident | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [error, setError] = useState<string>("");
-  const [editModal, setEditModal] = useState(false);
-  const [editData, setEditData] = useState<Incident | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
+  const [selectedParent, setSelectedParent] = useState<ParentViewModel | null>(
+    null
+  );
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentOptions, setStudentOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [studentsLoadingForSearch, setStudentsLoadingForSearch] =
+    useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [incidentsLoading, setIncidentsLoading] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
+    null
+  );
+  // Thêm lại allStudents vào state để map studentId sang tên và lớp
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
 
-  // Lấy danh sách sự cố y tế từ API
-  useEffect(() => {
-    setLoading(true);
-    setError("");
-    const fetchIncidents = studentId
-      ? FecthAllIncidents(studentId)
-      : FetchAllIncidentsWithoutStudentId();
-    fetchIncidents
-      .then((data) => {
-        console.log("[DEBUG] incidents from API:", data);
-        setIncidents(data);
-      })
-      .catch((err: unknown) => {
-        if (err instanceof Error) setError(err.message);
-        else setError("Lỗi tải dữ liệu");
-      })
-      .finally(() => setLoading(false));
-  }, [studentId]);
+  // State cho modal tạo sự cố y tế
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [incidentForm, setIncidentForm] = useState({
+    type: "",
+    description: "",
+    status: 0,
+    incidentDate: "",
+  });
 
-  // Xóa sự cố y tế
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Bạn có chắc muốn xóa sự cố này?")) return;
+  // Fetch parents
+  const fetchParent = useCallback(async () => {
     setLoading(true);
     try {
-      await FecthDeleteIncident(id);
-      setIncidents((prev) => prev.filter((i) => i.id !== id));
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Lỗi xóa sự cố");
+      const response = await FecthParents();
+      setParents(response || []);
+      setFilteredParents(response || []);
+    } catch {
+      setParents([]);
+      setFilteredParents([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleEdit = (incident: Incident) => {
-    setEditData(incident);
-    setEditModal(true);
-  };
-
-  const handleEditChange = (field: keyof Incident, value: string) => {
-    if (!editData) return;
-    setEditData({ ...editData, [field]: value });
-  };
-
-  const handleEditSave = async () => {
-    if (!editData) return;
-    setEditLoading(true);
+  // Fetch all students (luôn gọi khi load trang)
+  const fetchAllStudents = useCallback(async () => {
+    setStudentsLoadingForSearch(true);
     try {
-      // Cập nhật trạng thái nếu có thay đổi
-      const original = incidents.find((i) => i.id === editData.id);
-      if (original && original.status !== editData.status) {
-        await FecthUpdateIncidentStatus(editData.id, editData.status || "");
-      }
-
-      // Cập nhật thông tin khác
-      await FecthUpdateIncident(editData.id, {
-        type: editData.type,
-        description: editData.description,
-        note: editData.note,
-        details: editData.details,
-      });
-
-      // Cập nhật state ngay lập tức để UI phản hồi
-      setIncidents((prev) =>
-        prev.map((incident) =>
-          incident.id === editData.id
-            ? {
-                ...incident,
-                type: editData.type,
-                description: editData.description,
-                note: editData.note,
-                details: editData.details,
-                status: editData.status,
-              }
-            : incident
-        )
-      );
-
-      // Reload lại danh sách từ server để đảm bảo đồng bộ
-      const fetchIncidents = studentId
-        ? FecthAllIncidents(studentId)
-        : FetchAllIncidentsWithoutStudentId();
-      const data = await fetchIncidents;
-      setIncidents(data);
-
-      setEditModal(false);
-      setEditData(null);
-    } catch (err) {
-      alert((err as Error).message || "Lỗi cập nhật sự cố");
+      const response = await FecthStudents();
+      setAllStudents(response || []);
+      const options = (response || []).map((student) => ({
+        value: student.id,
+        label: `${student.studentCode} - ${student.fullName} (${
+          student.studentClass?.className || "N/A"
+        })`,
+      }));
+      setStudentOptions(options);
+    } catch {
+      setAllStudents([]);
+      setStudentOptions([]);
     } finally {
-      setEditLoading(false);
+      setStudentsLoadingForSearch(false);
+    }
+  }, []);
+
+  // Thêm hàm fetchStudentsByParentId
+  const fetchStudentsByParentId = useCallback(async (parentId: string) => {
+    setStudentsLoadingForSearch(true);
+    try {
+      const response = await FecthStudentsByParentId(parentId);
+      setStudents(response || []);
+    } finally {
+      setStudentsLoadingForSearch(false);
+    }
+  }, []);
+
+  // Handle student select
+  const handleStudentSelect = useCallback((studentId: string) => {
+    setSelectedStudentId(studentId);
+  }, []);
+
+  // Fetch incidents
+  const fetchIncidents = useCallback(async () => {
+    setIncidentsLoading(true);
+    try {
+      let data: Incident[] = [];
+      if (selectedStudentId) {
+        data = await FetchIncidentsByStudent(selectedStudentId);
+      } else {
+        data = await FetchAllIncidentsWithoutStudentId();
+      }
+      setIncidents(data || []);
+    } catch {
+      setIncidents([]);
+    } finally {
+      setIncidentsLoading(false);
+    }
+  }, [selectedStudentId]);
+
+  // Filter parents
+  const filterParents = useCallback(() => {
+    if (!searchTerm || searchTerm.trim() === "") {
+      setFilteredParents([]);
+      return;
+    }
+    const filtered = parents.filter(
+      (parent) =>
+        parent.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        parent.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        parent.phone?.includes(searchTerm)
+    );
+    setFilteredParents(filtered);
+  }, [parents, searchTerm]);
+
+  // Clear filters
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSelectedStudentId("");
+  };
+
+  // Thêm logic tạo sự cố y tế
+  const handleCreateIncident = async () => {
+    if (
+      !selectedStudentId ||
+      !incidentForm.type ||
+      !incidentForm.description ||
+      !incidentForm.incidentDate
+    ) {
+      showToast.warning("Vui lòng nhập đầy đủ các trường bắt buộc!");
+      return;
+    }
+    try {
+      await FecthCreateIncident({
+        studentId: selectedStudentId,
+        type: incidentForm.type,
+        description: incidentForm.description,
+        incidentDate: incidentForm.incidentDate,
+        medicalUsageDetails: [],
+      });
+      setShowCreateModal(false);
+      setIncidentForm({
+        type: "",
+        description: "",
+        status: 0,
+        incidentDate: "",
+      });
+      fetchIncidents();
+      showToast.success("Tạo sự cố y tế thành công!");
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "message" in err) {
+        showToast.error((err as any).message || "Tạo sự cố y tế thất bại!");
+      } else {
+        showToast.error("Tạo sự cố y tế thất bại!");
+      }
     }
   };
 
+  // Effects
+  useEffect(() => {
+    fetchParent();
+    fetchAllStudents();
+    fetchIncidents();
+  }, [fetchParent, fetchAllStudents, fetchIncidents]);
+
+  useEffect(() => {
+    filterParents();
+  }, [filterParents]);
+
+  useEffect(() => {
+    fetchIncidents();
+  }, [selectedStudentId, fetchIncidents]);
+
+  // UI
   return (
-    <div className="p-4 md:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Info className="w-8 h-8 text-blue-600" />
-          <h1 className="text-2xl md:text-3xl font-bold">
-            {studentId
-              ? "Quản lý sự cố y tế học sinh"
-              : "Quản lý tất cả sự cố y tế"}
-          </h1>
+    <div className="p-6">
+      <PageHeader
+        title="Sự cố y tế"
+        icon={<AlertTriangleIcon className="w-10 h-10" />}
+        description="Quản lý sự cố y tế của học sinh"
+      />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Bộ lọc tìm kiếm
+            </h2>
+            {(searchTerm || selectedStudentId) && (
+              <button
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="search">Tìm kiếm phụ huynh</Label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="search"
+                  placeholder="Tìm kiếm theo tên phụ huynh, email, số điện thoại..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="student-search">Tìm kiếm học sinh</Label>
+              <div className="flex flex-wrap gap-2 items-start">
+                <div className="flex-1 min-w-[200px]">
+                  <SearchableSelect
+                    options={studentOptions}
+                    placeholder={
+                      studentsLoadingForSearch
+                        ? "Đang tải..."
+                        : "Chọn học sinh theo mã hoặc tên..."
+                    }
+                    onChange={handleStudentSelect}
+                    value={selectedStudentId}
+                  />
+                </div>
+                <div className="flex flex-row gap-3 items-start">
+                  <div className="flex flex-col gap-2 items-stretch">
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      disabled={!selectedStudentId || studentsLoadingForSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    >
+                      <AlertTriangleIcon className="w-4 h-4" />
+                      Tạo sự cố y tế
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      {error && <div className="text-red-600 mb-4">{error}</div>}
-      <Card className="shadow-lg rounded-xl overflow-x-auto">
-        <CardContent className="p-0">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                  Thời gian
-                </th>
-                {!studentId && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                    Học sinh
-                  </th>
-                )}
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                  Loại sự cố
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                  Mô tả
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                  Trạng thái
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {loading ? (
+      <div className="grid grid-cols-3 gap-6">
+        {/* Danh sách phụ huynh */}
+        <div className="col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Danh sách phụ huynh
+              {filteredParents.length > 0 && (
+                <span className="text-sm text-normal text-gray-500">
+                  ({filteredParents.length} kết quả)
+                </span>
+              )}
+            </h2>
+          </div>
+          {/* Luôn hiển thị danh sách phụ huynh */}
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-gray-600">Đang tải...</span>
+            </div>
+          ) : filteredParents.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">
+                Không tìm thấy phụ huynh nào phù hợp với từ khóa tìm kiếm
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredParents.map((parent, index) => (
+                <div
+                  key={index}
+                  onClick={() => {
+                    setSelectedParent(parent);
+                    fetchStudentsByParentId(parent.id);
+                  }}
+                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
+                    selectedParent && selectedParent.id === parent.id
+                      ? "border-blue-500 bg-blue-50 shadow-md"
+                      : "border-gray-200 hover:border-blue-300"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {parent.fullName}
+                      </h3>
+                      <p className="text-sm text-gray-500 truncate">
+                        {parent.email}
+                      </p>
+                      <p className="text-sm text-gray-500">{parent.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Danh sách học sinh */}
+        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              {selectedParent
+                ? `Danh sách học sinh của ${selectedParent.fullName}`
+                : "Danh sách học sinh"}
+              {students.length > 0 && (
+                <span className="text-sm text-normal text-gray-500">
+                  ({students.length} học sinh)
+                </span>
+              )}
+            </h2>
+            {selectedParent && (
+              <button
+                onClick={() => {
+                  setSelectedParent(null);
+                  setStudents([]);
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Đóng
+              </button>
+            )}
+          </div>
+          {/* Luôn hiển thị danh sách học sinh */}
+          {studentsLoadingForSearch ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-gray-600">
+                Đang tải danh sách học sinh...
+              </span>
+            </div>
+          ) : !selectedParent ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">
+                Vui lòng chọn phụ huynh để xem danh sách học sinh
+              </p>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">
+                Không tìm thấy học sinh nào cho phụ huynh này
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {students.map((student, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setSelectedStudentId(student.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Users className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {student.fullName}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Mã học sinh: {student.studentCode}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Giới tính: {student.gender}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Ngày sinh:{" "}
+                        {new Date(student.dateOfBirth).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </p>
+                      {student.studentClass && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-xs text-gray-400 mb-1">Lớp học:</p>
+                          <p className="text-sm font-medium text-gray-700">
+                            {student.studentClass.className}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Phòng: {student.studentClass.classRoom}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Danh sách sự cố y tế */}
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold mb-4">Danh sách sự cố y tế</h2>
+        {incidentsLoading ? (
+          <div>Đang tải...</div>
+        ) : incidents.length === 0 ? (
+          <div>Không có sự cố y tế nào.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead>
                 <tr>
-                  <td colSpan={studentId ? 5 : 6} className="text-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" />
-                  </td>
+                  <th className="px-3 py-2 border-b">Học sinh</th>
+                  <th className="px-3 py-2 border-b">Lớp</th>
+                  <th className="px-3 py-2 border-b">Loại sự cố</th>
+                  <th className="px-3 py-2 border-b">Mô tả</th>
+                  <th className="px-3 py-2 border-b">Trạng thái</th>
+                  <th className="px-3 py-2 border-b">Ngày tạo</th>
+                  <th className="px-3 py-2 border-b">Hành động</th>
                 </tr>
-              ) : incidents.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={studentId ? 5 : 6}
-                    className="text-center py-8 text-gray-400"
-                  >
-                    Không có sự cố nào.
-                  </td>
-                </tr>
-              ) : (
-                incidents.map((incident) => {
-                  const mappedStatus = mapStatus(incident.status);
+              </thead>
+              <tbody>
+                {incidents.map((incident) => {
+                  const student =
+                    allStudents.find((s) => s.id === incident.studentId) ||
+                    students.find((s) => s.id === incident.studentId);
                   return (
                     <tr
                       key={incident.id}
-                      className="hover:bg-blue-50 transition"
+                      className="border-b hover:bg-gray-50 cursor-pointer"
                     >
-                      <td className="px-4 py-3 whitespace-nowrap font-medium">
-                        {incident.incidentDate || incident.createdTime}
+                      <td className="px-3 py-2">
+                        {student ? student.fullName : incident.studentId}
                       </td>
-                      {!studentId && (
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                          {incident.studentId}
-                        </td>
-                      )}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {incident.type}
+                      <td className="px-3 py-2">
+                        {student && student.studentClass
+                          ? student.studentClass.className
+                          : "-"}
                       </td>
-                      <td
-                        className="px-4 py-3 max-w-xs truncate"
-                        title={
-                          incident.description ||
-                          incident.note ||
-                          incident.details ||
-                          "Không có mô tả"
-                        }
-                      >
+                      <td className="px-3 py-2">{incident.type}</td>
+                      <td className="px-3 py-2">
                         {incident.description ||
                           incident.note ||
                           incident.details ||
                           "Không có mô tả"}
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                            statusColor[mappedStatus] ||
-                            "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {statusIcon[mappedStatus] || (
-                            <Info className="w-4 h-4 mr-1 text-gray-500" />
-                          )}
-                          {mappedStatus}
-                        </span>
+                      <td className="px-3 py-2">{incident.status}</td>
+                      <td className="px-3 py-2">
+                        {incident.createdTime
+                          ? new Date(incident.createdTime).toLocaleDateString(
+                              "vi-VN"
+                            )
+                          : ""}
                       </td>
-                      <td className="px-4 py-3 text-center flex gap-2 justify-center">
-                        <Button
-                          size="icon"
-                          variant="ghost"
+                      <td className="px-3 py-2">
+                        <button
                           onClick={() => {
-                            setSelected(incident);
-                            setShowModal(true);
+                            setSelectedIncident(incident);
+                            setShowDetailModal(true);
                           }}
+                          className="text-blue-600 hover:underline"
                         >
-                          <Eye className="w-5 h-5 text-blue-600" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleEdit(incident)}
-                        >
-                          <Edit className="w-5 h-5 text-green-600" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDelete(incident.id)}
-                        >
-                          <Trash2 className="w-5 h-5 text-red-600" />
-                        </Button>
+                          Xem
+                        </button>
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-      {/* Modal chi tiết */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <div className="p-6 max-w-md mx-auto">
-          {selected && (
-            <>
-              <div className="flex items-center gap-3 mb-4">
-                {statusIcon[mapStatus(selected.status)] || (
-                  <Info className="w-4 h-4 mr-1 text-gray-500" />
-                )}
-                <h2 className="text-xl font-bold">Chi tiết sự cố y tế</h2>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {/* Modal xem chi tiết sự cố y tế */}
+      <Modal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedIncident(null);
+        }}
+      >
+        <div className="p-6 min-w-[350px] max-w-[500px]">
+          <h3 className="text-lg font-semibold mb-4">Chi tiết sự cố y tế</h3>
+          {!selectedIncident ? (
+            <div>Không tìm thấy thông tin sự cố.</div>
+          ) : (
+            <div className="space-y-2">
+              <div>
+                <b>Học sinh:</b> {selectedIncident.studentId}
               </div>
-              <div className="mb-2">
-                <span className="font-semibold">Thời gian:</span>{" "}
-                {selected.incidentDate || selected.createdTime}
+              <div>
+                <b>Loại sự cố:</b> {selectedIncident.type}
               </div>
-              {!studentId && (
-                <div className="mb-2">
-                  <span className="font-semibold">Học sinh:</span>{" "}
-                  {selected.studentId}
-                </div>
-              )}
-              <div className="mb-2">
-                <span className="font-semibold">Loại sự cố:</span>{" "}
-                {selected.type}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Mô tả:</span>{" "}
-                {selected.description ||
-                  selected.note ||
-                  selected.details ||
+              <div>
+                <b>Mô tả:</b>{" "}
+                {selectedIncident.description ||
+                  selectedIncident.note ||
+                  selectedIncident.details ||
                   "Không có mô tả"}
               </div>
-              <div className="mb-2">
-                <span className="font-semibold">Trạng thái:</span>{" "}
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    statusColor[mapStatus(selected.status)] ||
-                    "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {statusIcon[mapStatus(selected.status)] || (
-                    <Info className="w-4 h-4 mr-1 text-gray-500" />
-                  )}
-                  {mapStatus(selected.status)}
-                </span>
+              <div>
+                <b>Trạng thái:</b> {selectedIncident.status}
               </div>
-              <div className="flex gap-2 mt-6">
-                <Button
-                  className="bg-green-600 hover:bg-green-700 text-white flex-1"
-                  onClick={() => handleEdit(selected)}
-                >
-                  Sửa
-                </Button>
-                <Button
-                  className="bg-red-600 hover:bg-red-700 text-white flex-1"
-                  onClick={() => handleDelete(selected.id)}
-                >
-                  Xóa
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowModal(false)}
-                >
-                  Đóng
-                </Button>
+              <div>
+                <b>Ngày tạo:</b>{" "}
+                {new Date(selectedIncident.createdTime).toLocaleDateString(
+                  "vi-VN"
+                )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </Modal>
-      {/* Modal sửa sự cố */}
-      <Modal isOpen={editModal} onClose={() => setEditModal(false)}>
-        <div className="p-6 max-w-md mx-auto">
-          <h2 className="text-xl font-bold mb-4">Sửa sự cố y tế</h2>
-          {editData && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleEditSave();
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block font-semibold mb-1">Loại sự cố</label>
-                <input
-                  className="w-full border rounded px-3 py-2"
-                  value={editData.type || ""}
-                  onChange={(e) => handleEditChange("type", e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1">
-                  Mô tả/Chi tiết
-                </label>
-                <textarea
-                  className="w-full border rounded px-3 py-2"
-                  value={editData.description || ""}
-                  onChange={(e) =>
-                    handleEditChange("description", e.target.value)
-                  }
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1">Trạng thái</label>
-                <select
-                  className="w-full border rounded px-3 py-2"
-                  value={mapStatus(editData.status)}
-                  onChange={(e) => handleEditChange("status", e.target.value)}
-                  required
-                >
-                  {statusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2 mt-6">
-                <Button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-                  disabled={editLoading}
-                >
-                  {editLoading ? "Đang lưu..." : "Lưu"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setEditModal(false)}
-                >
-                  Hủy
-                </Button>
-              </div>
-            </form>
-          )}
+      {/* Modal tạo sự cố y tế */}
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)}>
+        <div className="mx-auto w-full max-w-md bg-white rounded-xl shadow-2xl p-8 flex flex-col gap-6">
+          <h2 className="text-2xl font-bold mb-2 text-center text-blue-700">
+            Tạo sự cố y tế
+          </h2>
+          <form className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm font-semibold text-gray-700">
+                Loại sự cố <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                value={incidentForm.type}
+                onChange={(e) =>
+                  setIncidentForm((f) => ({ ...f, type: e.target.value }))
+                }
+                placeholder="Nhập loại sự cố..."
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm font-semibold text-gray-700">
+                Mô tả <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition min-h-[80px]"
+                value={incidentForm.description}
+                onChange={(e) =>
+                  setIncidentForm((f) => ({
+                    ...f,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="Nhập mô tả chi tiết..."
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm font-semibold text-gray-700">
+                Trạng thái
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                value={incidentForm.status}
+                onChange={(e) =>
+                  setIncidentForm((f) => ({
+                    ...f,
+                    status: Number(e.target.value),
+                  }))
+                }
+              >
+                <option value={0}>Chưa xử lý</option>
+                <option value={1}>Đã xử lý</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm font-semibold text-gray-700">
+                Ngày xảy ra sự cố <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                value={incidentForm.incidentDate}
+                onChange={(e) =>
+                  setIncidentForm((f) => ({
+                    ...f,
+                    incidentDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition"
+                onClick={() => setShowCreateModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+                onClick={handleCreateIncident}
+              >
+                Tạo mới
+              </button>
+            </div>
+          </form>
         </div>
       </Modal>
     </div>

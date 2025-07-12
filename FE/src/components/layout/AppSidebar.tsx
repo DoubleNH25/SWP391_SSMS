@@ -12,8 +12,9 @@ import {
   RequestIcon,
   StethoscopeIcon,
   BackIcon,
-  ListIcon
+  ListIcon,
 } from "@/components/icons";
+import { AlertTriangle } from "lucide-react";
 import { useSidebar } from "@/components/context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
@@ -129,6 +130,12 @@ const navItems: NavItem[] = [
     icon: <RequestIcon className="w-5 h-5 mx-auto" />,
     name: "Yêu cầu thuốc",
     path: "/dashboard/medical/medical-request",
+    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
+  },
+  {
+    icon: <AlertTriangle className="w-5 h-5 mx-auto" />,
+    name: "Sự cố y tế",
+    path: "/dashboard/medicalincident/manager",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
