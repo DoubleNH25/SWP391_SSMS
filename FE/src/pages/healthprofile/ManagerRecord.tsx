@@ -375,6 +375,7 @@ export default function ManagerRecord() {
 
               {/* Sort Control */}
               <div className="flex flex-wrap items-center gap-3">
+                
                 {hasActiveFilters && (
                   <button
                     onClick={handleClearFilters}
