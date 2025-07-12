@@ -12,9 +12,9 @@ import type {
   VaccinationRecord,
 } from "@/types/MedicalRecord";
 import { Student } from "@/types/Student";
-import { Search, User, CheckCircle, Clock, Heart } from "lucide-react";
+import { Search, User, CheckCircle, Clock, Heart, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { showToast } from "@/components/ui/Toast";
 
 export default function MedicalVaccinationRecord() {
@@ -32,6 +32,7 @@ export default function MedicalVaccinationRecord() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isCurrentDate, setIsCurrentDate] = useState<boolean>(false);
+  const navigaton = useNavigate();
 
   const handleGetMedicalRecord = useCallback(async () => {
     setLoading(true);
@@ -185,6 +186,16 @@ export default function MedicalVaccinationRecord() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-2">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
+        <div className="flex items-center gap-3 px-4 my-5">
+          <Button
+            variant="outline"
+            onClick={() => navigaton(-1)}
+            className="flex items-center gap-2 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Quay lại
+          </Button>
+        </div>
         <PageHeader
           title="Sự kiện tiêm vaccine"
           icon={<Heart className="w-6 h-6 text-red-600" />}

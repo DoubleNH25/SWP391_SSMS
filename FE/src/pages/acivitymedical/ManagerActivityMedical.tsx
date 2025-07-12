@@ -174,6 +174,7 @@ export default function ManagerActivityMedical() {
       setShowConfirmation(false);
       // Refresh the data
       await fetchActivityMedicalEvent();
+      handleBack();
     } catch (error) {
       console.error("Error updating consent status:", error);
       showToast.error(
@@ -481,7 +482,7 @@ export default function ManagerActivityMedical() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tìm kiếm
                     </label>
@@ -531,21 +532,6 @@ export default function ManagerActivityMedical() {
                       onChange={(e) => setDateFilter(e.target.value)}
                       className="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Loại sự kiện
-                    </label>
-                    <select
-                      value={typeFilter}
-                      onChange={(e) => setTypeFilter(e.target.value)}
-                      className="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    >
-                      <option value="all">Tất cả loại</option>
-                      <option value="khám">Khám sức khỏe</option>
-                      <option value="tiêm">Tiêm chủng</option>
-                      <option value="tư vấn">Tư vấn sức khỏe</option>
-                    </select>
                   </div>
                 </div>
                 {(searchTerm ||

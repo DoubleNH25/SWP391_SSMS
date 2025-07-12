@@ -57,8 +57,8 @@ export async function FecthDeleteNotification(): Promise<boolean> {
   }
   try {
     await ApiClient<boolean>({
-      method: 'PUT',
-      endpoint: `/notifications/mark-all-read`,
+      method: 'DELETE',
+      endpoint: `/notifications/delete-read`,
     });
     return true;
   } catch (err) {

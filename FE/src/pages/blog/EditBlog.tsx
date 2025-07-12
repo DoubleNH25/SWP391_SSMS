@@ -17,6 +17,7 @@ export default function EditBlog() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    excerpt: "",
     image: null as File | null,
     titleImage: null as File | null,
   });
@@ -29,6 +30,7 @@ export default function EditBlog() {
       setFormData({
         title: blog.title,
         content: blog.content,
+        excerpt: blog.excerpt || "",
         image: null,
         titleImage: null,
       });
@@ -44,16 +46,24 @@ export default function EditBlog() {
     }
   }, [blogId]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, title: e.target.value });
+  const handleTitleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const value = e.target.value;
+    if (value.length <= 200) {
+      setFormData({ ...formData, title: value });
+    }
   };
 
   const handleContentChange = (value: string) => {
     setFormData({ ...formData, content: value });
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Đã loại bỏ category, không cần xử lý
+  const handleExcerptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= 200) {
+      setFormData({ ...formData, excerpt: value });
+    }
   };
 
   const quillModules = {
@@ -71,6 +81,7 @@ export default function EditBlog() {
     setFormData({
       title: "",
       content: "",
+      excerpt: "",
       image: null,
       titleImage: null,
     });
@@ -84,11 +95,14 @@ export default function EditBlog() {
       return;
     }
 
+    if (formData.title.length > 200) {
+      showToast.error("Tiêu đề không được vượt quá 200 ký tự");
+      return;
+    }
+
     setFormLoading(true);
     try {
-      let imageUrl = ""; // Mặc định rỗng
-
-      // Nếu user có upload ảnh mới -> Upload và lấy URL mới
+      let imageUrl: string | undefined;
       if (formData.image) {
         const uploadResult = await UploadBlogImage(formData.image);
         imageUrl = uploadResult.imageUrl;
@@ -97,9 +111,9 @@ export default function EditBlog() {
       const blogRequest: BlogRequest = {
         title: formData.title,
         content: formData.content,
-        imageUrl: imageUrl || undefined, // giữ lại undefined nếu không có gì thay đổi
-        imageFile: formData.titleImage || undefined,
-        excerpt: formData.content.replace(/<[^>]+>/g, "").slice(0, 200), // tạo excerpt ngắn từ content
+        excerpt: formData.excerpt || formData.content.replace(/<[^>]+>/g, "").slice(0, 200),
+        imageUrl: imageUrl,
+        imageFile: formData.titleImage ?? undefined,
         // category đã bị loại bỏ
       };
 
@@ -148,9 +162,9 @@ export default function EditBlog() {
         {/* Main Form */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="p-6 sm:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="gap-6 mb-8">
               {/* Title Field */}
-              <div className="lg:col-span-2">
+              <div>
                 <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                   <svg
                     className="w-4 h-4"
@@ -167,22 +181,57 @@ export default function EditBlog() {
                   </svg>
                   Tiêu đề bài viết
                 </Label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.title}
-                  onChange={handleTitleChange}
+                  onChange={(e) => {
+                    handleTitleChange(e); // Call the original change handler
+                    e.target.style.height = "auto"; // Reset height to auto
+                    e.target.style.height = `${e.target.scrollHeight}px`; // Set height based on content
+                  }}
                   placeholder="Nhập tiêu đề hấp dẫn cho bài viết của bạn..."
-                  className="w-full h-12 px-4 rounded-xl border-2 transition-all duration-200 text-lg "
+                  className="w-full px-4 rounded-xl border-2 transition-all duration-200 text-lg resize-none"
+                  style={{ minHeight: "48px" }} // Default height (equivalent to h-12)
                 />
                 {formData.title && (
                   <p className="text-sm text-gray-500 mt-2">
-                    {formData.title.length}/100 ký tự
+                    {formData.title.length}/200 ký tự
                   </p>
                 )}
               </div>
 
-              {/* Category Field */}
-              {/* Đã loại bỏ trường category */}
+            </div>
+
+            {/* Excerpt Field */}
+            <div className="mb-6">
+              <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                  />
+                </svg>
+                Tóm tắt bài viết
+              </Label>
+              <textarea
+                value={formData.excerpt}
+                onChange={handleExcerptChange}
+                placeholder="Nhập tóm tắt ngắn gọn cho bài viết (tối đa 200 ký tự)..."
+                className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 resize-none"
+                style={{ minHeight: "80px" }}
+                rows={3}
+              />
+              {formData.excerpt && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {formData.excerpt.length}/200 ký tự
+                </p>
+              )}
             </div>
 
             {/* Title Image Upload */}

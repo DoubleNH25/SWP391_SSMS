@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   FecthMedicalHealthCheckupRecord,
   FecthUpdateHealthCheckupRecord,
@@ -21,6 +21,7 @@ import {
   Heart,
   CheckCircle,
   Clock,
+  ArrowLeft,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { showToast } from "@/components/ui/Toast";
@@ -43,6 +44,7 @@ export default function MedicalHealthCheckupRecords() {
       abnormalNote: "",
       checkingStatus: "Normal",
     });
+  const navigaton = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [validateMessage, setValidateMessage] = useState({
     vision: "",
@@ -297,6 +299,16 @@ export default function MedicalHealthCheckupRecords() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-2">
       <div className="max-w-8xl mx-auto">
+        <div className="flex items-center gap-3 px-4 my-5">
+          <Button
+            variant="outline"
+            onClick={() => navigaton(-1)}
+            className="flex items-center gap-2 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Quay lại
+          </Button>
+        </div>
         <PageHeader
           title="Sự kiện kiểm tra sức khỏe"
           icon={<Heart className="w-6 h-6 text-red-600" />}
@@ -304,7 +316,6 @@ export default function MedicalHealthCheckupRecords() {
             "vi-VN"
           )}`}
         />
-
         <div className="flex items-center justify-end gap-3 mb-6 absolute right-[1rem] top-[6rem]">
           <div className="w-28 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-2 text-white text-center">
             <div className="text-lg font-bold">{students.length}</div>

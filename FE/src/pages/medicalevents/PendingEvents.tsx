@@ -161,7 +161,9 @@ export default function PendingEventManager() {
               (event) => event.id !== selectedEvent.id
             )
           );
-          showToast.success("Chiến dịch tiêm chủng đã được phê duyệt thành công");
+          showToast.success(
+            "Chiến dịch tiêm chủng đã được phê duyệt thành công"
+          );
         } else {
           throw new Error("Phê duyệt thất bại");
         }
@@ -250,9 +252,32 @@ export default function PendingEventManager() {
       setCurrentPage(page);
     }
   };
+  const normalizeDate = (date: Date | string) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Sự kiện y tế quá hạn
+  const overdueMedicalEvents = medicalEvents.filter(
+    (event) =>
+      event.status === "Pending" && normalizeDate(event.scheduledDate) < today
+  );
+
+  // Chiến dịch tiêm chủng quá hạn
+  const overdueVaccinationCampaigns = vaccinationCampaigns.filter(
+    (campaign) =>
+      campaign.status === "Pending" && normalizeDate(campaign.startDate) < today
+  );
+
+  const totalOverdueCount =
+    overdueMedicalEvents.length + overdueVaccinationCampaigns.length;
 
   return (
-    <div className="p-4">
+    <div className="p-4 ">
       <PageHeader
         title="Quản lý sự kiện chờ duyệt"
         icon={<ClockAlert className="w-6 h-6 text-orange-600" />}
@@ -296,18 +321,27 @@ export default function PendingEventManager() {
         </div>
       ) : (
         <div>
-          <div className="flex items-center justify-end mb-6 absolute right-[56px] top-[115px]">
+          <div className="flex items-center justify-end mb-6 right-[56px] top-[115px]">
             <div className="relative">
               {totalPendingCount > 0 ? (
-                <div className="fixed top-[6rem] right-[2rem] bg-red-50 border border-red-200 text-red-800 p-4 rounded-2xl shadow-lg flex items-center gap-3 max-w-xs">
+                <div className="absolute top-[-5rem] right-[0rem] w-[24rem] bg-red-50 border border-red-200 text-red-800 p-4 rounded-2xl shadow-lg flex items-center gap-3">
                   <AlertCircleIcon className="w-5 h-5 text-red-600" />
                   <p className="text-sm font-medium">
                     Có <span className="font-bold">{totalPendingCount}</span> sự
                     kiện chờ phê duyệt
+                    {totalOverdueCount > 0 && (
+                      <>
+                        {" "}
+                        / <span className="font-bold">
+                          {totalOverdueCount}
+                        </span>{" "}
+                        đã quá hạn
+                      </>
+                    )}
                   </p>
                 </div>
               ) : (
-                <div className="fixed top-[6rem] right-[2rem] z-50 bg-gray-50 border border-gray-200 text-gray-800 p-4 rounded-2xl shadow-lg flex items-center gap-3 max-w-xs">
+                <div className="absolute top-[-5rem] right-[0rem] w-[24rem] z-50 bg-gray-50 border border-gray-200 text-gray-800 p-4 rounded-2xl shadow-lg flex items-center gap-3 max-w-xs">
                   <AlertCircleIcon className="w-5 h-5 text-gray-600" />
                   <p className="text-sm font-medium">
                     Không có sự kiện chờ phê duyệt
@@ -370,7 +404,9 @@ export default function PendingEventManager() {
                                   Trạng thái:
                                 </span>
                                 <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {event.status === "Pending" ? "Chờ duyệt" : event.status}
+                                  {event.status === "Pending"
+                                    ? "Chờ duyệt"
+                                    : event.status}
                                 </span>
                               </div>
                               <div className="flex justify-between items-start">
@@ -474,7 +510,9 @@ export default function PendingEventManager() {
                                   Trạng thái:
                                 </span>
                                 <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {campaign.status === "Pending" ? "Chờ duyệt" : campaign.status}
+                                  {campaign.status === "Pending"
+                                    ? "Chờ duyệt"
+                                    : campaign.status}
                                 </span>
                               </div>
                               <div className="flex justify-between items-start">
@@ -521,7 +559,11 @@ export default function PendingEventManager() {
                 )}
 
                 <p className="text-gray-600 mb-6">
-                  Bạn có chắc chắn muốn phê duyệt {selectedEvent?.type === "medicalEvent" ? "sự kiện y tế này" : "chiến dịch tiêm chủng này"} không?
+                  Bạn có chắc chắn muốn phê duyệt{" "}
+                  {selectedEvent?.type === "medicalEvent"
+                    ? "sự kiện y tế này"
+                    : "chiến dịch tiêm chủng này"}{" "}
+                  không?
                 </p>
 
                 <div className="flex justify-end gap-4">
@@ -598,7 +640,9 @@ export default function PendingEventManager() {
                                   Trạng thái:
                                 </span>
                                 <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {event.status === "Pending" ? "Chờ duyệt" : event.status}
+                                  {event.status === "Pending"
+                                    ? "Chờ duyệt"
+                                    : event.status}
                                 </span>
                               </div>
                               <div className="flex justify-between items-start">
@@ -702,7 +746,9 @@ export default function PendingEventManager() {
                                   Trạng thái:
                                 </span>
                                 <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {campaign.status === "Pending" ? "Chờ duyệt" : campaign.status}
+                                  {campaign.status === "Pending"
+                                    ? "Chờ duyệt"
+                                    : campaign.status}
                                 </span>
                               </div>
                               <div className="flex justify-between items-start">
@@ -766,7 +812,11 @@ export default function PendingEventManager() {
                         Cảnh báo
                       </h3>
                       <p className="text-sm text-red-700 mt-1">
-                        Bạn có chắc chắn muốn từ chối {selectedEvent?.type === "medicalEvent" ? "sự kiện y tế này" : "chiến dịch tiêm chủng này"}? Hành động này không thể hoàn tác.
+                        Bạn có chắc chắn muốn từ chối{" "}
+                        {selectedEvent?.type === "medicalEvent"
+                          ? "sự kiện y tế này"
+                          : "chiến dịch tiêm chủng này"}
+                        ? Hành động này không thể hoàn tác.
                       </p>
                     </div>
                   </div>
@@ -983,7 +1033,7 @@ export default function PendingEventManager() {
                                     "vaccinationCampaign"
                                   )
                                 }
-                                className="flex-1 text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 shadow-sm hover:shadow-md"
+                                className="flex-1 text-green-700 bg-green-50 hover:bg-green-100 border hover:text-green-700 border-green-200 shadow-sm hover:shadow-md"
                                 disabled={approving || rejecting}
                               >
                                 Phê duyệt
@@ -997,7 +1047,7 @@ export default function PendingEventManager() {
                                     "vaccinationCampaign"
                                   )
                                 }
-                                className="flex-1 text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 shadow-sm hover:shadow-md"
+                                className="flex-1 text-red-700 bg-red-50 hover:bg-red-100 border hover:text-red-700 border-red-200 shadow-sm hover:shadow-md"
                                 disabled={approving || rejecting}
                               >
                                 Từ chối
@@ -1016,10 +1066,14 @@ export default function PendingEventManager() {
                   <div className="flex items-center justify-between p-6">
                     <div>
                       <p className="text-sm text-gray-700">
-                        Hiển thị từ {medicalEventStartIndex + 1} đến {Math.min(
-                            medicalEventEndIndex,
-                            medicalEvents.length + vaccinationCampaigns.length
-                          )} trong tổng số {medicalEvents.length + vaccinationCampaigns.length} kết quả
+                        Hiển thị từ {medicalEventStartIndex + 1} đến{" "}
+                        {Math.min(
+                          medicalEventEndIndex,
+                          medicalEvents.length + vaccinationCampaigns.length
+                        )}{" "}
+                        trong tổng số{" "}
+                        {medicalEvents.length + vaccinationCampaigns.length} kết
+                        quả
                       </p>
                     </div>
                     <div className="flex gap-4">
