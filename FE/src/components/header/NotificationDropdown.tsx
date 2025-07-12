@@ -217,25 +217,31 @@ const NotificationDropdown: React.FC = () => {
     const token = localStorage.getItem("token") || "";
     let notificationBuffer: NotificationViewModel[] = [];
     let toastTimeout: NodeJS.Timeout | null = null;
-    startSignalRConnection(token, (newNotification: NotificationViewModel) => {
-      setNotificationData((prev) => [newNotification, ...prev]);
-      notificationBuffer.push(newNotification);
+    startSignalRConnection(token, (data: unknown) => {
+      // Type guard to ensure data is a valid notification
+      if (data && typeof data === 'object' && 'id' in data && 'title' in data && 'message' in data) {
+        const newNotification = data as NotificationViewModel;
+        setNotificationData((prev) => [newNotification, ...prev]);
+        notificationBuffer.push(newNotification);
 
-      if (toastTimeout) clearTimeout(toastTimeout);
+        if (toastTimeout) clearTimeout(toastTimeout);
 
-      toastTimeout = setTimeout(() => {
-        const count = notificationBuffer.length;
-        if (count > 0) {
-          showToast.info(`Bạn có ${count} thông báo mới`);
-          notificationBuffer = [];
-        }
-      }, 500);
+        toastTimeout = setTimeout(() => {
+          const count = notificationBuffer.length;
+          if (count > 0) {
+            showToast.info(`Bạn có ${count} thông báo mới`);
+            notificationBuffer = [];
+          }
+        }, 500);
 
-      const audio = new Audio("public/sounds/livechat-129007.mp3");
-      audio.currentTime = 0;
-      audio.play().catch((err) => {
-        console.warn("Không thể phát âm báo:", err);
-      });
+        const audio = new Audio("public/sounds/livechat-129007.mp3");
+        audio.currentTime = 0;
+        audio.play().catch((err) => {
+          console.warn("Không thể phát âm báo:", err);
+        });
+      } else {
+        console.warn("Received invalid notification data:", data);
+      }
     });
 
     return () => {

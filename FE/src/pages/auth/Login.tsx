@@ -45,6 +45,7 @@ export default function Login() {
     try {
       switch (formType) {
         case "phone": {
+          setIsSendingOtp(true); 
           let sendPhone = phone;
           const code = countryCode;
           if (!sendPhone) {
@@ -90,6 +91,7 @@ export default function Login() {
             );
             return;
           }
+          setIsSendingOtp(true); 
           await sendOTP(phone);
           navigate("/confirm-otp", { state: { phone, isRegister: true } });
           break;
@@ -115,6 +117,7 @@ export default function Login() {
       }
     } finally {
       setIsLoading(false);
+      setIsSendingOtp(false);
     }
   };
 
@@ -122,6 +125,7 @@ export default function Login() {
     setShowPhoneLogin(!showPhoneLogin);
     setShowRegister(false);
     setShowForgotPassword(false);
+    setIsSendingOtp(false);
     setPhone("");
   };
 
@@ -129,6 +133,7 @@ export default function Login() {
     setShowForgotPassword(!showForgotPassword);
     setShowPhoneLogin(false);
     setShowRegister(false);
+    setIsSendingOtp(false);
     setPhone("");
   };
 
@@ -136,6 +141,7 @@ export default function Login() {
     setShowRegister(!showRegister);
     setShowPhoneLogin(false);
     setShowForgotPassword(false);
+    setIsSendingOtp(false);
     setPhone("");
   };
 
@@ -375,6 +381,7 @@ export default function Login() {
                       whileFocus={{ scale: 1.02 }}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      disabled={isSendingOtp}
                     />
                   </div>
                   <div id="recaptcha-container"></div>

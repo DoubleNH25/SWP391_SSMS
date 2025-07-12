@@ -11,13 +11,15 @@ interface ClassSelectorProps {
   selectedClasses: string[];
   onClassChange: (classIds: string[]) => void;
   placeholder?: string;
+  hasError?: boolean;
 }
 
 const ClassSelector = ({
   classOptions,
   selectedClasses,
   onClassChange,
-  placeholder = "Chọn lớp hoặc khối"
+  placeholder = "Chọn lớp hoặc khối",
+  hasError = false
 }: ClassSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -258,7 +260,9 @@ const ClassSelector = ({
 
       <div className="relative" data-dropdown-container ref={dropdownRef}>
         <div
-          className="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 cursor-pointer"
+          className={`h-11 w-full appearance-none rounded-lg border bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 cursor-pointer ${
+            hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10'
+          }`}
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
           <span className="block truncate text-gray-400">
