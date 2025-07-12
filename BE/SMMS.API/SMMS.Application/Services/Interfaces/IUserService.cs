@@ -30,5 +30,10 @@ namespace SMMS.Application.Services.Interfaces
 		//Parent Features
 		Task<List<ParentResponse>> GetAllParentsAsync();
 		Task<ParentResponse> GetParentByStudentIdAsync(string studentId);
+
+		//Dashboard Count Features
+		Task<int> GetStudentsCountAsync();
+		Task<int> GetParentsCountAsync();
+		Task<int> GetNursesCountAsync();
 	}
 }

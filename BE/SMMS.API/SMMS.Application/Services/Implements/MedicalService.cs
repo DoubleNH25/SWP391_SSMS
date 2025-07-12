@@ -1387,5 +1387,22 @@ namespace SMMS.Application.Services.Implements
         {
             return await GetCompletedMedicationHistoryAsync(DateTime.Today);
         }
+
+        // Dashboard Count Features
+        public async Task<int> GetTodayMedicalRequestsCountAsync()
+        {
+            var today = DateTime.Today;
+            return await _repositoryManager.MedicalRequestRepository
+                .FindByCondition(m => !m.DeletedTime.HasValue &&
+                                    m.CreatedTime.Date == today, false)
+                .CountAsync();
+        }
+
+        public async Task<int> GetMedicalIncidentsCountAsync()
+        {
+            return await _repositoryManager.MedicalIncidentRepository
+                .FindByCondition(m => !m.DeletedTime.HasValue, false)
+                .CountAsync();
+        }
     }
 }
