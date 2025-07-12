@@ -18,7 +18,7 @@ export async function FecthHealthProfile(): Promise<Student[]> {
   try {
     const response = await ApiClient<Student[]>({
       method: "GET",
-      endpoint: "/users/students",
+      endpoint: "/parents/students",
     });
     return response?.data || [];
   } catch (err) {

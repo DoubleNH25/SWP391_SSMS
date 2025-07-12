@@ -1,18 +1,5 @@
-import { IncidentCreateViewModel } from "@/types/Incident";
+import { IncidentCreateViewModel, Incident } from "@/types/Incident";
 import ApiClient from "@/utils/ApiBase";
-
-export interface Incident {
-  id: string;
-  studentId: string;
-  type: string;
-  description?: string;
-  note?: string;
-  details?: string;
-  status: string;
-  incidentDate: string;
-  createdTime: string;
-  // Thêm các trường khác nếu backend trả về
-}
 
 export async function FecthCreateIncident(
   data: IncidentCreateViewModel

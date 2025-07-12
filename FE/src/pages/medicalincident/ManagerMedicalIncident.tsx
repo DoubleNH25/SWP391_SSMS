@@ -14,9 +14,9 @@ import { useState, useEffect, useCallback } from "react";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import {
   FetchAllIncidentsWithoutStudentId,
-  Incident,
   FecthAllIncidents as FetchIncidentsByStudent,
 } from "@/services/IncidentService";
+import { Incident } from "@/types/Incident";
 import { Modal } from "@/components/ui/modal";
 
 export default function ManagerMedicalIncident() {
@@ -40,8 +40,6 @@ export default function ManagerMedicalIncident() {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
     null
   );
-  // Thêm lại allStudents vào state để map studentId sang tên và lớp
-  const [allStudents, setAllStudents] = useState<Student[]>([]);
 
   // State cho modal tạo sự cố y tế
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -51,6 +49,22 @@ export default function ManagerMedicalIncident() {
     status: 0,
     incidentDate: "",
   });
+  const [requireMedicine, setRequireMedicine] = useState(false);
+  // 1. Thay đổi state medicines để chứa đầy đủ trường
+  const [medicines, setMedicines] = useState([
+    {
+      medicationName: "",
+      form: "",
+      dosage: "",
+      route: "",
+      frequency: 1,
+      totalQuantity: 1,
+      timeToAdminister: [""],
+      startDate: "",
+      endDate: "",
+      notes: "",
+    },
+  ]);
 
   // Fetch parents
   const fetchParent = useCallback(async () => {
@@ -72,7 +86,6 @@ export default function ManagerMedicalIncident() {
     setStudentsLoadingForSearch(true);
     try {
       const response = await FecthStudents();
-      setAllStudents(response || []);
       const options = (response || []).map((student) => ({
         value: student.id,
         label: `${student.studentCode} - ${student.fullName} (${
@@ -81,7 +94,6 @@ export default function ManagerMedicalIncident() {
       }));
       setStudentOptions(options);
     } catch {
-      setAllStudents([]);
       setStudentOptions([]);
     } finally {
       setStudentsLoadingForSearch(false);
@@ -160,7 +172,13 @@ export default function ManagerMedicalIncident() {
         type: incidentForm.type,
         description: incidentForm.description,
         incidentDate: incidentForm.incidentDate,
-        medicalUsageDetails: [],
+        medicalUsageDetails: requireMedicine
+          ? medicines.map((med) => ({
+              medicalStockId: med.medicationName || "", // hoặc chọn từ danh sách thuốc nếu có
+              dosage: med.dosage,
+              quantity: med.totalQuantity || 1,
+            }))
+          : [],
       });
       setShowCreateModal(false);
       setIncidentForm({
@@ -169,11 +187,28 @@ export default function ManagerMedicalIncident() {
         status: 0,
         incidentDate: "",
       });
+      setRequireMedicine(false);
+      setMedicines([
+        {
+          medicationName: "",
+          form: "",
+          dosage: "",
+          route: "",
+          frequency: 1,
+          totalQuantity: 1,
+          timeToAdminister: [""],
+          startDate: "",
+          endDate: "",
+          notes: "",
+        },
+      ]);
       fetchIncidents();
       showToast.success("Tạo sự cố y tế thành công!");
     } catch (err: unknown) {
       if (err && typeof err === "object" && "message" in err) {
-        showToast.error((err as any).message || "Tạo sự cố y tế thất bại!");
+        showToast.error(
+          (err as { message?: string }).message || "Tạo sự cố y tế thất bại!"
+        );
       } else {
         showToast.error("Tạo sự cố y tế thất bại!");
       }
@@ -430,52 +465,51 @@ export default function ManagerMedicalIncident() {
           <div>Không có sự cố y tế nào.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <table className="table-auto w-full bg-white border border-gray-200 rounded-lg text-center">
               <thead>
                 <tr>
-                  <th className="px-3 py-2 border-b">Học sinh</th>
-                  <th className="px-3 py-2 border-b">Lớp</th>
-                  <th className="px-3 py-2 border-b">Loại sự cố</th>
-                  <th className="px-3 py-2 border-b">Mô tả</th>
-                  <th className="px-3 py-2 border-b">Trạng thái</th>
-                  <th className="px-3 py-2 border-b">Ngày tạo</th>
-                  <th className="px-3 py-2 border-b">Hành động</th>
+                  <th className="px-4 py-2 border-b">Học sinh</th>
+                  <th className="px-4 py-2 border-b">Lớp</th>
+                  <th className="px-4 py-2 border-b">Loại sự cố</th>
+                  <th className="px-4 py-2 border-b">Mô tả</th>
+                  <th className="px-4 py-2 border-b">Trạng thái</th>
+                  <th className="px-4 py-2 border-b">Ngày tạo</th>
+                  <th className="px-4 py-2 border-b">Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.map((incident) => {
-                  const student =
-                    allStudents.find((s) => s.id === incident.studentId) ||
-                    students.find((s) => s.id === incident.studentId);
                   return (
                     <tr
                       key={incident.id}
                       className="border-b hover:bg-gray-50 cursor-pointer"
                     >
-                      <td className="px-3 py-2">
-                        {student ? student.fullName : incident.studentId}
+                      <td className="px-4 py-2">
+                        {incident.studentName || "-"}
                       </td>
-                      <td className="px-3 py-2">
-                        {student && student.studentClass
-                          ? student.studentClass.className
-                          : "-"}
-                      </td>
-                      <td className="px-3 py-2">{incident.type}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-2">{incident.class || "-"}</td>
+                      <td className="px-4 py-2">{incident.type}</td>
+                      <td className="px-4 py-2">
                         {incident.description ||
                           incident.note ||
                           incident.details ||
                           "Không có mô tả"}
                       </td>
-                      <td className="px-3 py-2">{incident.status}</td>
-                      <td className="px-3 py-2">
-                        {incident.createdTime
-                          ? new Date(incident.createdTime).toLocaleDateString(
-                              "vi-VN"
-                            )
-                          : ""}
+                      <td className="px-4 py-2">{incident.status}</td>
+                      <td className="px-4 py-2">
+                        {(() => {
+                          const dateStr: string =
+                            typeof incident.incidentDate === "string"
+                              ? incident.incidentDate
+                              : "";
+                          if (!dateStr) return "-";
+                          const d = new Date(dateStr);
+                          return isNaN(d.getTime())
+                            ? "-"
+                            : d.toLocaleDateString("vi-VN");
+                        })()}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-2">
                         <button
                           onClick={() => {
                             setSelectedIncident(incident);
@@ -526,103 +560,345 @@ export default function ManagerMedicalIncident() {
               </div>
               <div>
                 <b>Ngày tạo:</b>{" "}
-                {new Date(selectedIncident.createdTime).toLocaleDateString(
-                  "vi-VN"
-                )}
+                {typeof selectedIncident.createdTime === "string" &&
+                selectedIncident.createdTime
+                  ? new Date(selectedIncident.createdTime).toLocaleDateString(
+                      "vi-VN"
+                    )
+                  : "-"}
               </div>
             </div>
           )}
         </div>
       </Modal>
       {/* Modal tạo sự cố y tế */}
-      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)}>
-        <div className="mx-auto w-full max-w-md bg-white rounded-xl shadow-2xl p-8 flex flex-col gap-6">
-          <h2 className="text-2xl font-bold mb-2 text-center text-blue-700">
-            Tạo sự cố y tế
-          </h2>
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="block text-sm font-semibold text-gray-700">
-                Loại sự cố <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                value={incidentForm.type}
-                onChange={(e) =>
-                  setIncidentForm((f) => ({ ...f, type: e.target.value }))
-                }
-                placeholder="Nhập loại sự cố..."
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="block text-sm font-semibold text-gray-700">
-                Mô tả <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition min-h-[80px]"
-                value={incidentForm.description}
-                onChange={(e) =>
-                  setIncidentForm((f) => ({
-                    ...f,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Nhập mô tả chi tiết..."
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="block text-sm font-semibold text-gray-700">
-                Trạng thái
-              </label>
-              <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                value={incidentForm.status}
-                onChange={(e) =>
-                  setIncidentForm((f) => ({
-                    ...f,
-                    status: Number(e.target.value),
-                  }))
-                }
-              >
-                <option value={0}>Chưa xử lý</option>
-                <option value={1}>Đã xử lý</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="block text-sm font-semibold text-gray-700">
-                Ngày xảy ra sự cố <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                value={incidentForm.incidentDate}
-                onChange={(e) =>
-                  setIncidentForm((f) => ({
-                    ...f,
-                    incidentDate: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        className="mx-auto w-full max-w-3xl bg-gray-50 rounded-xl shadow-2xl p-8 flex flex-col gap-6 ring-1 ring-gray-200"
+      >
+        <h2 className="text-2xl font-bold mb-2 text-center text-blue-700">
+          Tạo sự cố y tế
+        </h2>
+        <form className="flex flex-col gap-4">
+          {/* Checkbox yêu cầu thuốc */}
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="requireMedicine"
+              checked={requireMedicine}
+              onChange={(e) => setRequireMedicine(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label
+              htmlFor="requireMedicine"
+              className="text-sm font-medium text-gray-700"
+            >
+              Yêu cầu thuốc
+            </label>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Loại sự cố <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              value={incidentForm.type}
+              onChange={(e) =>
+                setIncidentForm((f) => ({ ...f, type: e.target.value }))
+              }
+              placeholder="Nhập loại sự cố..."
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Mô tả <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition min-h-[80px]"
+              value={incidentForm.description}
+              onChange={(e) =>
+                setIncidentForm((f) => ({
+                  ...f,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Nhập mô tả chi tiết..."
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Trạng thái
+            </label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              value={incidentForm.status}
+              onChange={(e) =>
+                setIncidentForm((f) => ({
+                  ...f,
+                  status: Number(e.target.value),
+                }))
+              }
+            >
+              <option value={0}>Chưa xử lý</option>
+              <option value={1}>Đã xử lý</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Ngày xảy ra sự cố <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              value={incidentForm.incidentDate}
+              onChange={(e) =>
+                setIncidentForm((f) => ({
+                  ...f,
+                  incidentDate: e.target.value,
+                }))
+              }
+            />
+          </div>
+          {/* Nếu yêu cầu thuốc, hiển thị phần nhập thuốc */}
+          {requireMedicine && (
+            <div className="border rounded-lg p-4 mb-4 bg-blue-50">
+              <h4 className="font-semibold mb-2 text-blue-700">
+                Thông tin thuốc
+              </h4>
+              {medicines.map((med, idx) => (
+                <div key={idx} className="mb-6 border-b pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-blue-700">
+                      Thuốc {idx + 1}
+                    </span>
+                    {medicines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMedicines(medicines.filter((_, i) => i !== idx))
+                        }
+                        className="text-red-500 px-2"
+                      >
+                        X
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Tên thuốc *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nhập tên thuốc"
+                        value={med.medicationName}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].medicationName = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Dạng thuốc
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Viên nén, Siro..."
+                        value={med.form}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].form = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Liều lượng *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: 2 viên/lần, 5ml/lần"
+                        value={med.dosage}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].dosage = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Cách dùng
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Uống, Tiêm..."
+                        value={med.route}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].route = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Tổng số lượng *
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Số lượng"
+                        value={med.totalQuantity}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].totalQuantity = Number(e.target.value);
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Tần suất (lần/ngày)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Tần suất"
+                        value={med.frequency}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].frequency = Number(e.target.value);
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Thời gian cho thuốc trong ngày
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: 08:00, 12:00, 18:00"
+                        value={med.timeToAdminister.join(", ")}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].timeToAdminister = e.target.value
+                            .split(",")
+                            .map((s) => s.trim());
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Ngày bắt đầu
+                      </label>
+                      <input
+                        type="date"
+                        value={med.startDate}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].startDate = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Ngày kết thúc
+                      </label>
+                      <input
+                        type="date"
+                        value={med.endDate}
+                        onChange={(e) => {
+                          const newMeds = [...medicines];
+                          newMeds[idx].endDate = e.target.value;
+                          setMedicines(newMeds);
+                        }}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Ghi chú
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ghi chú thêm (nếu có)"
+                      value={med.notes}
+                      onChange={(e) => {
+                        const newMeds = [...medicines];
+                        newMeds[idx].notes = e.target.value;
+                        setMedicines(newMeds);
+                      }}
+                      className="border rounded px-2 py-1 w-full"
+                    />
+                  </div>
+                </div>
+              ))}
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() =>
+                  setMedicines([
+                    ...medicines,
+                    {
+                      medicationName: "",
+                      form: "",
+                      dosage: "",
+                      route: "",
+                      frequency: 1,
+                      totalQuantity: 1,
+                      timeToAdminister: [""],
+                      startDate: "",
+                      endDate: "",
+                      notes: "",
+                    },
+                  ])
+                }
+                className="text-blue-600 hover:underline text-sm mt-2"
               >
-                Hủy
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-                onClick={handleCreateIncident}
-              >
-                Tạo mới
+                + Thêm thuốc
               </button>
             </div>
-          </form>
-        </div>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition"
+              onClick={() => setShowCreateModal(false)}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+              onClick={handleCreateIncident}
+            >
+              Tạo mới
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

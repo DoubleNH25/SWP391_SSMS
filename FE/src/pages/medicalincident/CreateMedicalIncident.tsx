@@ -469,7 +469,7 @@ export default function CreateMedicalIncident() {
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div
-            className={`p-4 sm:p-8 transition-all duration-300 ${
+            className={`py-4 sm:py-8 transition-all duration-300 ${
               isTransitioning ? "opacity-50" : "opacity-100"
             }`}
           >
@@ -631,7 +631,7 @@ export default function CreateMedicalIncident() {
           </div>
 
           {/* Buttons */}
-          <div className="px-6 sm:px-8 py-6 bg-gray-50 border-t border-gray-100">
+          <div className="py-6 bg-gray-50 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
               <div>
                 {currentStep > 1 && (
@@ -680,9 +680,9 @@ export default function CreateMedicalIncident() {
             onClose={() => setShowConfirmModal(false)}
             showCloseButton={false}
             isFullscreen={false}
-            className="p-5 max-w-md "
+            className="max-w-6xl w-full overflow-y-auto max-h-[95vh]"
           >
-            <div className="max-w-md mx-auto">
+            <div className="max-w-6xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex flex-col">
                   <h3 className="text-lg font-semibold text-gray-900">

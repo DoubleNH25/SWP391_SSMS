@@ -36,10 +36,8 @@ export default function MedicalRequest() {
   const [students, setStudents] = useState<Student[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
 
-  const [allStudents, setAllStudents] = useState<Student[]>([]);
-  const [studentOptions, setStudentOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
+  const [allStudents] = useState<Student[]>([]);
+  const [studentOptions] = useState<{ value: string; label: string }[]>([]);
   const [studentsLoadingForSearch, setStudentsLoadingForSearch] =
     useState(false);
 
@@ -59,10 +57,11 @@ export default function MedicalRequest() {
     useState<MedicalRequestViewModel | null>(null);
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updateRequest, setUpdateRequest] = useState<any>({});
-  const [selectedDeleteRequest, setSelectedDeleteRequest] = useState<{
-    [key: string]: any;
-  } | null>(null);
+  const [updateRequest, setUpdateRequest] = useState<Record<string, unknown>>(
+    {}
+  );
+  const [selectedDeleteRequest, setSelectedDeleteRequest] =
+    useState<ListMedicalRequestViewModel | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -160,7 +159,7 @@ export default function MedicalRequest() {
     try {
       const data = await FecthMedicalRequest();
       setMedicalRequests(data || []);
-    } catch (err) {
+    } catch {
       setMedicalRequests([]);
     } finally {
       setMedicalRequestsLoading(false);
@@ -173,7 +172,7 @@ export default function MedicalRequest() {
     try {
       const detail = await FecthMedicalRequestById(id);
       setMedicalRequestDetail(detail);
-    } catch (err) {
+    } catch {
       setMedicalRequestDetail(null);
     } finally {
       setDetailLoading(false);
@@ -203,22 +202,24 @@ export default function MedicalRequest() {
   const handleConfirmUpdate = async () => {
     if (!medicalRequestDetail) return;
     try {
-      // Map lại dữ liệu đúng format API
+      // Map lại dữ liệu đúng format API (camelCase)
       const payload = {
         studentId: medicalRequestDetail.studentId,
         parentId: medicalRequestDetail.parentId,
         medicalRequestItems: [
           {
-            medicationName: updateRequest.medicationName,
-            form: updateRequest.form,
-            dosage: updateRequest.dosage,
-            route: updateRequest.route,
-            frequency: updateRequest.frequency,
-            totalQuantity: Number(updateRequest.totalQuantity),
-            timeToAdminister: updateRequest.timeToAdminister,
-            startDate: updateRequest.startDate,
-            endDate: updateRequest.endDate,
-            notes: updateRequest.note,
+            medicationName: String(updateRequest.medicationName ?? ""),
+            form: String(updateRequest.form ?? ""),
+            dosage: String(updateRequest.dosage ?? ""),
+            route: String(updateRequest.route ?? ""),
+            frequency: Number(updateRequest.frequency ?? 1),
+            totalQuantity: Number(updateRequest.totalQuantity ?? 0),
+            timeToAdminister: Array.isArray(updateRequest.timeToAdminister)
+              ? updateRequest.timeToAdminister.map(String)
+              : [],
+            startDate: String(updateRequest.startDate ?? ""),
+            endDate: String(updateRequest.endDate ?? ""),
+            notes: String(updateRequest.note ?? ""),
           },
         ],
       };
@@ -227,31 +228,28 @@ export default function MedicalRequest() {
       setShowDetailModal(false);
       await fetchMedicalRequests();
       await handleShowDetail(medicalRequestDetail.id);
-    } catch (err: any) {
-      alert(err.message || "Cập nhật đơn thuốc thất bại");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message || "Cập nhật đơn thuốc thất bại");
+      }
     }
   };
 
-  const handleDeleteClick = (req: any) => {
-    setSelectedDeleteRequest({
-      medicationRequestId: req.id,
-      studentName: req.studentName,
-      medicationName: req.medicationName,
-    });
+  const handleDeleteClick = (req: ListMedicalRequestViewModel) => {
+    setSelectedDeleteRequest(req);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!(selectedDeleteRequest && selectedDeleteRequest.medicationRequestId))
-      return;
+    if (!selectedDeleteRequest) return;
     try {
-      await FecthDeleteMedicalRequest(
-        selectedDeleteRequest.medicationRequestId
-      );
+      await FecthDeleteMedicalRequest(selectedDeleteRequest.id);
       setShowDeleteModal(false);
       await fetchMedicalRequests();
-    } catch (err: any) {
-      alert(err.message || "Xóa đơn thuốc thất bại");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message || "Xóa đơn thuốc thất bại");
+      }
     } finally {
       setSelectedDeleteRequest(null);
     }
@@ -584,14 +582,14 @@ export default function MedicalRequest() {
       {/* Multi Medication Modal */}
       <MultiMedicationModal
         isOpen={showMedicationModal}
-        parentId={selectedParentId}
-        studentId={selectedStudentId}
+        parentId={selectedParent?.id || ""}
+        studentId={selectedStudentForModal?.id || ""}
         onClose={() => {
           setShowMedicationModal(false);
           setSelectedStudentForModal(null);
         }}
         selectedStudent={selectedStudentForModal}
-        onSubmit={(medications) => {
+        onSubmit={() => {
           fetchMedicalRequests(); // Refresh list after create
         }}
       />
@@ -744,7 +742,6 @@ export default function MedicalRequest() {
           "Thuốc hít",
           "Vắc-xin",
         ]}
-        routes={["Uống", "Tiêm", "Bôi ngoài da", "Nhỏ mắt", "Đặt", "Hít"]}
       />
 
       <DeleteConfirmationModal
