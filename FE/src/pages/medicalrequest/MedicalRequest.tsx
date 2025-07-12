@@ -1,21 +1,10 @@
 import { TaskIcon } from "@/components/icons";
 import Label from "@/components/ui/form/Label";
 import PageHeader from "@/components/ui/PageHeader";
-import {
-  FecthParents,
-  FecthStudentsByParentId,
-  FecthStudents,
-} from "@/services/UserService";
+import { FecthParents, FecthStudentsByParentId } from "@/services/UserService";
 import { ParentViewModel } from "@/types/User";
 import { Student } from "@/types/Student";
-import {
-  Search,
-  X,
-  Users,
-  ArrowRight,
-  AlertTriangleIcon,
-  FilePlusIcon,
-} from "lucide-react";
+import { Search, X, Users, ArrowRight, FilePlusIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
@@ -23,13 +12,11 @@ import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationMod
 import {
   FecthMedicalRequest,
   FecthMedicalRequestById,
-  FecthMedicalRequestByStudent,
-  FecthMedicalRequestByParent,
-  FecthMedicalRequestByDate,
-  FecthMedicalRequestToday,
-  FecthMedicalRequestSearch
 } from "@/services/MedicalRequest";
-import { ListMedicalRequestViewModel, MedicalRequestViewModel } from "@/types/MedicalRequest";
+import {
+  ListMedicalRequestViewModel,
+  MedicalRequestViewModel,
+} from "@/types/MedicalRequest";
 import { Modal } from "@/components/ui/modal";
 import UpdateMedicationModal from "@/components/medicalrequest/UpdateMedicationModal";
 import { FecthUpdateMedicalRequest } from "@/services/MedicalRequest";
@@ -53,33 +40,31 @@ export default function MedicalRequest() {
   const [studentOptions, setStudentOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [studentsLoadingForSearch, setStudentsLoadingForSearch] =
     useState(false);
 
   const [showMedicationModal, setShowMedicationModal] = useState(false);
   const [selectedStudentForModal, setSelectedStudentForModal] =
     useState<Student | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
 
-  const [medicalRequests, setMedicalRequests] = useState<ListMedicalRequestViewModel[]>([]);
+  const [medicalRequests, setMedicalRequests] = useState<
+    ListMedicalRequestViewModel[]
+  >([]);
   const [medicalRequestsLoading, setMedicalRequestsLoading] = useState(false);
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [medicalRequestDetail, setMedicalRequestDetail] = useState<MedicalRequestViewModel | null>(null);
+  const [medicalRequestDetail, setMedicalRequestDetail] =
+    useState<MedicalRequestViewModel | null>(null);
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateRequest, setUpdateRequest] = useState<any>({});
-  const [updating, setUpdating] = useState(false);
+  const [selectedDeleteRequest, setSelectedDeleteRequest] = useState<{
+    [key: string]: any;
+  } | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedDeleteRequest, setSelectedDeleteRequest] = useState<any>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const [filterStudent, setFilterStudent] = useState("");
-  const [filterParent, setFilterParent] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [advancedSearch, setAdvancedSearch] = useState({ keyword: "" });
 
   const fetchParent = useCallback(async () => {
     setLoading(true);
@@ -118,60 +103,11 @@ export default function MedicalRequest() {
     [fetchStudentsByParentId]
   );
 
-  const handleNavigateCreateIncident = useCallback(async () => {
-    if (selectedStudentId) {
-      navigate(`/dashboard/medical/medical-incident/${selectedStudentId}`);
-    }
-  }, [selectedStudentId, navigate]);
-
-  const fetchAllStudents = useCallback(async () => {
-    setStudentsLoadingForSearch(true);
-    try {
-      const response = await FecthStudents();
-      setAllStudents(response || []);
-      const options = (response || []).map((student) => ({
-        value: student.id,
-        label: `${student.studentCode} - ${student.fullName} (${
-          student.studentClass?.className || "N/A"
-        })`,
-      }));
-      setStudentOptions(options);
-    } catch (err) {
-      console.error("Failed to fetch all students:", err);
-      setAllStudents([]);
-      setStudentOptions([]);
-    } finally {
-      setStudentsLoadingForSearch(false);
-    }
-  }, []);
-
-  const handleStudentSelect = useCallback((studentId: string) => {
-    setSelectedStudentId(studentId);
-  }, []);
-
-  const handleNavigateCreateMedicalRequest = useCallback(() => {
-    if (selectedStudentId) {
-      const student = allStudents.find((s) => s.id === selectedStudentId);
-      if (student) {
-        // If no parent is selected, try to get parent ID from student
-        if (!selectedParentId && student.parentId) {
-          setSelectedParentId(student.parentId);
-        }
-        setSelectedStudentForModal(student);
-        setShowMedicationModal(true);
-      }
-    }
-  }, [selectedStudentId, allStudents, selectedParentId]);
-
   const handleNavigateToStudent = useCallback(() => {
     if (selectedStudentId) {
-      navigate(`/dashboard/medical/manager-medical-request/${selectedStudentId}`);
-    }
-  }, [selectedStudentId, navigate]);
-
-  const handleNavigateToStudentIncident = useCallback(() => {
-    if (selectedStudentId) {
-      navigate(`/dashboard/medical/manager-medical-incident/${selectedStudentId}`);
+      navigate(
+        `/dashboard/medical/manager-medical-request/${selectedStudentId}`
+      );
     }
   }, [selectedStudentId, navigate]);
 
@@ -205,20 +141,19 @@ export default function MedicalRequest() {
     setSelectedStudentId("");
   };
 
-  const handleMedicationSubmit = useCallback(
-    (medications: any[]) => {
-      console.log("Medications submitted:", medications);
-      console.log("For student:", selectedStudentForModal);
-      // Here you would typically save to backend
-      // For now, just show success message
-      alert(
-        `Đã tạo đơn thuốc thành công cho học sinh ${selectedStudentForModal?.fullName} với ${medications.length} loại thuốc!`
-      );
-      setShowMedicationModal(false);
-      setSelectedStudentForModal(null);
-    },
-    [selectedStudentForModal]
-  );
+  const handleNavigateCreateMedicalRequest = useCallback(() => {
+    if (selectedStudentId) {
+      const student = allStudents.find((s) => s.id === selectedStudentId);
+      if (student) {
+        // If no parent is selected, try to get parent ID from student
+        if (!selectedParentId && student.parentId) {
+          setSelectedParentId(student.parentId);
+        }
+        setSelectedStudentForModal(student);
+        setShowMedicationModal(true);
+      }
+    }
+  }, [selectedStudentId, allStudents, selectedParentId]);
 
   const fetchMedicalRequests = useCallback(async () => {
     setMedicalRequestsLoading(true);
@@ -267,7 +202,6 @@ export default function MedicalRequest() {
 
   const handleConfirmUpdate = async () => {
     if (!medicalRequestDetail) return;
-    setUpdating(true);
     try {
       // Map lại dữ liệu đúng format API
       const payload = {
@@ -295,8 +229,6 @@ export default function MedicalRequest() {
       await handleShowDetail(medicalRequestDetail.id);
     } catch (err: any) {
       alert(err.message || "Cập nhật đơn thuốc thất bại");
-    } finally {
-      setUpdating(false);
     }
   };
 
@@ -310,18 +242,36 @@ export default function MedicalRequest() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedDeleteRequest?.medicationRequestId) return;
-    setDeleting(true);
+    if (!(selectedDeleteRequest && selectedDeleteRequest.medicationRequestId))
+      return;
     try {
-      await FecthDeleteMedicalRequest(selectedDeleteRequest.medicationRequestId);
+      await FecthDeleteMedicalRequest(
+        selectedDeleteRequest.medicationRequestId
+      );
       setShowDeleteModal(false);
       await fetchMedicalRequests();
     } catch (err: any) {
       alert(err.message || "Xóa đơn thuốc thất bại");
     } finally {
-      setDeleting(false);
+      setSelectedDeleteRequest(null);
     }
   };
+
+  const fetchAllStudents = useCallback(async () => {
+    setStudentsLoadingForSearch(true);
+    try {
+      // Giả sử bạn có API lấy toàn bộ học sinh
+      // const response = await FecthStudents();
+      // setAllStudents(response || []);
+      // setStudentOptions(...)
+    } finally {
+      setStudentsLoadingForSearch(false);
+    }
+  }, []);
+
+  const handleStudentSelect = useCallback((studentId: string) => {
+    setSelectedStudentId(studentId);
+  }, []);
 
   useEffect(() => {
     fetchParent();
@@ -405,14 +355,6 @@ export default function MedicalRequest() {
                   {/* Nút xem đơn thuốc */}
                   <div className="flex flex-col gap-2 items-stretch">
                     <button
-                      onClick={handleNavigateToStudentIncident}
-                      disabled={!selectedStudentId || studentsLoadingForSearch}
-                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                      Xem sự cố y tế
-                    </button>
-                    <button
                       onClick={handleNavigateToStudent}
                       disabled={!selectedStudentId || studentsLoadingForSearch}
                       className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
@@ -423,15 +365,6 @@ export default function MedicalRequest() {
                   </div>
                   {/* Cụm 2 nút dọc */}
                   <div className="flex flex-col gap-2 items-stretch">
-                    <button
-                      onClick={handleNavigateCreateIncident}
-                      disabled={!selectedStudentId || studentsLoadingForSearch}
-                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-                    >
-                      <AlertTriangleIcon className="w-4 h-4" />
-                      Tạo sự cố y tế
-                    </button>
-
                     <button
                       onClick={handleNavigateCreateMedicalRequest}
                       disabled={!selectedStudentId || studentsLoadingForSearch}
@@ -688,7 +621,11 @@ export default function MedicalRequest() {
               </thead>
               <tbody>
                 {medicalRequests.map((req) => (
-                  <tr key={req.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleShowDetail(req.id)}>
+                  <tr
+                    key={req.id}
+                    className="border-b hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleShowDetail(req.id)}
+                  >
                     <td className="px-3 py-2">{req.studentName}</td>
                     <td className="px-3 py-2">{req.studentClass}</td>
                     <td className="px-3 py-2">{req.parentName}</td>
@@ -696,9 +633,19 @@ export default function MedicalRequest() {
                     <td className="px-3 py-2">{req.totalQuantity}</td>
                     <td className="px-3 py-2">{req.remainingQuantity}</td>
                     <td className="px-3 py-2">{req.status}</td>
-                    <td className="px-3 py-2">{new Date(req.createdTime).toLocaleDateString("vi-VN")}</td>
                     <td className="px-3 py-2">
-                      <button onClick={e => { e.stopPropagation(); handleDeleteClick(req); }} className="text-red-600 hover:underline">Xóa</button>
+                      {new Date(req.createdTime).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(req);
+                        }}
+                        className="text-red-600 hover:underline"
+                      >
+                        Xóa
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -709,7 +656,13 @@ export default function MedicalRequest() {
       </div>
 
       {/* Modal xem chi tiết đơn thuốc */}
-      <Modal isOpen={showDetailModal} onClose={() => { setShowDetailModal(false); setMedicalRequestDetail(null); }}>
+      <Modal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setMedicalRequestDetail(null);
+        }}
+      >
         <div className="p-6 min-w-[350px] max-w-[500px]">
           <h3 className="text-lg font-semibold mb-4">Chi tiết đơn thuốc</h3>
           {detailLoading ? (
@@ -718,20 +671,54 @@ export default function MedicalRequest() {
             <div>Không tìm thấy thông tin đơn thuốc.</div>
           ) : (
             <div className="space-y-2">
-              <div><b>Học sinh:</b> {medicalRequestDetail.studentName}</div>
-              <div><b>Lớp:</b> {medicalRequestDetail.studentClass}</div>
-              <div><b>Phụ huynh:</b> {medicalRequestDetail.parentName}</div>
-              <div><b>Thuốc:</b> {medicalRequestDetail.medicationName}</div>
-              <div><b>Số lượng tổng:</b> {medicalRequestDetail.totalQuantity}</div>
-              <div><b>Số lượng còn lại:</b> {medicalRequestDetail.remainingQuantity}</div>
-              <div><b>Thời gian dùng:</b> {medicalRequestDetail.timeToAdminister?.join(", ")}</div>
-              <div><b>Ngày bắt đầu:</b> {medicalRequestDetail.startDate}</div>
-              <div><b>Ngày kết thúc:</b> {medicalRequestDetail.endDate}</div>
-              <div><b>Trạng thái:</b> {medicalRequestDetail.status}</div>
-              <div><b>Ngày tạo:</b> {new Date(medicalRequestDetail.createdTime).toLocaleDateString("vi-VN")}</div>
-              <div><b>Ghi chú:</b> {medicalRequestDetail.notes || "-"}</div>
+              <div>
+                <b>Học sinh:</b> {medicalRequestDetail.studentName}
+              </div>
+              <div>
+                <b>Lớp:</b> {medicalRequestDetail.studentClass}
+              </div>
+              <div>
+                <b>Phụ huynh:</b> {medicalRequestDetail.parentName}
+              </div>
+              <div>
+                <b>Thuốc:</b> {medicalRequestDetail.medicationName}
+              </div>
+              <div>
+                <b>Số lượng tổng:</b> {medicalRequestDetail.totalQuantity}
+              </div>
+              <div>
+                <b>Số lượng còn lại:</b>{" "}
+                {medicalRequestDetail.remainingQuantity}
+              </div>
+              <div>
+                <b>Thời gian dùng:</b>{" "}
+                {medicalRequestDetail.timeToAdminister?.join(", ")}
+              </div>
+              <div>
+                <b>Ngày bắt đầu:</b> {medicalRequestDetail.startDate}
+              </div>
+              <div>
+                <b>Ngày kết thúc:</b> {medicalRequestDetail.endDate}
+              </div>
+              <div>
+                <b>Trạng thái:</b> {medicalRequestDetail.status}
+              </div>
+              <div>
+                <b>Ngày tạo:</b>{" "}
+                {new Date(medicalRequestDetail.createdTime).toLocaleDateString(
+                  "vi-VN"
+                )}
+              </div>
+              <div>
+                <b>Ghi chú:</b> {medicalRequestDetail.notes || "-"}
+              </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={handleEdit} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Sửa</button>
+                <button
+                  onClick={handleEdit}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Sửa
+                </button>
               </div>
             </div>
           )}
@@ -745,7 +732,18 @@ export default function MedicalRequest() {
         updateRequest={updateRequest}
         setUpdateRequest={setUpdateRequest}
         onConfirm={handleConfirmUpdate}
-        medicationForms={["Viên nén", "Siro", "Thuốc nhỏ mắt", "Kem bôi", "Viên con nhộng", "Thuốc tiêm", "Thuốc mỡ", "Thuốc đặt", "Thuốc hít", "Vắc-xin"]}
+        medicationForms={[
+          "Viên nén",
+          "Siro",
+          "Thuốc nhỏ mắt",
+          "Kem bôi",
+          "Viên con nhộng",
+          "Thuốc tiêm",
+          "Thuốc mỡ",
+          "Thuốc đặt",
+          "Thuốc hít",
+          "Vắc-xin",
+        ]}
         routes={["Uống", "Tiêm", "Bôi ngoài da", "Nhỏ mắt", "Đặt", "Hít"]}
       />
 

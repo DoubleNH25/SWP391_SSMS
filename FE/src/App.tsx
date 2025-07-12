@@ -368,6 +368,16 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="medicalincident/manager"
+              element={
+                <PrivateRoute
+                  allowedRoles={["Admin", "Manager", "Nurse", "Parent"]}
+                >
+                  <ManagerMedicalIncident />
+                </PrivateRoute>
+              }
+            />
           </Route>
         </Routes>
       </Router>

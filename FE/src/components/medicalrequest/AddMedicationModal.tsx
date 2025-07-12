@@ -50,10 +50,10 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
     endDate: "",
     notes: "",
   });
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.studentId) newErrors.studentId = "Chọn học sinh";
     if (!formData.medicationName) newErrors.medicationName = "Chọn thuốc";
     if (!formData.form) newErrors.form = "Chọn dạng thuốc";
@@ -126,10 +126,14 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl w-full">
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      className="w-full max-w-lg sm:max-w-2xl mx-auto"
+    >
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
         <h2 className="text-xl font-semibold mb-4">Thêm đơn thuốc mới</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Học sinh</Label>
             <Select
@@ -151,7 +155,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Số điện thoại</Label>
             <Input
@@ -175,7 +179,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Dạng thuốc</Label>
             <Select
@@ -200,7 +204,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Cách dùng</Label>
             <Input
@@ -215,7 +219,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
               name="frequency"
               type="number"
               min={1}
-              value={formData.frequency}
+              value={String(formData.frequency)}
               onChange={handleChange}
             />
             {errors.frequency && (
@@ -223,14 +227,14 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Tổng số lượng</Label>
             <Input
               name="totalQuantity"
               type="number"
               min={1}
-              value={formData.totalQuantity}
+              value={String(formData.totalQuantity)}
               onChange={handleChange}
             />
             {errors.totalQuantity && (
@@ -270,7 +274,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Ngày bắt đầu</Label>
             <Input
