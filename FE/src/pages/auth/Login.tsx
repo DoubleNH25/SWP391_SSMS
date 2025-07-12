@@ -193,21 +193,7 @@ export default function Login() {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      disabled={isLoading}
-                      className="h-4 w-4 shrink-0 text-blue-600 focus:ring-blue-500 border-slate-300 rounded disabled:opacity-50"
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="ml-3 block text-sm text-slate-500"
-                    >
-                      Ghi nhớ đăng nhập
-                    </label>
-                  </div>
+                  <div className="flex items-center"/>
                   <button
                     type="button"
                     onClick={toggleForgotPassword}
