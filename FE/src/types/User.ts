@@ -33,14 +33,14 @@ export interface UserCreate {
   password: string;
 }
 
-export interface UserUpdate{
+export interface UserUpdate {
   email: string;
   phone: string;
   fullName: string;
   password: string;
 }
 
-export interface ParentViewModel extends User{
+export interface ParentViewModel extends User {
   students: Student
 }
 
@@ -72,4 +72,16 @@ export interface LoginResponse {
 export interface VerifyOTPRequest {
   idToken: string;
   phoneNumber: string;
+}
+
+export interface VerifyOTPEmailRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string; 
+  resetToken: string; 
+  newPassword: string; 
+  verifyPassword: string;
 }
