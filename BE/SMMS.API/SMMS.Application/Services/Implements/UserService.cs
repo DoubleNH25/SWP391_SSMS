@@ -613,5 +613,27 @@ namespace SMMS.Application.Services.Implements
 
 			return student;
 		}
+
+		// Dashboard Count Features
+		public async Task<int> GetStudentsCountAsync()
+		{
+			return await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.DeletedTime == null, false)
+				.CountAsync();
+		}
+
+		public async Task<int> GetParentsCountAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Parent" && u.DeletedTime == null, false)
+				.CountAsync();
+		}
+
+		public async Task<int> GetNursesCountAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Nurse" && u.DeletedTime == null, false)
+				.CountAsync();
+		}
 	}
 }

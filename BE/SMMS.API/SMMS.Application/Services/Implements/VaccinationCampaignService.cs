@@ -125,7 +125,7 @@ namespace SMMS.Application.Services.Implements
 
 		private async Task CreateActivityConsentsAsync(VaccinationCampaign campaign)
 		{
-			var classIds = campaign.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList();
+			var classIds = campaign.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList();
 			var students = await Task.Run(() => _repositoryManager.StudentRepository
 				.FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
 				.ToList());
@@ -176,7 +176,7 @@ namespace SMMS.Application.Services.Implements
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
 					Status = vc.Status,
-					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
+					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -198,7 +198,7 @@ namespace SMMS.Application.Services.Implements
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
 					Status = vc.Status,
-					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
+					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -220,7 +220,7 @@ namespace SMMS.Application.Services.Implements
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
 					Status = vc.Status,
-					ClassIds = vc.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
+					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -228,15 +228,30 @@ namespace SMMS.Application.Services.Implements
 		{
 			var campaign = _repositoryManager.VaccinationCampaignRepository
 				.FindByCondition(vc => vc.Id == vaccinationCampaignId && vc.Status == ApprovalStatus.Pending, true)
+				.Include(vc => vc.VaccinationCampaignClasses)
 				.FirstOrDefault();
 			if (campaign == null) return false;
 
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
-			if (campaign.CreatedBy != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
+				.FirstOrDefault();
+			if (campaign.CreatedBy != userId && (user.Role?.RoleName != "Admin" && user.Role?.RoleName != "Manager"))
 			{
 				return false;
 			}
 
+			// Validate that all requested class IDs exist
+			var existingClassIds = _repositoryManager.ClassRepository
+				.FindByCondition(c => request.ClassIds.Contains(c.Id) && c.DeletedTime == null, false)
+				.Select(c => c.Id)
+				.ToList();
+			if (existingClassIds.Count != request.ClassIds.Count)
+			{
+				throw new Exception("Một hoặc nhiều lớp không tồn tại.");
+			}
+
+			// Update campaign properties
 			campaign.Name = request.Name ?? string.Empty;
 			campaign.VaccineName = request.VaccineName ?? string.Empty;
 			campaign.EXP = request.EXP;
@@ -245,6 +260,42 @@ namespace SMMS.Application.Services.Implements
 			campaign.StartDate = request.StartDate;
 			campaign.LastUpdatedBy = userId;
 			campaign.LastUpdatedTime = DateTimeOffset.UtcNow;
+
+			// Update class associations
+			var currentClassIds = campaign.VaccinationCampaignClasses
+				.Where(vcc => vcc.DeletedTime == null) // Chỉ lấy những class chưa bị soft delete
+				.Select(vcc => vcc.SchoolClassId)
+				.ToList();
+			var newClassIds = request.ClassIds.ToList();
+
+			// Remove classes that are no longer in the request
+			var classesToRemove = campaign.VaccinationCampaignClasses
+				.Where(vcc => vcc.DeletedTime == null && !newClassIds.Contains(vcc.SchoolClassId))
+				.ToList();
+			foreach (var classToRemove in classesToRemove)
+			{
+				classToRemove.DeletedBy = userId;
+				classToRemove.DeletedTime = DateTimeOffset.UtcNow;
+			}
+
+			// Add new classes
+			var classesToAdd = newClassIds
+				.Where(classId => !currentClassIds.Contains(classId))
+				.Select(classId => new VaccinationCampaignClass
+				{
+					VaccinationCampaignId = vaccinationCampaignId,
+					SchoolClassId = classId,
+					CreatedBy = userId,
+					CreatedTime = DateTimeOffset.UtcNow
+				})
+				.ToList();
+
+			// Add new class associations to the campaign
+			foreach (var classToAdd in classesToAdd)
+			{
+				campaign.VaccinationCampaignClasses.Add(classToAdd);
+			}
+
 			_repositoryManager.VaccinationCampaignRepository.Update(campaign);
 			await _repositoryManager.SaveAsync();
 			return true;
@@ -257,8 +308,11 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (campaign == null) return false;
 
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
-			if (campaign.CreatedBy != userId && user?.Role.RoleName != "Admin" && user?.Role.RoleName != "Manager")
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
+				.FirstOrDefault();
+			if (campaign.CreatedBy != userId && (user?.Role?.RoleName != "Admin" && user?.Role?.RoleName != "Manager"))
 			{
 				return false;
 			}

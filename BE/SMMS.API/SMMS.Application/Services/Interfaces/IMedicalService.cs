@@ -42,5 +42,8 @@ namespace SMMS.Application.Services.Interfaces
         Task<bool> DeleteMedicalUsageAsync(string id, string userId);
         Task<bool> UpdateMedicalUsageAsync(string id, UpdateMedicalUsageRequest model, string userId);
 
+        //---------------Dashboard Count Features----------------
+        Task<int> GetTodayMedicalRequestsCountAsync();
+        Task<int> GetMedicalIncidentsCountAsync();
     }
 }
