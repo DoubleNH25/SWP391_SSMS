@@ -21,6 +21,10 @@ import {
 } from "@/services/DashboardService";
 import { FetchAllBlogs } from "@/services/BlogService";
 import { BlogResponse } from "@/types/Blog";
+import { FecthPendingMedicalEvent } from "@/services/MedicalEventService";
+import { MedicalEventViewModel } from "@/types/MedicalEvent";
+import NurseDashboard from "./dashboard/NurseDashboard";
+import ParentDashboard from "./dashboard/ParentDashboard";
 
 const BlogSlider = () => {
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
@@ -127,20 +131,14 @@ export default function Dashboard() {
   const [userName, setUserName] = useState<string>("");
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
-    totalUsers: 0,
-    totalNurses: 0,
-    pendingEvents: 0,
+    incidents: 0,
     processingPrescriptions: 0,
-    testEvents: 0,
+    totalParents: 0,
   });
   const [loading, setLoading] = useState(true);
-
-  // Dữ liệu mẫu cho bảng sự kiện y tế
-  const medicalEvents = [
-    { product: "Tiêm phòng sởi", price: "-", status: "CHỜ DUYỆT" },
-    { product: "Khám định kỳ", price: "-", status: "ĐÃ DUYỆT" },
-    { product: "Khám răng", price: "-", status: "CHỜ DUYỆT" },
-  ];
+  const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>(
+    []
+  );
 
   // Dữ liệu mẫu cho biểu đồ
   const chartData = [
@@ -175,8 +173,17 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
-
     fetchStats();
+    // Fetch medical events from API
+    const fetchMedicalEvents = async () => {
+      try {
+        const events = await FecthPendingMedicalEvent();
+        setMedicalEvents(events);
+      } catch {
+        setMedicalEvents([]);
+      }
+    };
+    fetchMedicalEvents();
   }, []);
 
   const StatCard = ({
@@ -232,8 +239,8 @@ export default function Dashboard() {
                   <Activity className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Tổng quan</p>
-                  <p className="text-2xl font-bold">{stats.totalUsers}</p>
+                  <p className="text-sm text-gray-600">Sự cố y tế</p>
+                  <p className="text-2xl font-bold">{stats.incidents}</p>
                 </div>
               </div>
             </div>
@@ -256,8 +263,8 @@ export default function Dashboard() {
                   <Clock className="w-6 h-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
-                  <p className="text-2xl font-bold">{stats.pendingEvents}</p>
+                  <p className="text-sm text-gray-600">Tổng số phụ huynh</p>
+                  <p className="text-2xl font-bold">{stats.totalParents}</p>
                 </div>
               </div>
             </div>
@@ -268,8 +275,10 @@ export default function Dashboard() {
                   <Stethoscope className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Số nhân viên y tế</p>
-                  <p className="text-2xl font-bold">{stats.totalNurses}</p>
+                  <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
+                  <p className="text-2xl font-bold">
+                    {stats.processingPrescriptions}
+                  </p>
                 </div>
               </div>
             </div>
@@ -287,23 +296,13 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <ListTodo className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
-                  <p className="text-2xl font-bold">{stats.testEvents}</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Sự kiện y tế chờ duyệt
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -317,17 +316,23 @@ export default function Dashboard() {
                   <tbody>
                     {medicalEvents.map((event, index) => (
                       <tr key={index} className="border-b">
-                        <td className="py-3 px-4">{event.product}</td>
-                        <td className="py-3 px-4">{event.price}</td>
+                        <td className="py-3 px-4">{event.name}</td>
+                        <td className="py-3 px-4">-</td>
                         <td className="py-3 px-4">
                           <span
                             className={`px-3 py-1 rounded-full text-sm ${
-                              event.status === "ĐÃ DUYỆT"
+                              event.status === "Approved"
                                 ? "bg-blue-100 text-blue-800"
-                                : "bg-orange-100 text-orange-800"
+                                : event.status === "Pending"
+                                ? "bg-orange-100 text-orange-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {event.status}
+                            {event.status === "Approved"
+                              ? "ĐÃ DUYỆT"
+                              : event.status === "Pending"
+                              ? "CHỜ DUYỆT"
+                              : "TỪ CHỐI"}
                           </span>
                         </td>
                         <td className="py-3 px-4">
@@ -363,8 +368,8 @@ export default function Dashboard() {
               <Activity className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Tổng quan</p>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
+              <p className="text-sm text-gray-600">Sự cố y tế</p>
+              <p className="text-2xl font-bold">{stats.incidents}</p>
             </div>
           </div>
         </div>
@@ -387,8 +392,8 @@ export default function Dashboard() {
               <Clock className="w-6 h-6 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
-              <p className="text-2xl font-bold">{stats.pendingEvents}</p>
+              <p className="text-sm text-gray-600">Tổng số phụ huynh</p>
+              <p className="text-2xl font-bold">{stats.totalParents}</p>
             </div>
           </div>
         </div>
@@ -399,8 +404,10 @@ export default function Dashboard() {
               <Stethoscope className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Số nhân viên y tế</p>
-              <p className="text-2xl font-bold">{stats.totalNurses}</p>
+              <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
+              <p className="text-2xl font-bold">
+                {stats.processingPrescriptions}
+              </p>
             </div>
           </div>
         </div>
@@ -418,23 +425,11 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-lg">
-              <ListTodo className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
-              <p className="text-2xl font-bold">{stats.testEvents}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
+          <h2 className="text-xl font-semibold mb-4">Sự kiện y tế chờ duyệt</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -448,17 +443,23 @@ export default function Dashboard() {
               <tbody>
                 {medicalEvents.map((event, index) => (
                   <tr key={index} className="border-b">
-                    <td className="py-3 px-4">{event.product}</td>
-                    <td className="py-3 px-4">{event.price}</td>
+                    <td className="py-3 px-4">{event.name}</td>
+                    <td className="py-3 px-4">-</td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1 rounded-full text-sm ${
-                          event.status === "ĐÃ DUYỆT"
+                          event.status === "Approved"
                             ? "bg-blue-100 text-blue-800"
-                            : "bg-orange-100 text-orange-800"
+                            : event.status === "Pending"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {event.status}
+                        {event.status === "Approved"
+                          ? "ĐÃ DUYỆT"
+                          : event.status === "Pending"
+                          ? "CHỜ DUYỆT"
+                          : "TỪ CHỐI"}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -495,67 +496,27 @@ export default function Dashboard() {
 
   const renderNurseDashboard = () => (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Tổng số học sinh"
           value={stats.totalStudents}
-          trend={{ value: 12, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          }
+          icon={<Users className="w-8 h-8 text-blue-600" />}
         />
         <StatCard
-          title="Sự kiện đã duyệt"
-          value={stats.processingPrescriptions}
-          trend={{ value: 15, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
+          title="Tổng số phụ huynh"
+          value={stats.totalParents}
+          icon={<ListTodo className="w-8 h-8 text-green-600" />}
         />
-      </div>
-
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Lịch trình hôm nay
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for schedule */}
-              <p className="text-sm text-gray-500">
-                Không có sự kiện nào được lên lịch cho hôm nay.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Sự cố y tế"
+          value={stats.incidents}
+          icon={<Activity className="w-8 h-8 text-red-600" />}
+        />
+        <StatCard
+          title="Đơn thuốc đang xử lý"
+          value={stats.processingPrescriptions}
+          icon={<Pill className="w-8 h-8 text-emerald-600" />}
+        />
       </div>
     </>
   );
@@ -609,6 +570,9 @@ export default function Dashboard() {
       </div>
     </>
   );
+
+  if (role === "Parent") return <ParentDashboard />;
+  if (role === "Nurse") return <NurseDashboard />;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
