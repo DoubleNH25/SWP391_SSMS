@@ -45,14 +45,11 @@ export default function ConselingScheduleAbnormal() {
   const [consultTime, setConsultTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sentStudents, setSentStudents] = useState<ConselingSchedulesAND[]>([]);
-  // 1. Thêm state cho parentRejectNote và showRejectInput
-  const [parentRejectNote, setParentRejectNote] = useState("");
-  const [showRejectInput, setShowRejectInput] = useState(false);
-  const [rejectError, setRejectError] = useState("");
 
   const fetchAbnormalStudents = async () => {
     try {
       const data = await FecthMedicalHealthCheckupRecordAbnormal();
+      console.log("FecthMedicalHealthCheckupRecordAbnormal", data);
       setAbnormalStudents(data);
     } catch (err) {
       setError("Lỗi khi lấy danh sách học sinh bất thường");
@@ -64,6 +61,7 @@ export default function ConselingScheduleAbnormal() {
   const AbnormalStudentsAppointmentSent = async () => {
     try {
       const data = await FecthConselingSchedules();
+      console.log("FecthConselingSchedules", data);
       setSentStudents(data);
     } catch (err) {
       setError("Lỗi khi lấy danh sách học sinh đã gửi tư vấn");
@@ -73,11 +71,9 @@ export default function ConselingScheduleAbnormal() {
   // Search + Pagination + Date filter
   const filteredStudents = useMemo(() => {
     return abnormalStudents.filter((student) => {
-      // Loại bỏ học sinh đã gửi tư vấn (trùng studentId và healthCheckUpId)
+      // Loại bỏ học sinh đã gửi tư vấn (trùng healthCheckUpId)
       const isSent = sentStudents.some(
-        (sent) =>
-          sent.studentId === student.studentId &&
-          sent.healthCheckupId === student.healthCheckUpId
+        (sent) => sent.healthCheckupId === student.healthCheckUpId
       );
       if (isSent) return false;
       const matchName = student.studentName
@@ -142,14 +138,13 @@ export default function ConselingScheduleAbnormal() {
     }
     setIsSubmitting(true);
     try {
-      console.log(formData);
-      console.log(requestDate);
       const data = {
         studentId: formData.studentId,
         healthCheckupId: formData.healthCheckupId,
         note: formData.note,
         requestedDate: requestDate,
       } as ConselingSchedules;
+      console.log("data", data);
       await FecthCreateConselingSchedule(data);
       showToast.success("Đặt lịch tư vấn thành công!");
       await AbnormalStudentsAppointmentSent();
@@ -259,14 +254,6 @@ export default function ConselingScheduleAbnormal() {
                     }}
                     className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
                   />
-                  {searchDate && (
-                    <Button
-                      onClick={() => setSearchDate("")}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
@@ -328,7 +315,7 @@ export default function ConselingScheduleAbnormal() {
                   <div className="text-gray-700 text-sm">
                     <span className="font-medium">Ngày khám:</span>{" "}
                     <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">
-                      {student.recordDate}
+                      {DateUtils.customFormatDate(student.recordDate)}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -352,7 +339,10 @@ export default function ConselingScheduleAbnormal() {
                     Tư vấn
                   </Button>
                   <div className="absolute top-2 right-2 text-xs text-gray-400">
-                    #{student.studentId.slice(-4)}
+                    #
+                    {student?.healthCheckUpId
+                      ? student.healthCheckUpId.slice(-4)
+                      : ""}
                   </div>
                 </div>
               ))}
@@ -463,7 +453,7 @@ export default function ConselingScheduleAbnormal() {
         onClose={closeConsultModal}
         showCloseButton={true}
         isFullscreen={false}
-        className="max-w-md"
+        className="max-w-xl w-full"
       >
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">
@@ -525,65 +515,20 @@ export default function ConselingScheduleAbnormal() {
             <div className="flex justify-end gap-3 mt-8">
               <button
                 type="button"
-                onClick={() => setShowRejectInput(true)}
-                className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                onClick={closeConsultModal}
+                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 disabled={isSubmitting}
               >
-                Từ chối
+                Hủy
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Đang gửi..." : "Xác nhận"}
+                {isSubmitting ? "Đang gửi..." : "Đặt lịch tư vấn"}
               </button>
             </div>
-            {showRejectInput && (
-              <div className="mt-4">
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lý do phụ huynh từ chối lịch tư vấn
-                </Label>
-                <textarea
-                  className="w-full h-20 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={parentRejectNote}
-                  onChange={(e) => setParentRejectNote(e.target.value)}
-                  placeholder="Nhập lý do từ chối..."
-                />
-                {rejectError && (
-                  <div className="text-red-600 text-sm mt-1">{rejectError}</div>
-                )}
-                <div className="flex justify-end gap-3 mt-2">
-                  <button
-                    type="button"
-                    className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-                    disabled={isSubmitting}
-                    onClick={() => {
-                      if (!parentRejectNote.trim()) {
-                        setRejectError("Vui lòng nhập lý do từ chối!");
-                        return;
-                      }
-                      // TODO: Gửi lý do từ chối lên server tại đây
-                      setRejectError("");
-                      setShowRejectInput(false);
-                      setParentRejectNote("");
-                      closeConsultModal();
-                      showToast.success("Đã từ chối lịch tư vấn!");
-                    }}
-                  >
-                    Xác nhận từ chối
-                  </button>
-                  <button
-                    type="button"
-                    className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    onClick={() => setShowRejectInput(false)}
-                    disabled={isSubmitting}
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </form>
       </Modal>

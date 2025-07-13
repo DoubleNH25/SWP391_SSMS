@@ -27,4 +27,5 @@ export interface MedicalUpdateViewModel {
 export interface MedicalAccess {
   conselingScheduleId: string;
   status: string;
+  parentRejectNote?: string;
 }

@@ -21,9 +21,8 @@ import {
   ClockIcon,
   PencilSquareIcon,
   MagnifyingGlassIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   XMarkIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ export default function ManagerConselingSchedules() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] =
     useState<ConselingSchedulesAND | null>(null);
-
+  
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -61,6 +60,7 @@ export default function ManagerConselingSchedules() {
     { value: "all", label: "Tất cả trạng thái" },
     { value: "Pending", label: "Chờ duyệt" },
     { value: "Approved", label: "Đã duyệt" },
+    { value: "Rejected", label: "Từ chối" },
   ];
 
   const handleSubmit = useCallback(
@@ -144,7 +144,6 @@ export default function ManagerConselingSchedules() {
         if (item.createdBy) uniqueUserIds.add(item.createdBy);
         if (item.updatedBy) uniqueUserIds.add(item.updatedBy);
       });
-      console.log(data);
       uniqueUserIds.forEach((userId) => {
         fetchUserData(userId);
       });
@@ -154,10 +153,6 @@ export default function ManagerConselingSchedules() {
       setIsLoading(false);
     }
   }, [fetchUserData]);
-
-  const handleSort = useCallback(() => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  }, []);
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
@@ -264,6 +259,7 @@ export default function ManagerConselingSchedules() {
                 Bộ lọc tìm kiếm
               </h2>
               <div className="flex flex-wrap items-center gap-3">
+
                 {hasActiveFilters && (
                   <button
                     onClick={handleClearFilters}
@@ -403,12 +399,19 @@ export default function ManagerConselingSchedules() {
                   </p>
                 </div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${item.status === "Pending"
-                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    }`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    item.status === "Pending"
+                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                      : item.status === "Approved"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                  }`}
                 >
-                  {item.status === "Pending" ? "Chờ duyệt" : "Đã duyệt"}
+                  {item.status === "Pending" 
+                    ? "Chờ duyệt" 
+                    : item.status === "Approved" 
+                    ? "Đã duyệt" 
+                    : "Từ chối"}
                 </span>
               </div>
 
@@ -423,6 +426,19 @@ export default function ManagerConselingSchedules() {
                 {item.note && (
                   <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                     <p className="text-sm text-gray-700">{item.note}</p>
+                  </div>
+                )}
+
+                {/* Button xem lý do từ chối */}
+                {item.status === "Rejected" && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
+                      <span className="text-sm font-medium text-red-700">Lý do từ chối:</span>
+                    </div>
+                    <p className="text-sm text-red-800">
+                      {item.parentRejectNote || "Không có lý do được ghi chú"}
+                    </p>
                   </div>
                 )}
 
@@ -501,7 +517,7 @@ export default function ManagerConselingSchedules() {
         onClose={handleCloseModal}
         showCloseButton={true}
         isFullscreen={false}
-        className="max-w-md"
+        className="max-w-md w-full"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="p-6">
@@ -543,6 +559,21 @@ export default function ManagerConselingSchedules() {
                     className="mt-1 block w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
+                
+                {/* Thông báo khi không thể cập nhật */}
+                {selectedItem?.status !== "Pending" && (
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <div className="flex items-center gap-2">
+                      <ExclamationTriangleIcon className="w-4 h-4 text-amber-600" />
+                      <span className="text-sm text-amber-700">
+                        {selectedItem?.status === "Approved" 
+                          ? "Lịch tư vấn đã được duyệt, không thể cập nhật."
+                          : "Lịch tư vấn đã bị từ chối, không thể cập nhật."}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex justify-end gap-3 mt-8">
                   <Button
                     type="button"
@@ -553,8 +584,8 @@ export default function ManagerConselingSchedules() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={selectedItem?.status === "Approved"}
-                    className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    disabled={selectedItem?.status !== "Pending"}
+                    className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cập nhật
                   </Button>

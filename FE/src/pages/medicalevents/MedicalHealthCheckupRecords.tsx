@@ -22,6 +22,8 @@ import {
   CheckCircle,
   Clock,
   ArrowLeft,
+  Ruler,
+  Weight,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { showToast } from "@/components/ui/Toast";
@@ -39,6 +41,8 @@ export default function MedicalHealthCheckupRecords() {
     useState<HealthCheckupRecord>({
       vision: "",
       hearing: "",
+      height: 0,
+      weight: 0,
       dental: "",
       bmi: 0,
       abnormalNote: "",
@@ -51,6 +55,8 @@ export default function MedicalHealthCheckupRecords() {
     hearing: "",
     dental: "",
     bmi: "",
+    height: "",
+    weight: "",
   });
   const [isCurrentDate, setIsCurrentDate] = useState<boolean>(false);
 
@@ -68,6 +74,92 @@ export default function MedicalHealthCheckupRecords() {
     setStudents(data as Student[]);
   }, [medicalRecord]);
 
+  // Validation functions for all health fields
+  const validateVision = (vision: string) => {
+    if (!vision.trim()) return "Thị lực không được để trống";
+
+    // Kiểm tra format thị lực (ví dụ: 20/20, 20/40, 6/6, etc.)
+    const visionPattern = /^(\d+\/\d+|\d+\.\d+|\d+)$/;
+    if (!visionPattern.test(vision.trim())) {
+      return "Định dạng thị lực không hợp lệ (VD: 20/20, 6/6, 0.8)";
+    }
+
+    return "";
+  };
+
+  const validateHearing = (hearing: string) => {
+    if (!hearing.trim()) return "Thính lực không được để trống";
+
+    const validHearingValues = [
+      "Bình thường",
+      "Tốt",
+      "Khá",
+      "Trung bình",
+      "Kém",
+      "Điếc",
+      "Normal",
+      "Good",
+      "Fair",
+      "Poor",
+      "Deaf",
+      "Không có vấn đề",
+      "Có vấn đề nhẹ",
+      "Cần kiểm tra thêm",
+    ];
+
+    if (
+      !validHearingValues.some((value) =>
+        hearing.toLowerCase().includes(value.toLowerCase())
+      )
+    ) {
+      return "Giá trị thính lực không hợp lệ";
+    }
+
+    return "";
+  };
+
+  const validateDental = (dental: string) => {
+    if (!dental.trim()) return "Tình trạng răng miệng không được để trống";
+
+    const validDentalValues = [
+      "Tốt",
+      "Bình thường",
+      "Khá",
+      "Cần chăm sóc",
+      "Có sâu răng",
+      "Good",
+      "Normal",
+      "Fair",
+      "Needs care",
+      "Has cavities",
+      "Không có vấn đề",
+      "Cần điều trị",
+      "Đã điều trị",
+    ];
+
+    if (
+      !validDentalValues.some((value) =>
+        dental.toLowerCase().includes(value.toLowerCase())
+      )
+    ) {
+      return "Giá trị răng miệng không hợp lệ";
+    }
+
+    return "";
+  };
+
+  const validateHeight = (height: number) => {
+    if (height <= 0) return "Chiều cao phải lớn hơn 0";
+    if (height < 50 || height > 250) return "Chiều cao phải từ 50-250 cm";
+    return "";
+  };
+
+  const validateWeight = (weight: number) => {
+    if (weight <= 0) return "Cân nặng phải lớn hơn 0";
+    if (weight < 10 || weight > 200) return "Cân nặng phải từ 10-200 kg";
+    return "";
+  };
+
   const validateHealthCheckupData = useCallback(() => {
     let isValid = true;
     const newErrors = {
@@ -75,20 +167,37 @@ export default function MedicalHealthCheckupRecords() {
       hearing: "",
       dental: "",
       bmi: "",
+      height: "",
+      weight: "",
     };
 
-    if (!healthCheckupData.vision.trim()) {
-      newErrors.vision = "Vui lòng nhập kết quả kiểm tra thị lực";
+    const visionError = validateVision(healthCheckupData.vision);
+    if (visionError) {
+      newErrors.vision = visionError;
       isValid = false;
     }
 
-    if (!healthCheckupData.hearing.trim()) {
-      newErrors.hearing = "Vui lòng nhập kết quả kiểm tra thính lực";
+    const hearingError = validateHearing(healthCheckupData.hearing);
+    if (hearingError) {
+      newErrors.hearing = hearingError;
       isValid = false;
     }
 
-    if (!healthCheckupData.dental.trim()) {
-      newErrors.dental = "Vui lòng nhập kết quả kiểm tra răng miệng";
+    const dentalError = validateDental(healthCheckupData.dental);
+    if (dentalError) {
+      newErrors.dental = dentalError;
+      isValid = false;
+    }
+
+    const heightError = validateHeight(healthCheckupData.height);
+    if (heightError) {
+      newErrors.height = heightError;
+      isValid = false;
+    }
+
+    const weightError = validateWeight(healthCheckupData.weight);
+    if (weightError) {
+      newErrors.weight = weightError;
       isValid = false;
     }
 
@@ -101,9 +210,62 @@ export default function MedicalHealthCheckupRecords() {
     return isValid;
   }, [healthCheckupData]);
 
+  const calculateBMI = (weight: number, height: number): number => {
+    if (weight <= 0 || height <= 0) return 0;
+    // BMI = weight(kg) / (height(m))^2
+    const heightInMeters = height / 100;
+    const bmi = weight / (heightInMeters * heightInMeters);
+    return Math.round(bmi * 100) / 100; // Round to 2 decimal places
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setHealthCheckupData((prev) => ({ ...prev, [name]: value }));
+    const numberFields = ["height", "weight", "bmi"];
+
+    setHealthCheckupData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: numberFields.includes(name) ? Number(value) : value
+      };
+
+      // Auto-calculate BMI when height or weight changes
+      if (name === "height" || name === "weight") {
+        const newHeight = name === "height" ? Number(value) : prev.height;
+        const newWeight = name === "weight" ? Number(value) : prev.weight;
+        newData.bmi = calculateBMI(newWeight, newHeight);
+      }
+
+      return newData;
+    });
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let error = "";
+
+    switch (name) {
+      case "vision":
+        error = validateVision(value);
+        break;
+      case "hearing":
+        error = validateHearing(value);
+        break;
+      case "dental":
+        error = validateDental(value);
+        break;
+      case "height":
+        error = validateHeight(Number(value));
+        break;
+      case "weight":
+        error = validateWeight(Number(value));
+        break;
+    }
+
+    if (error) {
+      setValidateMessage((prev) => ({ ...prev, [name]: error }));
+    } else {
+      setValidateMessage((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleGetMedicalRecord = useCallback(async () => {
@@ -189,10 +351,10 @@ export default function MedicalHealthCheckupRecords() {
             prev.map((r) =>
               r.studentId === selectedStudent.id
                 ? {
-                    ...r,
-                    ...healthCheckupData,
-                    recordDate: new Date().toISOString(),
-                  }
+                  ...r,
+                  ...healthCheckupData,
+                  recordDate: new Date().toISOString(),
+                }
                 : r
             )
           );
@@ -222,6 +384,8 @@ export default function MedicalHealthCheckupRecords() {
       vision: "",
       hearing: "",
       dental: "",
+      height: 0,
+      weight: 0,
       bmi: 0,
       abnormalNote: "",
       checkingStatus: "Normal",
@@ -233,11 +397,17 @@ export default function MedicalHealthCheckupRecords() {
     setSelectedStudent(student);
     const record = medicalRecord.find((r) => r.studentId === student.id);
     if (record) {
+      const height = record.height !== 0 ? record.height : 0;
+      const weight = record.weight !== 0 ? record.weight : 0;
+      const calculatedBMI = calculateBMI(weight, height);
+      
       setHealthCheckupData({
         vision: record.vision !== "None" ? record.vision : "",
         hearing: record.hearing !== "None" ? record.hearing : "",
         dental: record.dental !== "None" ? record.dental : "",
-        bmi: record.bmi !== 0 ? record.bmi : 0,
+        bmi: calculatedBMI,
+        height: height,
+        weight: weight,
         abnormalNote: record.abnormalNote !== "None" ? record.abnormalNote : "",
         checkingStatus:
           record.checkingStatus === "Abnormal" ? "Abnormal" : "Normal",
@@ -249,6 +419,8 @@ export default function MedicalHealthCheckupRecords() {
         dental: "",
         bmi: 0,
         abnormalNote: "",
+        height: 0,
+        weight: 0,
         checkingStatus: "Normal",
       });
     }
@@ -269,13 +441,12 @@ export default function MedicalHealthCheckupRecords() {
 
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-          isChecked
-            ? isAbnormal
-              ? "bg-red-100 text-red-700 border-red-300"
-              : "bg-emerald-100 text-emerald-700 border-emerald-200"
-            : "bg-amber-100 text-amber-700 border-amber-200"
-        }`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${isChecked
+          ? isAbnormal
+            ? "bg-red-100 text-red-700 border-red-300"
+            : "bg-emerald-100 text-emerald-700 border-emerald-200"
+          : "bg-amber-100 text-amber-700 border-amber-200"
+          }`}
       >
         {isChecked ? (
           isAbnormal ? (
@@ -396,13 +567,12 @@ export default function MedicalHealthCheckupRecords() {
                   return (
                     <div
                       key={index}
-                      className={`p-2 border-b border-gray-100 cursor-pointer transition-all duration-200 ${
-                        selectedStudent?.id === student.id
-                          ? "bg-blue-50 border-l-4 border-l-blue-500"
-                          : record?.checkingStatus === "Abnormal"
+                      className={`p-2 border-b border-gray-100 cursor-pointer transition-all duration-200 ${selectedStudent?.id === student.id
+                        ? "bg-blue-50 border-l-4 border-l-blue-500"
+                        : record?.checkingStatus === "Abnormal"
                           ? "bg-red-50 hover:border-l-4 hover:border-l-red-300"
                           : "hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-300"
-                      }`}
+                        }`}
                       onClick={() => handleSelectStudent(student)}
                     >
                       <div className="flex justify-between items-start">
@@ -454,8 +624,8 @@ export default function MedicalHealthCheckupRecords() {
                         )?.nurseName === "Pending To Update"
                           ? "Chưa phân công"
                           : medicalRecord.find(
-                              (r) => r.studentId === selectedStudent.id
-                            )?.nurseName || "N/A"}
+                            (r) => r.studentId === selectedStudent.id
+                          )?.nurseName || "N/A"}
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-2 shadow-sm">
@@ -489,8 +659,8 @@ export default function MedicalHealthCheckupRecords() {
                 <div className="p-3 flex-1 overflow-auto">
                   <div className="space-y-3">
                     {/* Vision & BMI */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div className="md:col-span-2">
+                    <div className="">
+                      <div className="">
                         <Label
                           htmlFor="vision"
                           className="flex items-center gap-1"
@@ -502,9 +672,10 @@ export default function MedicalHealthCheckupRecords() {
                           id="vision"
                           name="vision"
                           type="text"
-                          placeholder="Nhập kết quả kiểm tra mắt"
+                          placeholder="VD: 20/20, 6/6, 0.8"
                           value={healthCheckupData.vision}
                           onChange={handleInputChange}
+                          onBlur={handleInputBlur}
                           disabled={!isCurrentDate}
                           error={!!validateMessage.vision}
                         />
@@ -513,6 +684,73 @@ export default function MedicalHealthCheckupRecords() {
                             {validateMessage.vision}
                           </p>
                         )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Định dạng: 20/20, 6/6, 0.8 (thị lực chuẩn)
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Height & Weight */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>
+                        <Label
+                          htmlFor="height"
+                          className="flex items-center gap-1"
+                        >
+                          <Ruler size={14} className="text-purple-500" />
+                          Chiều cao (cm)
+                        </Label>
+                        <Input
+                          id="height"
+                          name="height"
+                          type="number"
+                          min="50"
+                          max="250"
+                          placeholder="VD: 170"
+                          value={healthCheckupData.height}
+                          onChange={handleInputChange}
+                          onBlur={handleInputBlur}
+                          disabled={!isCurrentDate}
+                          error={!!validateMessage.height}
+                        />
+                        {validateMessage.height && (
+                          <p className="text-red-500 text-xs mt-0.5">
+                            {validateMessage.height}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Phạm vi: 50-250 cm
+                        </p>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="weight"
+                          className="flex items-center gap-1"
+                        >
+                          <Weight size={14} className="text-orange-500" />
+                          Cân nặng (kg)
+                        </Label>
+                        <Input
+                          id="weight"
+                          name="weight"
+                          type="number"
+                          min="10"
+                          max="200"
+                          placeholder="VD: 65"
+                          value={healthCheckupData.weight}
+                          onChange={handleInputChange}
+                          onBlur={handleInputBlur}
+                          disabled={!isCurrentDate}
+                          error={!!validateMessage.weight}
+                        />
+                        {validateMessage.weight && (
+                          <p className="text-red-500 text-xs mt-0.5">
+                            {validateMessage.weight}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Phạm vi: 10-200 kg
+                        </p>
                       </div>
                       <div>
                         <Label htmlFor="bmi">BMI</Label>
@@ -522,10 +760,10 @@ export default function MedicalHealthCheckupRecords() {
                           type="number"
                           min="0"
                           max="100"
-                          placeholder="BMI"
+                          placeholder="Tự động tính"
                           value={healthCheckupData.bmi}
                           onChange={handleInputChange}
-                          disabled={!isCurrentDate}
+                          disabled={true}
                           error={!!validateMessage.bmi}
                         />
                         {validateMessage.bmi && (
@@ -545,22 +783,26 @@ export default function MedicalHealthCheckupRecords() {
                         <Ear size={14} className="text-green-500" />
                         Thính lực
                       </Label>
-                      <Input
-                        id="hearing"
-                        name="hearing"
-                        type="text"
-                        placeholder="Nhập kết quả kiểm tra tai"
-                        value={healthCheckupData.hearing}
-                        onChange={handleInputChange}
-                        disabled={!isCurrentDate}
-                        error={!!validateMessage.hearing}
-                      />
-                      {validateMessage.hearing && (
-                        <p className="text-red-500 text-xs mt-0.5">
-                          {validateMessage.hearing}
+                                              <Input
+                          id="hearing"
+                          name="hearing"
+                          type="text"
+                          placeholder="VD: Bình thường, Tốt, Khá"
+                          value={healthCheckupData.hearing}
+                          onChange={handleInputChange}
+                          onBlur={handleInputBlur}
+                          disabled={!isCurrentDate}
+                          error={!!validateMessage.hearing}
+                        />
+                                              {validateMessage.hearing && (
+                          <p className="text-red-500 text-xs mt-0.5">
+                            {validateMessage.hearing}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Bình thường, Tốt, Khá, Trung bình, Kém, Điếc
                         </p>
-                      )}
-                    </div>
+                      </div>
 
                     {/* Dental */}
                     <div>
@@ -571,22 +813,26 @@ export default function MedicalHealthCheckupRecords() {
                         <span className="text-yellow-500">🦷</span>
                         Răng miệng
                       </Label>
-                      <Input
-                        id="dental"
-                        name="dental"
-                        type="text"
-                        placeholder="Nhập kết quả kiểm tra răng"
-                        value={healthCheckupData.dental}
-                        onChange={handleInputChange}
-                        disabled={!isCurrentDate}
-                        error={!!validateMessage.dental}
-                      />
-                      {validateMessage.dental && (
-                        <p className="text-red-500 text-xs mt-0.5">
-                          {validateMessage.dental}
+                                              <Input
+                          id="dental"
+                          name="dental"
+                          type="text"
+                          placeholder="VD: Tốt, Bình thường, Có sâu răng"
+                          value={healthCheckupData.dental}
+                          onChange={handleInputChange}
+                          onBlur={handleInputBlur}
+                          disabled={!isCurrentDate}
+                          error={!!validateMessage.dental}
+                        />
+                                              {validateMessage.dental && (
+                          <p className="text-red-500 text-xs mt-0.5">
+                            {validateMessage.dental}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Tốt, Bình thường, Khá, Cần chăm sóc, Có sâu răng
                         </p>
-                      )}
-                    </div>
+                      </div>
 
                     {/* Notes */}
                     <div>
@@ -650,11 +896,10 @@ export default function MedicalHealthCheckupRecords() {
                       <Button
                         variant="default"
                         size="sm"
-                        className={`px-3 py-1 text-xs font-medium border-2 w-1/3 ${
-                          updating || !isCurrentDate
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
+                        className={`px-3 py-1 text-xs font-medium border-2 w-1/3 ${updating || !isCurrentDate
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                          }`}
                         onClick={handleUpdateHealthCheckupRecord}
                         type="button"
                         disabled={updating || !isCurrentDate}
@@ -671,9 +916,8 @@ export default function MedicalHealthCheckupRecords() {
                       <Button
                         variant="default"
                         size="sm"
-                        className={`px-3 py-1 text-xs font-medium border-2 w-1/3 ${
-                          updating ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`px-3 py-1 text-xs font-medium border-2 w-1/3 ${updating ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         onClick={handleNext}
                         type="button"
                         disabled={updating}

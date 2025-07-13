@@ -83,6 +83,7 @@ export async function UpdateActivityConsentSchedules(data: MedicalAccess): Promi
         throw new Error('User is not authenticated');
     }
     try {
+        console.log(data);
         await ApiClient<void>({
             method: 'PUT',
             endpoint: `/parents/conseling-schedules-status`,

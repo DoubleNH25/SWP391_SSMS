@@ -13,6 +13,7 @@ interface ViewEventsModalProps {
   onAddNewEvent: () => void;
   onSetFormData: (formData : FormDataType | ((prev: FormDataType) => FormDataType)) => void;
   classOptions: { value: string; label: string }[];
+  isAdmin?: boolean;
 }
 
 type FormDataType =
@@ -27,7 +28,8 @@ const ViewEventsModal = ({
   onClose, 
   onAddNewEvent,
   onSetFormData,
-  classOptions 
+  classOptions,
+  isAdmin = false
 }: ViewEventsModalProps) => {
   if (!viewEventsDate) return null;
 
@@ -144,22 +146,24 @@ const ViewEventsModal = ({
         )}
       </div>
       
-      <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
-        <button
-          onClick={handleAddNewEvent}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-          disabled={loading}
-        >
-          Thêm sự kiện
-        </button>
-        <button
-          onClick={onClose}
-          disabled={loading}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-        >
-          Đóng
-        </button>
-      </div>
+              <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
+          {!isAdmin && (
+            <button
+              onClick={handleAddNewEvent}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+              disabled={loading}
+            >
+              Thêm sự kiện
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            Đóng
+          </button>
+        </div>
     </div>
   );
 };
