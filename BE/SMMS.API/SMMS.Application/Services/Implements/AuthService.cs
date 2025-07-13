@@ -71,35 +71,36 @@ namespace SMMS.Application.Services.Implements
 			}
 		}
 
-		public async Task<string> VerifyPhoneNumberAsync(VerifyPhoneRequest request)
+		public async Task<AuthResponse> VerifyPhoneNumberAsync(VerifyPhoneRequest request)
 		{
 			try
 			{
 				var verifiedPhone = await VerifyFirebasePhoneTokenAsync(request.IdToken);
-				if (verifiedPhone == null || verifiedPhone != request.PhoneNumber)
+				if (verifiedPhone == null)
 				{
 					throw new Exception("Xác thực OTP không hợp lệ hoặc không khớp số điện thoại.");
 				}
 
-				string normalizedPhoneNumber = request.PhoneNumber;
+				string normalizedPhoneNumber = verifiedPhone;
 				if (normalizedPhoneNumber.StartsWith("+84"))
 				{
 					normalizedPhoneNumber = string.Concat("0", normalizedPhoneNumber.AsSpan(3));
 				}
-				var existingPhonenumber = _repositoryManager.UserRepository
-					.FindByCondition(u => u.Phone == normalizedPhoneNumber, false)
+
+				var user = _repositoryManager.UserRepository.FindByCondition(u => u.Phone == normalizedPhoneNumber, false)
+					.Include(u => u.Role)
 					.FirstOrDefault();
-
-				if (existingPhonenumber != null)
+				if (user == null)
 				{
-					throw new Exception("PhoneNumber already in use");
+					throw new Exception("Invalid credentials");
 				}
+				var token = _jwtTokenGenerator.GenerateToken(user);
 
-				return "Ready to create an account !";
+				return new AuthResponse { Token = token, UserId = user.Id };
 			}
 			catch (Exception ex)
 			{
-				return $"Error: {ex.Message}";
+				throw ex;
 			}
 		}
 
