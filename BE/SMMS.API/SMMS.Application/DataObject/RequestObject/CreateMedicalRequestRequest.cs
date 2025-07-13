@@ -13,6 +13,8 @@ namespace SMMS.Application.DataObject.RequestObject
 
         [Required]
         public List<MedicalRequestItem> MedicalRequestItems { get; set; }
+
+        public string? ImageUrl { get; set; } // Thêm trường này cho ảnh toàn bộ request
     }
 
     public class MedicalRequestItem

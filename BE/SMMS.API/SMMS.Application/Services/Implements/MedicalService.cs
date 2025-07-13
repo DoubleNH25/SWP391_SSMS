@@ -551,6 +551,11 @@ namespace SMMS.Application.Services.Implements
         {
             try
             {
+                // Kiểm tra MedicalRequestItems không null hoặc rỗng
+                if (request.MedicalRequestItems == null || !request.MedicalRequestItems.Any())
+                {
+                    throw new Exception("Medical request must contain at least one medication item.");
+                }
                 // Lấy thông tin Parent để có ParentName và PhoneNumber
                 var parent = await _repositoryManager.UserRepository
                     .FindByCondition(u => u.Id == request.ParentId && !u.DeletedTime.HasValue, false)
@@ -583,7 +588,8 @@ namespace SMMS.Application.Services.Implements
                         Notes = item.Notes,
                         Status = "Active",
                         CreatedTime = DateTimeOffset.Now,
-                        CreatedBy = userId
+                        CreatedBy = userId,
+                        ImageUrl = request.ImageUrl // Gán ảnh toàn bộ request
                     };
 
                     if (item.Image != null)
@@ -595,7 +601,10 @@ namespace SMMS.Application.Services.Implements
                     medicalRequests.Add(medicalRequest);
                     _repositoryManager.MedicalRequestRepository.Create(medicalRequest);
 
-                    // Tự động tạo các bản ghi MedicationRequestAdministration dựa trên lịch trình
+                    // Lưu ngay để đảm bảo Id đã có
+                    await _repositoryManager.SaveAsync();
+
+                    // Tạo các bản ghi MedicationRequestAdministration dựa trên lịch trình
                     var administrationSchedules = GenerateMedicationAdministrationSchedule(
                         medicalRequest.Id,
                         item.TimeToAdminister,
@@ -609,6 +618,7 @@ namespace SMMS.Application.Services.Implements
                     }
                 }
 
+                // Lưu lại các administration
                 await _repositoryManager.SaveAsync();
 
                 // Notify Parent
@@ -630,6 +640,9 @@ namespace SMMS.Application.Services.Implements
             }
             catch (Exception ex)
             {
+                // Trả về inner exception chi tiết nếu có
+                if (ex.InnerException != null)
+                    throw new Exception($"{ex.Message} | Inner: {ex.InnerException.Message}", ex.InnerException);
                 throw new Exception(ex.Message);
             }
         }
@@ -1403,6 +1416,21 @@ namespace SMMS.Application.Services.Implements
             return await _repositoryManager.MedicalIncidentRepository
                 .FindByCondition(m => !m.DeletedTime.HasValue, false)
                 .CountAsync();
+        }
+
+        public async Task<User?> GetParentByStudentIdAsync(string studentId)
+        {
+            // Tìm student
+            var student = await _repositoryManager.StudentRepository
+                .FindByCondition(s => s.Id == studentId && s.DeletedTime == null, false)
+                .FirstOrDefaultAsync();
+            if (student == null || string.IsNullOrEmpty(student.ParentId))
+                return null;
+            // Tìm parent
+            var parent = await _repositoryManager.UserRepository
+                .FindByCondition(u => u.Id == student.ParentId && u.DeletedTime == null, false)
+                .FirstOrDefaultAsync();
+            return parent;
         }
     }
 }
