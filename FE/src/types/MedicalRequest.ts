@@ -9,6 +9,7 @@ export interface MedicalRequestItems {
   startDate: string;
   endDate: string;
   notes: string;
+  image?: string; // Thêm trường image cho đúng API
 }
 
 export interface MedicalRequestCreateUpdateViewModel {

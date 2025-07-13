@@ -44,12 +44,21 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
   // Get schedule data (flatten timeToAdminister for each request)
   const scheduleData = requests
     .filter((req) => {
-      if (req.status !== "active") return false;
+      // chỉ active
+      if ((req.status || "").toLowerCase() !== "active") return false;
+
+      // chỉ những đơn cover ngày hôm nay
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(req.startDate);
+      const end = new Date(req.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      if (!(start <= today && today <= end)) return false;
 
       // Date filter logic for schedule - improved
       if (scheduleStartDate || scheduleEndDate) {
-        const requestStart = new Date(req.startDate);
-        const requestEnd = new Date(req.endDate);
         const filterStart = scheduleStartDate
           ? new Date(scheduleStartDate)
           : null;
@@ -58,11 +67,11 @@ const MedicationScheduleTab: React.FC<MedicationScheduleTabProps> = ({
           : null;
 
         if (filterStart && filterEnd) {
-          return requestStart <= filterEnd && requestEnd >= filterStart;
+          return start <= filterEnd && end >= filterStart;
         } else if (filterStart) {
-          return requestEnd >= filterStart;
+          return end >= filterStart;
         } else if (filterEnd) {
-          return requestStart <= filterEnd;
+          return start <= filterEnd;
         }
       }
       return true;

@@ -18,6 +18,7 @@ import {
 } from "@/services/IncidentService";
 import { Incident } from "@/types/Incident";
 import { Modal } from "@/components/ui/modal";
+import { DecodeJWT } from "@/utils/DecodeJWT";
 
 export default function ManagerMedicalIncident() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,6 +66,16 @@ export default function ManagerMedicalIncident() {
       notes: "",
     },
   ]);
+
+  // Lấy role từ JWT
+  const user = DecodeJWT() as {
+    sub?: string;
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+  } | null;
+  const isParent =
+    user?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
+    "Parent";
+  const parentId = user?.sub;
 
   // Fetch parents
   const fetchParent = useCallback(async () => {
@@ -121,7 +132,9 @@ export default function ManagerMedicalIncident() {
     setIncidentsLoading(true);
     try {
       let data: Incident[] = [];
-      if (selectedStudentId) {
+      if (isParent) {
+        data = await FetchIncidentsByStudent(selectedStudentId);
+      } else if (selectedStudentId) {
         data = await FetchIncidentsByStudent(selectedStudentId);
       } else {
         data = await FetchAllIncidentsWithoutStudentId();
@@ -132,7 +145,7 @@ export default function ManagerMedicalIncident() {
     } finally {
       setIncidentsLoading(false);
     }
-  }, [selectedStudentId]);
+  }, [isParent, selectedStudentId]);
 
   // Filter parents
   const filterParents = useCallback(() => {
@@ -166,19 +179,21 @@ export default function ManagerMedicalIncident() {
       showToast.warning("Vui lòng nhập đầy đủ các trường bắt buộc!");
       return;
     }
+    // Lọc và map thuốc hợp lệ
+    const validMeds = medicines
+      .filter((m) => m.medicationName.trim() !== "")
+      .map((m) => ({
+        medicalStockId: m.medicationName,
+        dosage: m.dosage,
+        quantity: m.totalQuantity,
+      }));
     try {
       await FecthCreateIncident({
         studentId: selectedStudentId,
         type: incidentForm.type,
         description: incidentForm.description,
         incidentDate: incidentForm.incidentDate,
-        medicalUsageDetails: requireMedicine
-          ? medicines.map((med) => ({
-              medicalStockId: med.medicationName || "", // hoặc chọn từ danh sách thuốc nếu có
-              dosage: med.dosage,
-              quantity: med.totalQuantity || 1,
-            }))
-          : [],
+        medicalUsageDetails: requireMedicine ? validMeds : [],
       });
       setShowCreateModal(false);
       setIncidentForm({
@@ -230,6 +245,19 @@ export default function ManagerMedicalIncident() {
     fetchIncidents();
   }, [selectedStudentId, fetchIncidents]);
 
+  // Nếu là parent, fetch danh sách con và chọn studentId đầu tiên
+  useEffect(() => {
+    if (isParent && parentId) {
+      (async () => {
+        const response = await FecthStudentsByParentId(parentId);
+        setStudents(response || []);
+        if (response && response.length > 0) {
+          setSelectedStudentId(response[0].id);
+        }
+      })();
+    }
+  }, [isParent, parentId]);
+
   // UI
   return (
     <div className="p-6">
@@ -238,224 +266,234 @@ export default function ManagerMedicalIncident() {
         icon={<AlertTriangleIcon className="w-10 h-10" />}
         description="Quản lý sự cố y tế của học sinh"
       />
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-        <div className="flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Bộ lọc tìm kiếm
-            </h2>
-            {(searchTerm || selectedStudentId) && (
-              <button
-                onClick={handleClearFilters}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Xóa bộ lọc
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="search">Tìm kiếm phụ huynh</Label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="search"
-                  placeholder="Tìm kiếm theo tên phụ huynh, email, số điện thoại..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
-                />
-              </div>
+      {/* Ẩn UI lọc khi là parent */}
+      {!isParent && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Bộ lọc tìm kiếm
+              </h2>
+              {(searchTerm || selectedStudentId) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
             </div>
-            <div>
-              <Label htmlFor="student-search">Tìm kiếm học sinh</Label>
-              <div className="flex flex-wrap gap-2 items-start">
-                <div className="flex-1 min-w-[200px]">
-                  <SearchableSelect
-                    options={studentOptions}
-                    placeholder={
-                      studentsLoadingForSearch
-                        ? "Đang tải..."
-                        : "Chọn học sinh theo mã hoặc tên..."
-                    }
-                    onChange={handleStudentSelect}
-                    value={selectedStudentId}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="search">Tìm kiếm phụ huynh</Label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="search"
+                    placeholder="Tìm kiếm theo tên phụ huynh, email, số điện thoại..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-colors"
                   />
                 </div>
-                <div className="flex flex-row gap-3 items-start">
-                  <div className="flex flex-col gap-2 items-stretch">
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      disabled={!selectedStudentId || studentsLoadingForSearch}
-                      className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-                    >
-                      <AlertTriangleIcon className="w-4 h-4" />
-                      Tạo sự cố y tế
-                    </button>
+              </div>
+              <div>
+                <Label htmlFor="student-search">Tìm kiếm học sinh</Label>
+                <div className="flex flex-wrap gap-2 items-start">
+                  <div className="flex-1 min-w-[200px]">
+                    <SearchableSelect
+                      options={studentOptions}
+                      placeholder={
+                        studentsLoadingForSearch
+                          ? "Đang tải..."
+                          : "Chọn học sinh theo mã hoặc tên..."
+                      }
+                      onChange={handleStudentSelect}
+                      value={selectedStudentId}
+                    />
+                  </div>
+                  <div className="flex flex-row gap-3 items-start">
+                    <div className="flex flex-col gap-2 items-stretch">
+                      <button
+                        onClick={() => setShowCreateModal(true)}
+                        disabled={
+                          !selectedStudentId || studentsLoadingForSearch
+                        }
+                        className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                      >
+                        <AlertTriangleIcon className="w-4 h-4" />
+                        Tạo sự cố y tế
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-6">
-        {/* Danh sách phụ huynh */}
-        <div className="col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Danh sách phụ huynh
-              {filteredParents.length > 0 && (
-                <span className="text-sm text-normal text-gray-500">
-                  ({filteredParents.length} kết quả)
-                </span>
-              )}
-            </h2>
-          </div>
-          {/* Luôn hiển thị danh sách phụ huynh */}
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-2 text-gray-600">Đang tải...</span>
+      )}
+      {/* Ẩn luôn 2 cột danh sách phụ huynh/học sinh khi là parent */}
+      {!isParent && (
+        <div className="grid grid-cols-3 gap-6">
+          {/* Danh sách phụ huynh */}
+          <div className="col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Danh sách phụ huynh
+                {filteredParents.length > 0 && (
+                  <span className="text-sm text-normal text-gray-500">
+                    ({filteredParents.length} kết quả)
+                  </span>
+                )}
+              </h2>
             </div>
-          ) : filteredParents.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
-                Không tìm thấy phụ huynh nào phù hợp với từ khóa tìm kiếm
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredParents.map((parent, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setSelectedParent(parent);
-                    fetchStudentsByParentId(parent.id);
-                  }}
-                  className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
-                    selectedParent && selectedParent.id === parent.id
-                      ? "border-blue-500 bg-blue-50 shadow-md"
-                      : "border-gray-200 hover:border-blue-300"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {parent.fullName}
-                      </h3>
-                      <p className="text-sm text-gray-500 truncate">
-                        {parent.email}
-                      </p>
-                      <p className="text-sm text-gray-500">{parent.phone}</p>
+            {/* Luôn hiển thị danh sách phụ huynh */}
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">Đang tải...</span>
+              </div>
+            ) : filteredParents.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  Không tìm thấy phụ huynh nào phù hợp với từ khóa tìm kiếm
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredParents.map((parent, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setSelectedParent(parent);
+                      fetchStudentsByParentId(parent.id);
+                    }}
+                    className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
+                      selectedParent && selectedParent.id === parent.id
+                        ? "border-blue-500 bg-blue-50 shadow-md"
+                        : "border-gray-200 hover:border-blue-300"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Users className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {parent.fullName}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">
+                          {parent.email}
+                        </p>
+                        <p className="text-sm text-gray-500">{parent.phone}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Danh sách học sinh */}
-        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              {selectedParent
-                ? `Danh sách học sinh của ${selectedParent.fullName}`
-                : "Danh sách học sinh"}
-              {students.length > 0 && (
-                <span className="text-sm text-normal text-gray-500">
-                  ({students.length} học sinh)
-                </span>
-              )}
-            </h2>
-            {selectedParent && (
-              <button
-                onClick={() => {
-                  setSelectedParent(null);
-                  setStudents([]);
-                }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Đóng
-              </button>
+                ))}
+              </div>
             )}
           </div>
-          {/* Luôn hiển thị danh sách học sinh */}
-          {studentsLoadingForSearch ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-2 text-gray-600">
-                Đang tải danh sách học sinh...
-              </span>
-            </div>
-          ) : !selectedParent ? (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
-                Vui lòng chọn phụ huynh để xem danh sách học sinh
-              </p>
-            </div>
-          ) : students.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
-                Không tìm thấy học sinh nào cho phụ huynh này
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {students.map((student, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setSelectedStudentId(student.id)}
+
+          {/* Danh sách học sinh */}
+          <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                {selectedParent
+                  ? `Danh sách học sinh của ${selectedParent.fullName}`
+                  : "Danh sách học sinh"}
+                {students.length > 0 && (
+                  <span className="text-sm text-normal text-gray-500">
+                    ({students.length} học sinh)
+                  </span>
+                )}
+              </h2>
+              {selectedParent && (
+                <button
+                  onClick={() => {
+                    setSelectedParent(null);
+                    setStudents([]);
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {student.fullName}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Mã học sinh: {student.studentCode}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Giới tính: {student.gender}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Ngày sinh:{" "}
-                        {new Date(student.dateOfBirth).toLocaleDateString(
-                          "vi-VN"
+                  Đóng
+                </button>
+              )}
+            </div>
+            {/* Luôn hiển thị danh sách học sinh */}
+            {studentsLoadingForSearch ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">
+                  Đang tải danh sách học sinh...
+                </span>
+              </div>
+            ) : !selectedParent ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  Vui lòng chọn phụ huynh để xem danh sách học sinh
+                </p>
+              </div>
+            ) : students.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  Không tìm thấy học sinh nào cho phụ huynh này
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {students.map((student, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => setSelectedStudentId(student.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <Users className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {student.fullName}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Mã học sinh: {student.studentCode}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Giới tính: {student.gender}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Ngày sinh:{" "}
+                          {new Date(student.dateOfBirth).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </p>
+                        {student.studentClass && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-400 mb-1">
+                              Lớp học:
+                            </p>
+                            <p className="text-sm font-medium text-gray-700">
+                              {student.studentClass.className}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Phòng: {student.studentClass.classRoom}
+                            </p>
+                          </div>
                         )}
-                      </p>
-                      {student.studentClass && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-xs text-gray-400 mb-1">Lớp học:</p>
-                          <p className="text-sm font-medium text-gray-700">
-                            {student.studentClass.className}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Phòng: {student.studentClass.classRoom}
-                          </p>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       {/* Danh sách sự cố y tế */}
       <div className="mt-10">
         <h2 className="text-lg font-semibold mb-4">Danh sách sự cố y tế</h2>
@@ -535,33 +573,40 @@ export default function ManagerMedicalIncident() {
           setShowDetailModal(false);
           setSelectedIncident(null);
         }}
+        className="
+          mx-auto 
+          my-12 
+          w-full 
+          max-w-lg
+          bg-white
+          rounded-xl
+          shadow-2xl
+          ring-2
+          ring-blue-400
+          overflow-hidden
+        "
       >
-        <div className="p-6 min-w-[350px] max-w-[500px]">
-          <h3 className="text-lg font-semibold mb-4">Chi tiết sự cố y tế</h3>
+        <div className="p-6">
+          <h3 className="text-xl font-semibold mb-4">Chi tiết sự cố y tế</h3>
           {!selectedIncident ? (
             <div>Không tìm thấy thông tin sự cố.</div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 text-gray-800">
               <div>
-                <b>Học sinh:</b> {selectedIncident.studentId}
+                <b>Học sinh:</b> {selectedIncident.studentName}
               </div>
               <div>
                 <b>Loại sự cố:</b> {selectedIncident.type}
               </div>
               <div>
-                <b>Mô tả:</b>{" "}
-                {selectedIncident.description ||
-                  selectedIncident.note ||
-                  selectedIncident.details ||
-                  "Không có mô tả"}
+                <b>Mô tả:</b> {selectedIncident.description || "Không có mô tả"}
               </div>
               <div>
                 <b>Trạng thái:</b> {selectedIncident.status}
               </div>
               <div>
                 <b>Ngày tạo:</b>{" "}
-                {typeof selectedIncident.createdTime === "string" &&
-                selectedIncident.createdTime
+                {selectedIncident.createdTime
                   ? new Date(selectedIncident.createdTime).toLocaleDateString(
                       "vi-VN"
                     )
@@ -597,6 +642,110 @@ export default function ManagerMedicalIncident() {
               Yêu cầu thuốc
             </label>
           </div>
+          {/* Đơn thuốc động */}
+          {requireMedicine && (
+            <div className="border rounded-lg p-4 mb-4 bg-blue-50">
+              <h4 className="font-semibold mb-2 text-blue-700">
+                Thông tin thuốc
+              </h4>
+              {medicines.map((med, idx) => (
+                <div key={idx} className="mb-4 border-b pb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-blue-700">
+                      Thuốc {idx + 1}
+                    </span>
+                    {medicines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMedicines(medicines.filter((_, i) => i !== idx))
+                        }
+                        className="text-red-500"
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+                  {/* Tên thuốc */}
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Tên thuốc *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nhập tên thuốc"
+                      value={med.medicationName}
+                      onChange={(e) => {
+                        const arr = [...medicines];
+                        arr[idx].medicationName = e.target.value;
+                        setMedicines(arr);
+                      }}
+                      className="w-full border rounded px-2 py-1"
+                    />
+                  </div>
+                  {/* Liều lượng */}
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Liều lượng *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="VD: 2 viên/lần"
+                      value={med.dosage}
+                      onChange={(e) => {
+                        const arr = [...medicines];
+                        arr[idx].dosage = e.target.value;
+                        setMedicines(arr);
+                      }}
+                      className="w-full border rounded px-2 py-1"
+                    />
+                  </div>
+                  {/* Tổng số lượng */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Tổng số lượng *
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="Số lượng"
+                      value={med.totalQuantity}
+                      onChange={(e) => {
+                        const arr = [...medicines];
+                        arr[idx].totalQuantity = Number(e.target.value);
+                        setMedicines(arr);
+                      }}
+                      className="w-full border rounded px-2 py-1"
+                    />
+                  </div>
+                </div>
+              ))}
+              {/* Thêm thuốc */}
+              <button
+                type="button"
+                onClick={() =>
+                  setMedicines([
+                    ...medicines,
+                    {
+                      medicationName: "",
+                      form: "",
+                      dosage: "",
+                      route: "",
+                      frequency: 1,
+                      totalQuantity: 1,
+                      timeToAdminister: [""],
+                      startDate: "",
+                      endDate: "",
+                      notes: "",
+                    },
+                  ])
+                }
+                className="text-sm text-blue-600 hover:underline mt-2"
+              >
+                + Thêm thuốc
+              </button>
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <label className="block text-sm font-semibold text-gray-700">
               Loại sự cố <span className="text-red-500">*</span>
@@ -661,227 +810,6 @@ export default function ManagerMedicalIncident() {
               }
             />
           </div>
-          {/* Nếu yêu cầu thuốc, hiển thị phần nhập thuốc */}
-          {requireMedicine && (
-            <div className="border rounded-lg p-4 mb-4 bg-blue-50">
-              <h4 className="font-semibold mb-2 text-blue-700">
-                Thông tin thuốc
-              </h4>
-              {medicines.map((med, idx) => (
-                <div key={idx} className="mb-6 border-b pb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold text-blue-700">
-                      Thuốc {idx + 1}
-                    </span>
-                    {medicines.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setMedicines(medicines.filter((_, i) => i !== idx))
-                        }
-                        className="text-red-500 px-2"
-                      >
-                        X
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Tên thuốc *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Nhập tên thuốc"
-                        value={med.medicationName}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].medicationName = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Dạng thuốc
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="VD: Viên nén, Siro..."
-                        value={med.form}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].form = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Liều lượng *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="VD: 2 viên/lần, 5ml/lần"
-                        value={med.dosage}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].dosage = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Cách dùng
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="VD: Uống, Tiêm..."
-                        value={med.route}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].route = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Tổng số lượng *
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        placeholder="Số lượng"
-                        value={med.totalQuantity}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].totalQuantity = Number(e.target.value);
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Tần suất (lần/ngày)
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        placeholder="Tần suất"
-                        value={med.frequency}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].frequency = Number(e.target.value);
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Thời gian cho thuốc trong ngày
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="VD: 08:00, 12:00, 18:00"
-                        value={med.timeToAdminister.join(", ")}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].timeToAdminister = e.target.value
-                            .split(",")
-                            .map((s) => s.trim());
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Ngày bắt đầu
-                      </label>
-                      <input
-                        type="date"
-                        value={med.startDate}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].startDate = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Ngày kết thúc
-                      </label>
-                      <input
-                        type="date"
-                        value={med.endDate}
-                        onChange={(e) => {
-                          const newMeds = [...medicines];
-                          newMeds[idx].endDate = e.target.value;
-                          setMedicines(newMeds);
-                        }}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Ghi chú
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ghi chú thêm (nếu có)"
-                      value={med.notes}
-                      onChange={(e) => {
-                        const newMeds = [...medicines];
-                        newMeds[idx].notes = e.target.value;
-                        setMedicines(newMeds);
-                      }}
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() =>
-                  setMedicines([
-                    ...medicines,
-                    {
-                      medicationName: "",
-                      form: "",
-                      dosage: "",
-                      route: "",
-                      frequency: 1,
-                      totalQuantity: 1,
-                      timeToAdminister: [""],
-                      startDate: "",
-                      endDate: "",
-                      notes: "",
-                    },
-                  ])
-                }
-                className="text-blue-600 hover:underline text-sm mt-2"
-              >
-                + Thêm thuốc
-              </button>
-            </div>
-          )}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"

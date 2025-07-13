@@ -14,7 +14,7 @@ export async function FecthCreateMedicalRequest(
   try {
     await ApiClient<MedicalRequestCreateUpdateViewModel>({
       method: "POST",
-      endpoint: "/medical/request",
+      endpoint: "/medical-request",
       data: medical,
     });
     return true;
@@ -33,7 +33,7 @@ export async function FecthMedicalRequest(): Promise<
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: "/medical/request",
+      endpoint: "/medical-request",
     });
     return response.data;
   } catch (err: unknown) {
@@ -51,7 +51,7 @@ export async function FecthMedicalRequestById(
   try {
     const response = await ApiClient<MedicalRequestViewModel>({
       method: "GET",
-      endpoint: `/medical/request/${id}`,
+      endpoint: `/medical-request/${id}`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -73,7 +73,7 @@ export async function FecthUpdateMedicalRequest(
   try {
     await ApiClient<MedicalRequestCreateUpdateViewModel>({
       method: "PUT",
-      endpoint: `/medical/request/${id}`,
+      endpoint: `/medical-request/${id}`,
       data: medicalRequest,
     });
     return true;
@@ -91,7 +91,7 @@ export async function FecthDeleteMedicalRequest(id: string): Promise<boolean> {
   try {
     await ApiClient({
       method: "DELETE",
-      endpoint: `/medical/request/${id}`,
+      endpoint: `/medical-request/${id}`,
     });
     return true;
   } catch (err: unknown) {
@@ -109,7 +109,7 @@ export async function FecthMedicalRequestByStudent(
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/student/${studentId}`,
+      endpoint: `/medical-request/student/${studentId}`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -129,7 +129,7 @@ export async function FecthMedicalRequestByParent(
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/parent/${parentId}`,
+      endpoint: `/medical-request/parent/${parentId}`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -149,7 +149,7 @@ export async function FecthMedicalRequestByDate(
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/daily/${date}`,
+      endpoint: `/medical-request/daily/${date}`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -169,7 +169,7 @@ export async function FecthMedicalRequestToday(): Promise<
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/daily/today`,
+      endpoint: `/medical-request/daily/today`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -193,7 +193,7 @@ export async function FecthMedicalRequestSearch(
           `${encodeURIComponent(String(k))}=${encodeURIComponent(String(v))}`
       )
       .join("&");
-    const endpoint = `/medical/request/search${query ? `?${query}` : ""}`;
+    const endpoint = `/medical-request/search${query ? `?${query}` : ""}`;
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
       endpoint,
@@ -214,7 +214,7 @@ export async function FecthMedicalRequestHistoryCompletedByDate(
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/history/completed/${date}`,
+      endpoint: `/medical-request/history/completed/${date}`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -234,7 +234,7 @@ export async function FecthMedicalRequestHistoryCompletedToday(): Promise<
   try {
     const response = await ApiClient<ListMedicalRequestViewModel[]>({
       method: "GET",
-      endpoint: `/medical/request/history/completed/today`,
+      endpoint: `/medical-request/history/completed/today`,
     });
     return response.data;
   } catch (err: unknown) {
@@ -254,7 +254,7 @@ export async function FecthCreateMedicalAdministration(
   try {
     await ApiClient({
       method: "POST",
-      endpoint: "/medical/request/administration",
+      endpoint: "/medical-request/administration",
       data,
     });
     return true;

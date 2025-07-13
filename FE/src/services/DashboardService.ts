@@ -25,7 +25,7 @@ export async function FetchDashboardStats(): Promise<DashboardStats> {
       }),
       ApiClient<{ total: number }>({
         method: "GET",
-        endpoint: "/medical/request/daily/today/count",
+        endpoint: "/medical-request/daily/today/count",
       }),
       ApiClient<{ count: number }>({
         method: "GET",
