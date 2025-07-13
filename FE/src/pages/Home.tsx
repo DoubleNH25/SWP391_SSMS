@@ -1,627 +1,224 @@
-import React, { useEffect, useState } from "react";
-import { DecodeJWT } from "@/utils/DecodeJWT";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import PageHeader from "@/components/ui/PageHeader";
-import {
-  LayoutDashboard,
-  Users,
-  Clock,
-  Stethoscope,
-  Pill,
-  ListTodo,
-  Activity,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import {
-  FetchDashboardStats,
-  DashboardStats,
-} from "@/services/DashboardService";
-import { FetchAllBlogs } from "@/services/BlogService";
-import { BlogResponse } from "@/types/Blog";
+import { motion } from "framer-motion";
+import BlogFlashCard from "@/components/BlogFlashCard";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
-const BlogSlider = () => {
-  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+const features = [
+  {
+    icon: "🩺",
+    title: "Hồ sơ sức khỏe học sinh",
+    desc: "Quản lý, tra cứu thông tin sức khỏe, tiêm chủng, bệnh sử của từng học sinh.",
+  },
+  {
+    icon: "🚑",
+    title: "Sự cố y tế & cấp cứu",
+    desc: "Ghi nhận, xử lý và theo dõi các sự cố y tế, hỗ trợ phản ứng nhanh.",
+  },
+  {
+    icon: "💊",
+    title: "Đơn thuốc & lịch sử dùng thuốc",
+    desc: "Quản lý đơn thuốc, lịch sử cấp phát thuốc, nhắc nhở uống thuốc.",
+  },
+  {
+    icon: "📢",
+    title: "Thông báo & tư vấn y tế",
+    desc: "Gửi thông báo, tư vấn sức khỏe, kết nối phụ huynh và nhà trường.",
+  },
+  {
+    icon: "📈",
+    title: "Thống kê & báo cáo",
+    desc: "Báo cáo sức khỏe toàn trường, thống kê tiêm chủng, sự cố, bệnh tật.",
+  },
+];
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const data = await FetchAllBlogs();
-        setBlogs(data);
-      } catch (error) {
-        console.error("Không thể tải danh sách bài viết:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBlogs();
-  }, []);
-
-  useEffect(() => {
-    if (blogs.length > 0) {
-      const timer = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % blogs.length);
-      }, 5000); // Chuyển slide sau mỗi 5 giây
-
-      return () => clearInterval(timer);
-    }
-  }, [blogs]);
-
-  const goToNextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % blogs.length);
-  };
-
-  const goToPrevSlide = () => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + blogs.length) % blogs.length
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[300px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (blogs.length === 0) {
-    return (
-      <div className="text-center text-gray-500">Không có bài viết nào.</div>
-    );
-  }
-
-  return (
-    <div className="relative h-[300px] group">
-      <div className="absolute inset-0 overflow-hidden rounded-lg">
-        {blogs[currentIndex]?.image && (
-          <img
-            src={blogs[currentIndex].image}
-            alt={blogs[currentIndex].title}
-            className="w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-          <h3 className="text-xl font-semibold line-clamp-2">
-            {blogs[currentIndex]?.title}
-          </h3>
-        </div>
-      </div>
-
-      <button
-        onClick={goToPrevSlide}
-        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-
-      <button
-        onClick={goToNextSlide}
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
-
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-        {blogs.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              index === currentIndex ? "bg-white w-4" : "bg-white/60"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
+const benefits = [
+  {
+    icon: "⏱️",
+    title: "Tiết kiệm thời gian",
+    desc: "Tự động hóa quy trình, giảm tải công việc giấy tờ cho y tế trường.",
+  },
+  {
+    icon: "🔒",
+    title: "Bảo mật & an toàn",
+    desc: "Dữ liệu sức khỏe được bảo vệ, chỉ người có quyền mới truy cập.",
+  },
+  {
+    icon: "👨‍👩‍👧‍👦",
+    title: "Kết nối phụ huynh",
+    desc: "Phụ huynh theo dõi sức khỏe con mọi lúc, nhận thông báo tức thì.",
+  },
+];
 
 export default function Home() {
-  const [role, setRole] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
-  const [stats, setStats] = useState<DashboardStats>({
-    totalStudents: 0,
-    totalUsers: 0,
-    totalNurses: 0,
-    pendingEvents: 0,
-    processingPrescriptions: 0,
-    testEvents: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const handleScrollTo = (id: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // Dữ liệu mẫu cho bảng sự kiện y tế
-  const medicalEvents = [
-    { product: "Tiêm phòng sởi", price: "-", status: "CHỜ DUYỆT" },
-    { product: "Khám định kỳ", price: "-", status: "ĐÃ DUYỆT" },
-    { product: "Khám răng", price: "-", status: "CHỜ DUYỆT" },
-  ];
-
-  // Dữ liệu mẫu cho biểu đồ
-  const chartData = [
-    { label: "6A", value: 40 },
-    { label: "7A", value: 60 },
-    { label: "8A", value: 80 },
-    { label: "9A", value: 100 },
-    { label: "10A", value: 70 },
-  ];
+  const location = useLocation();
 
   useEffect(() => {
-    const payload = DecodeJWT();
-    if (payload) {
-      const role =
-        payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-      const name =
-        payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-      if (typeof role === "string") setRole(role);
-      if (typeof name === "string") setUserName(name);
+    const scrollToId = location.state?.scrollToId;
+    if (scrollToId) {
+      const timeout = setTimeout(() => {
+        const el = document.getElementById(scrollToId);
+        if (el) {
+          const yOffset = -80; // offset tránh bị header che
+          const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 100); // chờ Home render xong
+
+      // cleanup để tránh memory leak nếu rời khỏi trang
+      return () => clearTimeout(timeout);
     }
-  }, []);
+  }, [location.state]);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const data = await FetchDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Không thể tải dữ liệu thống kê:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  const StatCard = ({
-    title,
-    value,
-    icon,
-    trend,
-  }: {
-    title: string;
-    value: number;
-    icon: React.JSX.Element;
-    trend?: { value: number; isPositive: boolean };
-  }) => (
-    <Card className="relative overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-2">{value}</p>
-            {trend && (
-              <div
-                className={cn(
-                  "flex items-center mt-2 text-sm",
-                  trend.isPositive ? "text-green-600" : "text-red-600"
-                )}
+  return (
+    <div>
+      {/* Hero Section */}
+      <section className="min-h-[70vh] flex items-center bg-gradient-to-br from-blue-50 to-white relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-20">
+          <motion.div
+            className="space-y-7"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+          >
+            <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-blue-900">
+              Hệ thống <span className="text-blue-600">quản lý y tế</span>{" "}
+              trường học thông minh
+            </h1>
+            <p className="text-xl text-gray-700 leading-relaxed">
+              Kết nối nhà trường, phụ huynh và y tế – Bảo vệ sức khỏe học sinh
+              toàn diện, hiện đại và an toàn.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a
+                href="/dashboard"
+                className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
               >
-                <span>
-                  {trend.isPositive ? "↑" : "↓"} {trend.value}%
-                </span>
-                <span className="ml-1 text-gray-500">so với tháng trước</span>
-              </div>
-            )}
-          </div>
-          <div className="text-primary">{icon}</div>
+                Trải nghiệm ngay
+              </a>
+              <a
+                href="#features"
+                onClick={handleScrollTo("features")}
+                className="text-blue-700 font-semibold px-8 py-4 rounded-xl border border-blue-200 hover:bg-blue-50 transition-all duration-300"
+              >
+                Xem chức năng
+              </a>
+            </div>
+          </motion.div>
+          <motion.div
+            className="flex justify-center items-center"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.2, ease: "easeOut" }}
+          >
+            <div className="w-80 h-80 lg:w-[420px] lg:h-[420px] bg-gradient-to-br from-blue-400 to-blue-200 rounded-[2.5rem] flex flex-col items-center justify-center text-[5rem] lg:text-[7rem] text-white shadow-2xl select-none">
+              <span className="mb-2">🩺</span>
+              <span className="text-2xl font-bold">Y TẾ TRƯỜNG HỌC</span>
+            </div>
+          </motion.div>
         </div>
-      </CardContent>
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 to-primary/40"></div>
-    </Card>
-  );
+      </section>
 
-  const renderAdminDashboard = () => (
-    <>
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <Activity className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tổng quan</p>
-                  <p className="text-2xl font-bold">{stats.totalUsers}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tổng số học sinh</p>
-                  <p className="text-2xl font-bold">{stats.totalStudents}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Clock className="w-6 h-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
-                  <p className="text-2xl font-bold">{stats.pendingEvents}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Stethoscope className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Số nhân viên y tế</p>
-                  <p className="text-2xl font-bold">{stats.totalNurses}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <Pill className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
-                  <p className="text-2xl font-bold">
-                    {stats.processingPrescriptions}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <ListTodo className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
-                  <p className="text-2xl font-bold">{stats.testEvents}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">Sự kiện</th>
-                      <th className="text-left py-3 px-4">Chi phí</th>
-                      <th className="text-left py-3 px-4">Trạng thái</th>
-                      <th className="text-left py-3 px-4">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {medicalEvents.map((event, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-3 px-4">{event.product}</td>
-                        <td className="py-3 px-4">{event.price}</td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm ${
-                              event.status === "ĐÃ DUYỆT"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-orange-100 text-orange-800"
-                            }`}
-                          >
-                            {event.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button className="text-blue-600 hover:text-blue-800">
-                            Chi tiết
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">
-                Tin mới / Cập nhật y tế
-              </h2>
-              <BlogSlider />
-            </div>
-          </div>
-        </>
-      )}
-    </>
-  );
-
-  const renderManagerDashboard = () => (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-lg">
-              <Activity className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Tổng quan</p>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Tổng số học sinh</p>
-              <p className="text-2xl font-bold">{stats.totalStudents}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Sự kiện chờ duyệt</p>
-              <p className="text-2xl font-bold">{stats.pendingEvents}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Stethoscope className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Số nhân viên y tế</p>
-              <p className="text-2xl font-bold">{stats.totalNurses}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-lg">
-              <Pill className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Đơn thuốc đang xử lý</p>
-              <p className="text-2xl font-bold">
-                {stats.processingPrescriptions}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-lg">
-              <ListTodo className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Sự kiện xét nghiệm</p>
-              <p className="text-2xl font-bold">{stats.testEvents}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Sự kiện y tế</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Sự kiện</th>
-                  <th className="text-left py-3 px-4">Chi phí</th>
-                  <th className="text-left py-3 px-4">Trạng thái</th>
-                  <th className="text-left py-3 px-4">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {medicalEvents.map((event, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="py-3 px-4">{event.product}</td>
-                    <td className="py-3 px-4">{event.price}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          event.status === "ĐÃ DUYỆT"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-orange-100 text-orange-800"
-                        }`}
-                      >
-                        {event.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        Chi tiết
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">
-            Tin mới / Cập nhật y tế
+      {/* Section: Chức năng nổi bật */}
+      <section id="features" className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-blue-700">
+            Chức năng nổi bật
           </h2>
-          <div className="h-[300px] flex items-end justify-between gap-4 px-4">
-            {chartData.map((item, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className="w-full bg-blue-500 rounded-t-lg transition-all duration-300 hover:bg-blue-600"
-                  style={{ height: `${item.value}%` }}
-                ></div>
-                <span className="mt-2 text-sm text-gray-600">{item.label}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-blue-50 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="text-5xl mb-4">{item.icon}</div>
+                <h3 className="font-bold text-lg mb-2 text-blue-700">
+                  {item.title}
+                </h3>
+                <p className="text-gray-600 text-base">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
-    </>
-  );
+      </section>
 
-  const renderNurseDashboard = () => (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatCard
-          title="Tổng số học sinh"
-          value={stats.totalStudents}
-          trend={{ value: 12, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Sự kiện đã duyệt"
-          value={stats.processingPrescriptions}
-          trend={{ value: 15, isPositive: true }}
-          icon={
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-      </div>
-
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Lịch trình hôm nay
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for schedule */}
-              <p className="text-sm text-gray-500">
-                Không có sự kiện nào được lên lịch cho hôm nay.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-
-  const renderParentDashboard = () => (
-    <>
-      <Card className="mb-8">
-        <CardContent className="p-8 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Chào mừng, {userName}!
+      {/* Section: Lợi ích */}
+      <section className="py-16 bg-gradient-to-br from-blue-50 to-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-blue-700">
+            Lợi ích khi sử dụng hệ thống
           </h2>
-          <p className="mt-2 text-gray-600">
-            Xem hồ sơ sức khỏe của con bạn và cập nhật các sự kiện y tế của
-            chúng.
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {benefits.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:-translate-y-2 hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="text-5xl mb-4">{item.icon}</div>
+                <h3 className="font-bold text-lg mb-2 text-blue-700">
+                  {item.title}
+                </h3>
+                <p className="text-gray-600 text-base">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section: Blog Flash Cards */}
+      <section id="blog-section" className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-blue-700">
+              Bài viết mới nhất
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Khám phá những thông tin y tế, dinh dưỡng và hoạt động mới nhất từ
+              hệ thống y tế trường học
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="mb-12"
+          >
+            <BlogFlashCard autoPlayInterval={6000} maxBlogs={5} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Section: CTA Đăng nhập */}
+      <section className="py-16 bg-white">
+        <div className="max-w-2xl mx-auto px-6 text-center rounded-3xl shadow-xl py-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-blue-700">
+            Sẵn sàng trải nghiệm?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Đăng nhập để bắt đầu quản lý y tế trường học một cách thông minh,
+            hiệu quả và an toàn!
           </p>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Hồ sơ sức khỏe của trẻ
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for health profiles */}
-              <p className="text-sm text-gray-500">
-                Không có hồ sơ sức khỏe để hiển thị.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Sự kiện y tế sắp tới
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Placeholder for upcoming events */}
-              <p className="text-sm text-gray-500">
-                Không có sự kiện sắp tới nào được lên lịch.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <PageHeader
-        title="Bảng điều khiển"
-        icon={<LayoutDashboard className="w-6 h-6 text-blue-600" />}
-        description={`Chào mừng trở lại, ${userName}`}
-      />
-
-      {role === "Admin" && renderAdminDashboard()}
-      {role === "Manager" && renderManagerDashboard()}
-      {role === "Nurse" && renderNurseDashboard()}
-      {role === "Parent" && renderParentDashboard()}
+          <a
+            href="/login"
+            className="bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all"
+          >
+            Đăng nhập
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

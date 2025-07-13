@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import PageHeader from "@/components/ui/PageHeader";
+import { showToast } from "@/components/ui/Toast";
 import {
   FecthActivityMedicalEvent,
   UpdateActivityConsentStatus,
@@ -29,8 +30,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function ManagerActivityMedical() {
   const navigate = useNavigate();
@@ -58,7 +57,12 @@ export default function ManagerActivityMedical() {
     setError(null);
     try {
       const response = await FecthActivityMedicalEvent();
-      setActivityMedicalEvent(response);
+      const sorted = [...response].sort((a, b) => {
+        const isPendingA = a.status === "Pending" ? 0 : 1;
+        const isPendingB = b.status === "Pending" ? 0 : 1;
+        return isPendingA - isPendingB;
+      });
+      setActivityMedicalEvent(sorted);
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch activity medical events:", error);
@@ -169,26 +173,29 @@ export default function ManagerActivityMedical() {
         statusValue as 1 | 2
       );
 
-      toast.success(
+      showToast.success(
         `Đã ${decision ? "chấp nhận" : "từ chối"} tham gia sự kiện thành công!`
       );
       setShowConfirmation(false);
       // Refresh the data
       await fetchActivityMedicalEvent();
+      handleBack();
     } catch (error) {
       console.error("Error updating consent status:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại.");
+      showToast.error(
+        "Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleBack = () => {
-    navigate("/activity-medical");
+    navigate("/dashboard/activity-medical");
   };
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/activity-medical/${eventId}`);
+    navigate(`/dashboard/activity-medical/${eventId}`);
   };
 
   const filteredEvents = activityMedicalEvent.filter((event) => {
@@ -225,8 +232,6 @@ export default function ManagerActivityMedical() {
 
   return (
     <div>
-      <ToastContainer position="top-right" autoClose={3000} />
-
       <div className="p-6 min-h-screen">
         {loading && (
           <div className="flex justify-center items-center h-full">
@@ -308,7 +313,6 @@ export default function ManagerActivityMedical() {
                             </p>
                           </div>
                         </div>
-
 
                         <div className="flex items-start gap-3">
                           <User className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -483,7 +487,7 @@ export default function ManagerActivityMedical() {
                     )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tìm kiếm
                     </label>
@@ -533,21 +537,6 @@ export default function ManagerActivityMedical() {
                       onChange={(e) => setDateFilter(e.target.value)}
                       className="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Loại sự kiện
-                    </label>
-                    <select
-                      value={typeFilter}
-                      onChange={(e) => setTypeFilter(e.target.value)}
-                      className="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    >
-                      <option value="all">Tất cả loại</option>
-                      <option value="khám">Khám sức khỏe</option>
-                      <option value="tiêm">Tiêm chủng</option>
-                      <option value="tư vấn">Tư vấn sức khỏe</option>
-                    </select>
                   </div>
                 </div>
                 {(searchTerm ||

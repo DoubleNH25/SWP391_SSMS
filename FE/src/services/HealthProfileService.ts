@@ -1,17 +1,24 @@
 import { ConselingSchedules } from "@/types/ConselingSchedules";
-import { HealthProfile, HealthProfileUpdate, Student } from "@/types/HealthProfile";
-import { MedicalHealthCheckupRecord } from "@/types/MedicalRecord";
+import {
+  HealthProfile,
+  HealthProfileUpdate,
+  Student,
+} from "@/types/HealthProfile";
+import {
+  MedicalHealthCheckupRecord,
+  MedicalVaccinationRecord,
+} from "@/types/MedicalRecord";
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthHealthProfile(): Promise<Student[]> {
-  if (!localStorage.getItem('token')) {
-    console.error('User is not authenticated');
+  if (!localStorage.getItem("token")) {
+    console.error("User is not authenticated");
     return [];
   }
   try {
     const response = await ApiClient<Student[]>({
-      method: 'GET',
-      endpoint: '/parents/students',
+      method: "GET",
+      endpoint: "/parents/students",
     });
     return response?.data || [];
   } catch (err) {
@@ -20,36 +27,61 @@ export async function FecthHealthProfile(): Promise<Student[]> {
   }
 }
 
-export async function FecthUpdateHealthProfile(studentId: string, profile: HealthProfileUpdate): Promise<boolean> {
-  if (!studentId || typeof studentId !== 'string') {
-    throw new Error('Student ID is required');
+export async function FecthUpdateHealthProfile(
+  studentId: string,
+  profile: HealthProfileUpdate
+): Promise<boolean> {
+  if (!studentId || typeof studentId !== "string") {
+    throw new Error("Student ID is required");
   }
 
-  if (!profile || typeof profile !== 'object') {
-    throw new Error('Invalid health profile data');
+  if (!profile || typeof profile !== "object") {
+    throw new Error("Invalid health profile data");
   }
   try {
     await ApiClient<HealthProfileUpdate>({
-      method: 'PUT',
+      method: "PUT",
       endpoint: `/parents/students/${studentId}/health-profile`,
-      data: profile
+      data: profile,
     });
     return true;
   } catch (err) {
     console.error(`Failed to update health profile: ${err}`);
-    throw new Error('Unable to update health profile. Please try again.');
+    throw new Error("Unable to update health profile. Please try again.");
   }
 }
 
-export async function FecthHealthCheckup(): Promise<MedicalHealthCheckupRecord[]> {
-  if (!localStorage.getItem('token')) {
-    console.error('User is not authenticated');
+export async function FecthHealthCheckup(): Promise<
+  MedicalHealthCheckupRecord[]
+> {
+  if (!localStorage.getItem("token")) {
+    console.error("User is not authenticated");
     return [];
   }
   try {
     const response = await ApiClient<MedicalHealthCheckupRecord[]>({
-      method: 'GET',
-      endpoint: '/parents/get-all-student-health-checkup',
+      method: "GET",
+      endpoint: "/parents/get-all-student-health-checkup",
+    });
+    console.log(response.data);
+    return response?.data || [];
+  } catch (err) {
+    console.error(`Failed to get health profile: ${err}`);
+    return [];
+  }
+}
+
+export async function FecthVaccinationRecords(): Promise<
+  MedicalVaccinationRecord[]
+> {
+  if (!localStorage.getItem("token")) {
+    console.error("User is not authenticated");
+    return [];
+  }
+  try {
+    const response = await ApiClient<MedicalVaccinationRecord[]>({
+      method: "GET",
+      endpoint: "/parents/get-all-vaccination-records",
     });
     return response?.data || [];
   } catch (err) {
@@ -58,16 +90,24 @@ export async function FecthHealthCheckup(): Promise<MedicalHealthCheckupRecord[]
   }
 }
 
-export async function FecthCreateConselingSchedule(data: ConselingSchedules): Promise<boolean> {
-  if (!data || !data.studentId || !data.healthCheckupId || !data.requestDate) {
+export async function FecthCreateConselingSchedule(
+  data: ConselingSchedules
+): Promise<boolean> {
+  if (
+    !data ||
+    !data.studentId ||
+    !data.healthCheckupId ||
+    !data.requestedDate
+  ) {
     throw new Error("Please enter complete conseling schedule information");
   }
   try {
-    await ApiClient<ConselingSchedules>({
-      method: 'POST',
-      endpoint: '/nurse/conseling-schedules',
+    const rs = await ApiClient<ConselingSchedules>({
+      method: "POST",
+      endpoint: "/nurse/conseling-schedules",
       data: data,
     });
+    console.log(rs.data);
     return true;
   } catch (err) {
     console.error("Failed to create conseling schedule:", err);
@@ -75,14 +115,16 @@ export async function FecthCreateConselingSchedule(data: ConselingSchedules): Pr
   }
 }
 
-export async function FecthHealthProfileByStudentId(studentId: string): Promise<HealthProfile | null> {
-  if (!localStorage.getItem('token')) {
-    console.error('User is not authenticated');
+export async function FecthHealthProfileByStudentId(
+  studentId: string
+): Promise<HealthProfile | null> {
+  if (!localStorage.getItem("token")) {
+    console.error("User is not authenticated");
     return null;
   }
   try {
     const response = await ApiClient<HealthProfile>({
-      method: 'GET',
+      method: "GET",
       endpoint: `/nurse/health-profiles/${studentId}`,
     });
     return response?.data || null;
@@ -92,50 +134,56 @@ export async function FecthHealthProfileByStudentId(studentId: string): Promise<
   }
 }
 
-export async function FecthUpdateHealthProfileNurse(studentId: string, profile: HealthProfileUpdate): Promise<boolean> {
-  if (!studentId || typeof studentId !== 'string') {
-    throw new Error('Student ID is required');
+export async function FecthUpdateHealthProfileNurse(
+  studentId: string,
+  profile: HealthProfileUpdate
+): Promise<boolean> {
+  if (!studentId || typeof studentId !== "string") {
+    throw new Error("Student ID is required");
   }
 
-  if (!profile || typeof profile !== 'object') {
-    throw new Error('Invalid health profile data');
+  if (!profile || typeof profile !== "object") {
+    throw new Error("Invalid health profile data");
   }
   try {
     await ApiClient<HealthProfileUpdate>({
-      method: 'PUT',
+      method: "PUT",
       endpoint: `/nurse/health-profiles/${studentId}`,
-      data: profile
+      data: profile,
     });
     return true;
   } catch (err) {
     console.error(`Failed to update health profile: ${err}`);
-    throw new Error('Unable to update health profile. Please try again.');
+    throw new Error("Unable to update health profile. Please try again.");
   }
 }
 
 export async function DeleteHealthProfile(studentId: string): Promise<boolean> {
-  if (!localStorage.getItem('token')) {
-    throw new Error('User is not authenticated');
+  if (!localStorage.getItem("token")) {
+    throw new Error("User is not authenticated");
   }
   try {
     await ApiClient({
-      method: 'DELETE',
+      method: "DELETE",
       endpoint: `/nurse/health-profiles/${studentId}`,
     });
     return true;
   } catch (err) {
     console.error(`Failed to delete health profile: ${err}`);
-    throw new Error('Unable to delete health profile. Please try again.');
+    throw new Error("Unable to delete health profile. Please try again.");
   }
 }
 
-export async function FecthCreateHealthProfile(studentId: string, data: HealthProfileUpdate): Promise<boolean> {
+export async function FecthCreateHealthProfile(
+  studentId: string,
+  data: HealthProfileUpdate
+): Promise<boolean> {
   if (!data || !studentId) {
     throw new Error("Please enter complete health profile information");
   }
   try {
     await ApiClient<HealthProfileUpdate>({
-      method: 'POST',
+      method: "POST",
       endpoint: `/nurse/health-profiles?studentId=${studentId}`,
       data: data,
     });
@@ -145,5 +193,3 @@ export async function FecthCreateHealthProfile(studentId: string, data: HealthPr
     throw new Error("Unable to create health profile. Please try again.");
   }
 }
-
-

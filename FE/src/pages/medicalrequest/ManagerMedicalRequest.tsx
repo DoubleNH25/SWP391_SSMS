@@ -1,50 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Pill, ArrowLeft, Plus } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import MedicationRequestsTab from "@/components/medicalrequest/MedicationRequestsTab";
 import MedicationScheduleTab from "@/components/medicalrequest/MedicationScheduleTab";
 import MedicationHistoryTab from "@/components/medicalrequest/MedicationHistoryTab";
-import MultiMedicationModal from "@/components/medicalrequest/MultiMedicationModal";
 import UpdateMedicationModal from "@/components/medicalrequest/UpdateMedicationModal";
 import ConfirmMedicationModal from "@/components/medicalrequest/ConfirmMedicationModal";
 import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmationModal";
-import { ToastProvider } from "@/components/ui/Toast";
+import { showToast } from "@/components/ui/Toast";
+import {
+  FecthMedicalRequest,
+  FecthMedicalRequestById,
+} from "@/services/MedicalRequest";
+import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
+import { MedicationHistoryRecord } from "@/components/medicalrequest/MedicationHistoryTab";
+import AddMedicationModal from "@/components/medicalrequest/AddMedicationModal";
+import { Student } from "@/types/Student";
+import { DecodeJWT } from "@/utils/DecodeJWT";
+import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
 
 const ManagerMedicalRequest = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Toast utility function
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const toastOptions = {
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    };
-
-    switch (type) {
-      case 'success':
-        toast.success(message, toastOptions);
-        break;
-      case 'error':
-        toast.error(message, toastOptions);
-        break;
-      case 'info':
-        toast.info(message, toastOptions);
-        break;
-      default:
-        toast(message, toastOptions);
-    }
-  };
   const [activeTab, setActiveTab] = useState("requests");
-  const [showMultiMedicationModal, setShowMultiMedicationModal] =
-    useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -52,14 +33,16 @@ const ManagerMedicalRequest = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmNote, setConfirmNote] = useState("");
   const [selectedRequestForConfirm, setSelectedRequestForConfirm] =
-    useState<any>(null);
+    useState<ListMedicalRequestViewModel | null>(null);
 
   // Delete and Update modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedRequestForAction, setSelectedRequestForAction] =
-    useState<any>(null);
-  const [updateRequest, setUpdateRequest] = useState<any>({});
+    useState<ListMedicalRequestViewModel | null>(null);
+  const [updateRequest, setUpdateRequest] = useState<
+    Partial<ListMedicalRequestViewModel>
+  >({});
 
   // History filter and pagination states
   const [historySearchTerm, setHistorySearchTerm] = useState("");
@@ -82,143 +65,96 @@ const ManagerMedicalRequest = () => {
   );
   const navigate = useNavigate();
 
-  const [medicationHistory, setMedicationHistory] = useState<any[]>([
-    // Sample data for demo
-    {
-      id: 1,
-      studentName: "Nguyễn Minh An",
-      medicationName: "Paracetamol 250mg",
-      dosage: "2 viên/lần",
-      administeredTime: new Date(Date.now() - 30 * 60 * 1000).toLocaleString(
-        "vi-VN"
-      ),
-      administeredBy: "Y tá Lan",
-      note: "Học sinh đã uống thuốc sau bữa ăn trưa",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 2,
-      studentName: "Trần Thị Hương",
-      medicationName: "Vitamin C 500mg",
-      dosage: "5ml/lần",
-      administeredTime: new Date(
-        Date.now() - 2 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Minh",
-      note: "Đã lắc đều trước khi cho uống",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 3,
-      studentName: "Lê Văn Đức",
-      medicationName: "Amoxicillin 125mg",
-      dosage: "1 viên/lần",
-      administeredTime: new Date(
-        Date.now() - 4 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Lan",
-      note: "Cho uống với nước ấm",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 4,
-      studentName: "Phạm Thị Mai",
-      medicationName: "Siro ho",
-      dosage: "10ml/lần",
-      administeredTime: new Date(
-        Date.now() - 6 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Minh",
-      note: "Học sinh ho nhiều, đã cho uống đúng liều",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 5,
-      studentName: "Hoàng Văn Nam",
-      medicationName: "Thuốc nhỏ mắt",
-      dosage: "2 giọt/mắt",
-      administeredTime: new Date(
-        Date.now() - 8 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Lan",
-      note: "Đã vệ sinh mắt trước khi nhỏ thuốc",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 6,
-      studentName: "Vũ Thị Linh",
-      medicationName: "Paracetamol 250mg",
-      dosage: "1 viên/lần",
-      administeredTime: new Date(
-        Date.now() - 10 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Minh",
-      note: "Học sinh sốt nhẹ, đã cho uống thuốc hạ sốt",
-      status: "Đã hoàn thành",
-    },
-    {
-      id: 7,
-      studentName: "Đặng Minh Tuấn",
-      medicationName: "Vitamin D3",
-      dosage: "1 viên/lần",
-      administeredTime: new Date(
-        Date.now() - 12 * 60 * 60 * 1000
-      ).toLocaleString("vi-VN"),
-      administeredBy: "Y tá Lan",
-      note: "Bổ sung vitamin theo chỉ định bác sĩ",
-      status: "Đã hoàn thành",
-    },
-  ]);
+  const [requests, setRequests] = useState<ListMedicalRequestViewModel[]>([]);
+  const [medicationHistory, setMedicationHistory] = useState<
+    MedicationHistoryRecord[]
+  >([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [students, setStudents] = useState<{ value: string; label: string }[]>(
+    []
+  );
+  // Xoá khai báo và setMedicines, setForms nếu không dùng ở đâu nữa
 
-  // Sample data
-  const [requests, setRequests] = useState([
-    {
-      uid: "MR001",
-      medicationRequestId: "REQ-2024-001",
-      studentId: "ST001",
-      parentId: "P001",
-      parentName: "Nguyễn Thị Lan",
-      phoneNumber: "0912345678",
-      medicationName: "Paracetamol 250mg",
-      form: "Tablet",
-      dosage: "2 viên/lần",
-      route: "Uống",
-      frequency: 2,
-      totalQuantity: 60,
-      remainingQuantity: 45,
-      timeToAdminister: ["07:00", "19:00"],
-      startDate: "2024-06-10",
-      endDate: "2024-06-20",
-      note: "Cho uống sau bữa ăn",
-      status: "active",
-      createdBy: "Y tá Minh",
-      createdDate: "2024-06-10",
-      studentName: "Nguyễn Minh An",
-    },
-    {
-      uid: "MR002",
-      medicationRequestId: "REQ-2024-002",
-      studentId: "ST002",
-      parentId: "P002",
-      parentName: "Trần Văn Hùng",
-      phoneNumber: "0987654321",
-      medicationName: "Vitamin C 500mg",
-      form: "Syrup",
-      dosage: "5ml/lần",
-      route: "Uống",
-      frequency: 1,
-      totalQuantity: 100,
-      remainingQuantity: 85,
-      timeToAdminister: ["12:00"],
-      startDate: "2024-06-12",
-      endDate: "2024-06-25",
-      note: "Lắc đều trước khi uống",
-      status: "active",
-      createdBy: "Y tá Lan",
-      createdDate: "2024-06-12",
-      studentName: "Trần Thị Hương",
-    },
-  ]);
+  // Đảm bảo chỉ có 1 lần khai báo:
+  const user = DecodeJWT() as {
+    sub?: string;
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+    [key: string]: string | undefined;
+  } | null;
+  console.log("JWT user:", user);
+  const isParent =
+    user &&
+    user["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
+      "Parent";
+  const parentId = isParent ? user?.sub : selectedStudent?.parentId || "";
+  console.log("parentId:", parentId);
+
+  useEffect(() => {
+    setLoading(true);
+    FecthMedicalRequest()
+      .then((data) => {
+        setRequests(data);
+        // Lấy lịch sử cho thuốc từ tất cả đơn thuốc
+        Promise.all(
+          data.map(async (req) => {
+            const detail = await FecthMedicalRequestById(req.id);
+            if (!detail) return [];
+            return detail.administrations.map((adm, idx) => ({
+              id: typeof adm.id === "number" ? adm.id : idx,
+              studentName: detail.studentName,
+              medicationName: detail.medicationName,
+              dosage: adm.doseGiven || req.dosage || "",
+              administeredTime: adm.administeredAt,
+              administeredBy: adm.administratorName || adm.administeredBy,
+              note: adm.notes || "",
+              status: adm.wasTaken ? "Hoàn thành" : "Chưa hoàn thành",
+            }));
+          })
+        ).then((all) => {
+          setMedicationHistory(all.flat());
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || "Lỗi khi lấy danh sách đơn thuốc");
+        setLoading(false);
+      });
+  }, []);
+
+  // Lấy danh sách học sinh, thuốc, dạng thuốc
+  useEffect(() => {
+    if (isParent) {
+      fetch("/api/parents/students", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => {
+          if (!res.ok) {
+            console.error(
+              "API /api/parents/students lỗi:",
+              res.status,
+              res.statusText
+            );
+            throw new Error("API error");
+          }
+          return res.json();
+        })
+        .then((data: Student[]) => {
+          console.log("API /api/parents/students trả về:", data);
+          setStudents(data.map((s) => ({ value: s.id, label: s.fullName })));
+        })
+        .catch((err) => {
+          console.error("Lỗi khi gọi API /api/parents/students:", err);
+        });
+    } else {
+      setStudents(requests.map((r) => ({ value: r.id, label: r.studentName })));
+      // Nếu là nurse, lấy parentId từ selectedStudent khi mở modal
+      if (selectedStudent && selectedStudent.parentId) {
+        // setParentId(selectedStudent.parentId); // This line is removed
+      }
+    }
+    // eslint-disable-next-line
+  }, [isParent, requests, selectedStudent]);
 
   const medicationForms = [
     "Viên nén",
@@ -233,13 +169,12 @@ const ManagerMedicalRequest = () => {
     "Vắc-xin",
     "Khác",
   ];
-  const routes = ["Uống", "Chích", "Ngậm", "Bôi ngoài da", "Nhỏ mắt", "Khác"];
 
   const handleAdministerMedication = (requestId: string, note?: string) => {
     setRequests(
       requests.map((req) => {
         if (
-          req.uid === requestId &&
+          req.id === requestId &&
           req.form !== "Cream" &&
           req.form !== "EyeDrop"
         ) {
@@ -258,13 +193,13 @@ const ManagerMedicalRequest = () => {
 
     // Show success toast with note if provided
     if (note) {
-      showToast(`Đã xác nhận cho thuốc thành công! Ghi chú: ${note}`, 'success');
+      showToast.success(`Đã xác nhận cho thuốc thành công! Ghi chú: ${note}`);
     } else {
-      showToast("Đã xác nhận cho thuốc thành công!", 'success');
+      showToast.success("Đã xác nhận cho thuốc thành công!");
     }
   };
 
-  const handleOpenConfirmModal = (request: any) => {
+  const handleOpenConfirmModal = (request: ListMedicalRequestViewModel) => {
     setSelectedRequestForConfirm(request);
     setConfirmNote("");
     setShowConfirmModal(true);
@@ -272,7 +207,7 @@ const ManagerMedicalRequest = () => {
 
   const handleConfirmAdministration = () => {
     if (selectedRequestForConfirm) {
-      handleAdministerMedication(selectedRequestForConfirm.uid, confirmNote);
+      handleAdministerMedication(selectedRequestForConfirm.id, confirmNote);
 
       // Add to medication history
       const historyRecord = {
@@ -298,27 +233,25 @@ const ManagerMedicalRequest = () => {
   };
 
   // Delete and Update modal functions
-  const handleOpenDeleteModal = (request: any) => {
+  const handleOpenDeleteModal = (request: ListMedicalRequestViewModel) => {
     setSelectedRequestForAction(request);
     setShowDeleteModal(true);
   };
 
-  const handleOpenUpdateModal = (request: any) => {
+  const handleOpenUpdateModal = (request: ListMedicalRequestViewModel) => {
     setSelectedRequestForAction(request);
     setUpdateRequest({
       parentName: request.parentName,
-      phoneNumber: request.phoneNumber,
       studentName: request.studentName,
       medicationName: request.medicationName,
       form: request.form,
       dosage: request.dosage,
-      route: request.route,
       frequency: request.frequency,
       totalQuantity: request.totalQuantity,
       timeToAdminister: [...request.timeToAdminister],
       startDate: request.startDate,
       endDate: request.endDate,
-      note: request.note,
+      status: request.status,
     });
     setShowUpdateModal(true);
   };
@@ -326,9 +259,9 @@ const ManagerMedicalRequest = () => {
   const handleConfirmDelete = () => {
     if (selectedRequestForAction) {
       setRequests(
-        requests.filter((req) => req.uid !== selectedRequestForAction.uid)
+        requests.filter((req) => req.id !== selectedRequestForAction.id)
       );
-      showToast("Đã xóa đơn thuốc thành công!", 'success');
+      showToast.success("Đã xóa đơn thuốc thành công!");
       setShowDeleteModal(false);
       setSelectedRequestForAction(null);
     }
@@ -338,12 +271,12 @@ const ManagerMedicalRequest = () => {
     if (selectedRequestForAction) {
       setRequests(
         requests.map((req) =>
-          req.uid === selectedRequestForAction.uid
+          req.id === selectedRequestForAction.id
             ? { ...req, ...updateRequest }
             : req
         )
       );
-      showToast("Đã cập nhật đơn thuốc thành công!", 'success');
+      showToast.success("Đã cập nhật đơn thuốc thành công!");
       setShowUpdateModal(false);
       setSelectedRequestForAction(null);
       setUpdateRequest({});
@@ -400,51 +333,34 @@ const ManagerMedicalRequest = () => {
     setScheduleSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
-  const handleMultiMedicationSubmit = (medications: any[]) => {
-    // Convert multiple medications to individual requests
-    const newRequests = medications.map((medication, index) => ({
-      ...medication,
-      uid: `MR${String(requests.length + index + 1).padStart(3, "0")}`,
-      medicationRequestId: `REQ-2024-${String(
-        requests.length + index + 1
-      ).padStart(3, "0")}`,
-      studentId: `ST${String(requests.length + index + 1).padStart(3, "0")}`,
-      parentId: `P${String(requests.length + index + 1).padStart(3, "0")}`,
-      parentName: "Phụ huynh", // This should come from selected student
-      phoneNumber: "0123456789", // This should come from selected student
-      studentName: "Học sinh", // This should come from selected student
-      remainingQuantity: parseInt(medication.totalQuantity),
-      status: "active",
-      createdBy: "Y tá Minh",
-      createdDate: new Date().toISOString().split("T")[0],
-    }));
-
-    setRequests([...requests, ...newRequests]);
-    setShowMultiMedicationModal(false);
-    showToast(`Đã tạo thành công ${medications.length} đơn thuốc!`, 'success');
+  const handleOpenAddModal = (student?: Student) => {
+    if (student) {
+      setSelectedStudent(student);
+    }
+    setShowAddModal(true);
   };
+
+  const handleAddMedication = async (
+    data: import("@/types/MedicalRequest").MedicalRequestCreateUpdateViewModel
+  ) => {
+    setLoading(true);
+    try {
+      await FecthCreateMedicalRequest(data);
+      showToast.success("Tạo đơn thuốc thành công!");
+      await FecthMedicalRequest().then(setRequests);
+      setShowAddModal(false);
+    } catch {
+      showToast.error("Tạo đơn thuốc thất bại!");
+    }
+    setLoading(false);
+  };
+
+  // Trước khi render AddMedicationModal, tạo biến medicines/forms là [] nếu là parent
+  const medicines: { value: string; label: string }[] = [];
+  const forms: { value: string; label: string }[] = [];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastProvider />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="!top-20"
-        style={{
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
-      />
-
       {loading && (
         <div className="flex justify-center items-center h-screen">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-600"></div>
@@ -473,7 +389,7 @@ const ManagerMedicalRequest = () => {
             </Button>
 
             <Button
-              onClick={() => setShowMultiMedicationModal(true)}
+              onClick={() => handleOpenAddModal()}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
             >
               <Plus className="w-4 h-4" />
@@ -529,18 +445,32 @@ const ManagerMedicalRequest = () => {
           {activeTab === "requests" && (
             <MedicationRequestsTab
               requests={requests}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              filterStartDate={filterStartDate}
-              setFilterStartDate={setFilterStartDate}
-              filterEndDate={filterEndDate}
-              setFilterEndDate={setFilterEndDate}
+              {...(!isParent
+                ? {
+                    searchTerm: searchTerm || "",
+                    setSearchTerm,
+                    filterStatus: filterStatus || "",
+                    setFilterStatus,
+                    filterStartDate: filterStartDate || "",
+                    setFilterStartDate,
+                    filterEndDate: filterEndDate || "",
+                    setFilterEndDate,
+                    onClearFilters: handleRequestsClearFilters,
+                  }
+                : {
+                    searchTerm: "",
+                    setSearchTerm: () => {},
+                    filterStatus: "",
+                    setFilterStatus: () => {},
+                    filterStartDate: "",
+                    setFilterStartDate: () => {},
+                    filterEndDate: "",
+                    setFilterEndDate: () => {},
+                    onClearFilters: () => {},
+                  })}
               onOpenConfirmModal={handleOpenConfirmModal}
               onOpenUpdateModal={handleOpenUpdateModal}
               onOpenDeleteModal={handleOpenDeleteModal}
-              onClearFilters={handleRequestsClearFilters}
             />
           )}
 
@@ -613,7 +543,24 @@ const ManagerMedicalRequest = () => {
         setUpdateRequest={setUpdateRequest}
         onConfirm={handleConfirmUpdate}
         medicationForms={medicationForms}
-        routes={routes}
+      />
+
+      <AddMedicationModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setSelectedStudent(null);
+        }}
+        onSubmit={(data: Record<string, unknown>) =>
+          handleAddMedication(
+            data as unknown as import("@/types/MedicalRequest").MedicalRequestCreateUpdateViewModel
+          )
+        }
+        students={students}
+        medicines={medicines}
+        forms={forms}
+        selectedStudent={selectedStudent}
+        parentId={parentId || ""}
       />
 
       {/* <MultiMedicationModal

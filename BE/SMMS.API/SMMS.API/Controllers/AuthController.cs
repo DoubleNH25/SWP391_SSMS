@@ -48,5 +48,29 @@ namespace SMMS.API.Controllers
             return Ok(checker);
         }
 
+        [HttpPost("forget-password")]
+        public async Task<IActionResult> ForgetPassword(ForgetPasswordModel model)
+        {
+            var checker = await _authService.ForgetPasswordAsync(model);
+
+            return Ok(checker);
+        }
+
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpRequest model)
+        {
+            var checker = await _authService.VerifyOtpAsync(model);
+
+            return Ok(checker);
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest model)
+        {
+            var checker = await _authService.ResetPasswordAsync(model);
+
+            return Ok(checker);
+        }
+
     }
 }

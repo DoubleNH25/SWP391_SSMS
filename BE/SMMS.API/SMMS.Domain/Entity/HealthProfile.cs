@@ -15,7 +15,10 @@ namespace SMMS.Domain.Entity
         public string Hearing { get; set; }
         public string Dental { get; set; }
         public double BMI { get; set; }
+        public double Weight { get; set; }
+        public double Height { get; set; }
         public string? AbnormalNote { get; set; }
         public string? VaccinationHistory { get; set; }
+        public string? ParentNote { get; set; }
     }
 }

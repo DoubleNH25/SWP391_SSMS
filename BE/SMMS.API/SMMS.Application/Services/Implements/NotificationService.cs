@@ -1,18 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Interface.Repositories;
+using SMMS.Infrastructure.Hubs;
 
 namespace SMMS.Application.Services.Implements
 {
 	public class NotificationService : INotificationService
 	{
 		private readonly IRepositoryManager _repositoryManager;
+		private readonly IHubContext<NotificationHub> _hubContext;
 
-		public NotificationService(IRepositoryManager repositoryManager)
+		public NotificationService(IRepositoryManager repositoryManager, IHubContext<NotificationHub> hubContext)
 		{
 			_repositoryManager = repositoryManager;
+			_hubContext = hubContext;
 		}
 
 		public async Task CreateNotificationAsync(string userId, string title, string message, string eventId)
@@ -27,7 +31,15 @@ namespace SMMS.Application.Services.Implements
 				EventId = eventId ?? string.Empty
 			};
 			_repositoryManager.NotificationRepository.Create(notification);
-			await _repositoryManager.SaveAsync();
+			await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", new NotificationResponse
+			{
+				Id = notification.Id,
+				Title = notification.Title,
+				Message = notification.Message,
+				IsRead = notification.IsRead,
+				CreatedTime = notification.CreatedTime,
+				EventId = notification.EventId
+			});
 		}
 
 		public async Task<List<NotificationResponse>> GetNotificationsByUserIdAsync(string userId)

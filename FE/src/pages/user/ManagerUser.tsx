@@ -4,10 +4,9 @@ import { User } from "@/types/User";
 import { PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
-import { PlusIcon, UserCog, X, Search } from "lucide-react";
+import { PlusIcon, UserCog, X, Search} from "lucide-react";
 import { FecthUsers, FecthDeleteUsers } from "@/services/UserService";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
@@ -45,7 +44,7 @@ export default function UserManager() {
   };
 
   const handleAddUser = () => {
-    navigate('/user/add-user');
+    navigate('/dashboard/user/add-user');
   };
 
   const handleConfirmDeleteUser = async () => {
@@ -54,7 +53,7 @@ export default function UserManager() {
       const success = await FecthDeleteUsers(selectedUserId);
       if (success) {
         setUsers(users.filter(user => user.id !== selectedUserId));
-        toast.success('Xóa người dùng thành công');
+        showToast.success('Xóa người dùng thành công');
       } else {
         throw new Error('Lỗi khi xóa người dùng');
       }
@@ -62,7 +61,7 @@ export default function UserManager() {
       setSelectedUserId(null);
       setError(null);
     } catch (error) {
-      toast.error(`Lỗi khi xóa người dùng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      showToast.error(`Lỗi khi xóa người dùng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -79,7 +78,7 @@ export default function UserManager() {
   };
 
   const handleUpdateUser = (userId: string) => {
-    navigate(`/user/update-user/${userId}`);
+    navigate(`/dashboard/user/update-user/${userId}`);
   };
 
   const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -112,14 +111,6 @@ export default function UserManager() {
 
   return (
     <div className="p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
       <PageHeader
         title="Quản lý người dùng"
         icon={<UserCog className="w-6 h-6 text-blue-600" />}
@@ -254,14 +245,14 @@ export default function UserManager() {
               )}
             </div>
           </div>
-          <div className="flex items-center justify-end mb-6 absolute right-[16px] top-[115px]">
+          <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[115px]">
             <div className="flex items-center gap-2">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
                 onClick={handleAddUser}
               >
                 <PlusIcon className="w-4 h-4" />
-                Add New User
+                Thêm người dùng
               </button>
             </div>
           </div>

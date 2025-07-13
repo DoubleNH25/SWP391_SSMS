@@ -24,17 +24,23 @@ export interface MedicalHealthCheckupRecord {
     vision: string;
     hearing: string;
     dental: string;
+    height: number;
+    weight: number;
     bmi: number;
     abnormalNote: string;
     time: string;
     recordDate: string;
     isLatest: boolean;
+    checkingStatus: string
 }
 
 export interface HealthCheckupRecord {
     vision: string;
     hearing: string;
     dental: string;
+    height: number;
+    weight: number;
     bmi: number;
     abnormalNote: string;
+    checkingStatus: "Normal" | "Abnormal"
 }

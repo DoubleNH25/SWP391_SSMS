@@ -170,8 +170,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -189,10 +192,13 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).ToList());
 
@@ -232,8 +238,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -247,10 +256,13 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).ToList());
 
@@ -290,8 +302,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -305,10 +320,13 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).FirstOrDefaultAsync();
 
@@ -414,6 +432,9 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (student == null) return false;
 
+			// Thêm log kiểm tra giá trị height, weight
+			Console.WriteLine($"[DEBUG] UpdateHealthProfileByParentAsync: Height={request.Height}, Weight={request.Weight}");
+
 			// Lấy hồ sơ sức khỏe hiện tại của học sinh (chưa bị xóa mềm)
 			var healthProfile = _repositoryManager.HealthProfileRepository
 				.FindByCondition(hp => hp.StudentId == studentId && hp.DeletedTime == null, true)
@@ -428,9 +449,12 @@ namespace SMMS.Application.Services.Implements
 					Vision = request.Vision ?? string.Empty,
 					Hearing = request.Hearing ?? string.Empty,
 					Dental = request.Dental ?? string.Empty,
+					Weight = request.Weight,
+					Height = request.Height,
 					BMI = request.BMI,
 					AbnormalNote = request.AbnormalNote,
 					VaccinationHistory = request.VaccinationHistory,
+					ParentNote = request.ParentNote,
 					CreatedBy = parentId,
 					CreatedTime = DateTimeOffset.UtcNow
 				};
@@ -442,9 +466,12 @@ namespace SMMS.Application.Services.Implements
 				healthProfile.Vision = request.Vision ?? string.Empty;
 				healthProfile.Hearing = request.Hearing ?? string.Empty;
 				healthProfile.Dental = request.Dental ?? string.Empty;
+				healthProfile.Weight = request.Weight;
+				healthProfile.Height = request.Height;
 				healthProfile.BMI = request.BMI;
 				healthProfile.AbnormalNote = request.AbnormalNote;
 				healthProfile.VaccinationHistory = request.VaccinationHistory;
+				healthProfile.ParentNote = request.ParentNote;
 				healthProfile.LastUpdatedBy = parentId;
 				healthProfile.LastUpdatedTime = DateTimeOffset.UtcNow;
 				_repositoryManager.HealthProfileRepository.Update(healthProfile);
@@ -556,8 +583,11 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hp.Hearing,
 							Dental = hp.Dental,
 							BMI = hp.BMI,
+							Weight = hp.Weight,
+							Height = hp.Height,
 							AbnormalNote = hp.AbnormalNote,
-							VaccinationHistory = hp.VaccinationHistory
+							VaccinationHistory = hp.VaccinationHistory,
+							ParentNote = hp.ParentNote
 						}).FirstOrDefault(),
 					HealthCheckupRecords = s.HealthCheckupRecords
 						.Where(hcr => hcr.DeletedTime == null)
@@ -571,14 +601,39 @@ namespace SMMS.Application.Services.Implements
 							Hearing = hcr.Hearing,
 							Dental = hcr.Dental,
 							BMI = hcr.BMI,
+							Weight = hcr.Weight,
+							Height = hcr.Height,
 							AbnormalNote = hcr.AbnormalNote,
 							Time = hcr.RecordDate,
 							RecordDate = hcr.RecordDate,
-							IsLatest = hcr.IsLatest
+							IsLatest = hcr.IsLatest,
+							CheckingStatus = hcr.CheckingStatus
 						}).ToList()
 				}).FirstOrDefaultAsync();
 
 			return student;
+		}
+
+		// Dashboard Count Features
+		public async Task<int> GetStudentsCountAsync()
+		{
+			return await _repositoryManager.StudentRepository
+				.FindByCondition(s => s.DeletedTime == null, false)
+				.CountAsync();
+		}
+
+		public async Task<int> GetParentsCountAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Parent" && u.DeletedTime == null, false)
+				.CountAsync();
+		}
+
+		public async Task<int> GetNursesCountAsync()
+		{
+			return await _repositoryManager.UserRepository
+				.FindByCondition(u => u.Role.RoleName == "Nurse" && u.DeletedTime == null, false)
+				.CountAsync();
 		}
 	}
 }

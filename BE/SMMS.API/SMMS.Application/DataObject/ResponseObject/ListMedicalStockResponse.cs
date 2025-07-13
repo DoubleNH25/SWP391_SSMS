@@ -9,6 +9,7 @@ namespace SMMS.Application.DataObject.ResponseObject
         public int Quantity { get; set; }
         public DateTime ExpiryDate { get; set; }
         public string DetailInformation { get; set; }
+        public string Supplier { get; set; }
         public MedicalStockStatus Status { get; set; }
     }
 }

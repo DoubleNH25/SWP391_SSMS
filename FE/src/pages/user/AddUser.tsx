@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserCreate } from "@/types/User";
 import { FecthCreateUsers } from "@/services/UserService";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 import { FecthRoles } from "@/services/RoleService";
 
 export default function AddUser() {
@@ -71,14 +70,8 @@ export default function AddUser() {
     try {
       const success = await FecthCreateUsers(formData);
       if (success) {
-        toast.success("Tạo người dùng thành công", {
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        navigate("/user");
+        showToast.success("Tạo người dùng thành công");
+        navigate("/dashboard/user");
       } else {
         throw new Error('Creation failed');
       }
@@ -87,13 +80,7 @@ export default function AddUser() {
         ? 'Please log in to create a user.'
         : `Failed to create user: ${err instanceof Error ? err.message : 'Unknown error'}`;
       setError(errorMessage);
-      toast.error(errorMessage, {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -101,15 +88,14 @@ export default function AddUser() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/user");
+    navigate("/dashboard/user");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="px-6 py-5">
         <h3 className="text-base font-medium text-gray-800">
-          Add New User
+          Thêm người dùng mới
         </h3>
         {error && <p className="text-red-500">{error}</p>}
       </div>
@@ -125,40 +111,40 @@ export default function AddUser() {
                   id="input-email"
                   onChange={handleInputChange}
                   value={formData.email}
-                  placeholder="Please enter email" />
+                  placeholder="Nhập email" />
               </div>
               <div>
-                <Label htmlFor="input-phone">Phone</Label>
+                <Label htmlFor="input-phone">Số điện thoại</Label>
                 <Input
                   name="phone"
                   type="text"
                   id="input-phone"
                   onChange={handleInputChange}
                   value={formData.phone}
-                  placeholder="Please enter phone" />
+                  placeholder="Nhập số điện thoại" />
               </div>
               <div>
-                <Label htmlFor="input-name">Full Name</Label>
+                <Label htmlFor="input-name">Họ và tên</Label>
                 <Input
                   name="fullName"
                   type="text"
                   id="input-name"
                   onChange={handleInputChange}
                   value={formData.fullName}
-                  placeholder="Please enter name" />
+                  placeholder="Nhập họ và tên" />
               </div>
               <div>
-                <Label>Role</Label>
+                <Label>Vai trò</Label>
                 <Select
                   options={roleOptions}
-                  placeholder="Select an option"
+                  placeholder="Chọn vai trò"
                   onChange={handleSelectChange}
                   defaultValue={formData.roleId}
                   className="dark:bg-dark-900"
                 />
               </div>
               <div>
-                <Label htmlFor="input-password">Password</Label>
+                <Label htmlFor="input-password">Mật khẩu</Label>
                 <div className="relative">
                   <Input
                     id="input-password"
@@ -166,7 +152,7 @@ export default function AddUser() {
                     onChange={handleInputChange}
                     value={formData.password}
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder="Nhập mật khẩu"
                   />
                   <button
                     type="button"
@@ -188,7 +174,7 @@ export default function AddUser() {
               type="submit"
               className="mt-4 bg-blue-500 w-[10%] hover:bg-blue-600 text-white py-2 rounded"
             >
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? 'Đang lưu...' : 'Lưu'}
             </button>
             <button
               onClick={handleCancel}
@@ -196,7 +182,7 @@ export default function AddUser() {
               disabled={loading}
               className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
             >
-              Cancel
+              Hủy
             </button>
           </div>
         </div>

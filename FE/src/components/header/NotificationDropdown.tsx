@@ -5,19 +5,24 @@ import NotificationIcon from "@/components/icons/notification.svg";
 import {
   Bell,
   Clock,
-  CheckCheck,
   Trash2,
   X,
   MoreHorizontal,
+  CheckCircle,
 } from "lucide-react";
-import { showToast } from '@/components/ui/Toast';
+import { showToast } from "@/components/ui/Toast";
 import { NotificationViewModel } from "@/types/Notification";
 import {
   FecthNotification,
   FecthReadNotification,
   FecthDeleteNotification,
+  FecthReadAllNotification,
 } from "@/services/NotificationService";
 import { DecodeJWT } from "@/utils/DecodeJWT";
+import {
+  startSignalRConnection,
+  stopSignalRConnection,
+} from "@/services/SignalRService";
 
 const NotificationDropdown: React.FC = () => {
   const navigate = useNavigate();
@@ -75,37 +80,45 @@ const NotificationDropdown: React.FC = () => {
         setIsOpen(false);
         try {
           const payload = DecodeJWT();
-          const role = payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+          const role =
+            payload?.[
+              "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            ];
 
           if (
+            notification.title.toLowerCase().includes("health") ||
             notification.title.toLowerCase().includes("health") ||
             notification.message.toLowerCase().includes("health") ||
             notification.title.toLowerCase().includes("sức khỏe")
           ) {
             if (role === "Nurse") {
-              navigate(`/approved-medical-events`);
+              navigate(`/dashboard/approved-medical-events`);
             } else if (role === "Admin" || role === "Manager") {
-              navigate(`/pending-medical-events`);
+              navigate(`/dashboard/pending-medical-events`);
             } else {
-              navigate(`/activity-medical/${notification.eventId}`);
+              navigate(`/dashboard/activity-medical/${notification.eventId}`);
             }
           } else if (
             notification.title.toLowerCase().includes("vaccination") ||
             notification.message.toLowerCase().includes("vaccination") ||
             notification.title.toLowerCase().includes("tiêm chủng")
           ) {
-            navigate(`/activity-medical`);
+            if (role === "Nurse") {
+              navigate(`/dashboard/approved-medical-events`);
+            } else {
+              navigate(`/dashboard/activity-medical`);
+            }
           } else if (
             notification.title.toLowerCase().includes("medical") ||
             notification.message.toLowerCase().includes("medical") ||
             notification.title.toLowerCase().includes("y tế")
           ) {
             if (role === "Nurse") {
-              navigate(`/approved-medical-events`);
+              navigate(`/dashboard/approved-medical-events`);
             } else if (role === "Admin" || role === "Manager") {
-              navigate(`/pending-medical-events`);
+              navigate(`/dashboard/pending-medical-events`);
             } else {
-              navigate(`/activity-medical/${notification.eventId}`);
+              navigate(`/dashboard/activity-medical/${notification.eventId}`);
             }
           }
           showToast.success("Đang chuyển đến trang chi tiết...");
@@ -119,6 +132,20 @@ const NotificationDropdown: React.FC = () => {
     },
     [navigate, setIsOpen]
   );
+
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      setActionLoading("delete");
+      await FecthReadAllNotification();
+      showToast.success("Đã đọc toàn bộ");
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete read notifications:", err);
+      showToast.error("Lỗi");
+    } finally {
+      setActionLoading(null);
+    }
+  }, []);
 
   const handleDeleteReadNotifications = useCallback(async () => {
     try {
@@ -191,7 +218,41 @@ const NotificationDropdown: React.FC = () => {
   useEffect(() => {
     fetchData();
     const intervalId = setInterval(fetchData, 5 * 60 * 1000);
-    return () => clearInterval(intervalId);
+
+    const token = localStorage.getItem("token") || "";
+    let notificationBuffer: NotificationViewModel[] = [];
+    let toastTimeout: NodeJS.Timeout | null = null;
+    startSignalRConnection(token, (data: unknown) => {
+      // Type guard to ensure data is a valid notification
+      if (data && typeof data === 'object' && 'id' in data && 'title' in data && 'message' in data) {
+        const newNotification = data as NotificationViewModel;
+        setNotificationData((prev) => [newNotification, ...prev]);
+        notificationBuffer.push(newNotification);
+
+        if (toastTimeout) clearTimeout(toastTimeout);
+
+        toastTimeout = setTimeout(() => {
+          const count = notificationBuffer.length;
+          if (count > 0) {
+            showToast.info(`Bạn có ${count} thông báo mới`);
+            notificationBuffer = [];
+          }
+        }, 500);
+
+        const audio = new Audio("public/sounds/livechat-129007.mp3");
+        audio.currentTime = 0;
+        audio.play().catch((err) => {
+          console.warn("Không thể phát âm báo:", err);
+        });
+      } else {
+        console.warn("Received invalid notification data:", data);
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      stopSignalRConnection();
+    };
   }, []); // Remove fetchData dependency to prevent infinite loop
 
   useEffect(() => {
@@ -228,14 +289,16 @@ const NotificationDropdown: React.FC = () => {
       </button>
 
       <div
-        className={`fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto overflow-x-hidden transition-opacity duration-700 ${isOpen ? "opacity-100 z-50" : "opacity-0 pointer-events-none"
-          }`}
+        className={`fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto overflow-x-hidden transition-opacity duration-700 ${
+          isOpen ? "opacity-100 z-50" : "opacity-0 pointer-events-none"
+        }`}
         id="notification-dropdown"
       >
         <div
           id="notification-panel"
-          className={`w-full sm:w-3/4 md:w-1/2 lg:w-1/3 bg-gray-50 h-screen overflow-y-auto py-8 px-3 absolute right-0 transform transition-transform duration-700 ${isOpen ? "translate-x-0" : "translate-x-full"
-            }`}
+          className={`w-full sm:w-3/4 md:w-1/2 lg:w-1/3 bg-gray-50 h-screen overflow-y-auto py-8 px-3 absolute right-0 transform transition-transform duration-700 ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex-1">
@@ -244,18 +307,19 @@ const NotificationDropdown: React.FC = () => {
               </h5>
               <div className="flex items-center space-x-4 text-sm">
                 <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${notificationData.length === 0
-                    ? "bg-gray-300 text-gray-800"
-                    : unreadCount > 0
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    notificationData.length === 0
+                      ? "bg-gray-300 text-gray-800"
+                      : unreadCount > 0
                       ? "bg-blue-100 text-blue-800"
                       : "bg-green-100 text-green-800"
-                    }`}
+                  }`}
                 >
                   {notificationData.length === 0
                     ? "Không có thông báo"
                     : unreadCount > 0
-                      ? `${unreadCount} chưa đọc`
-                      : "Tất cả đã đọc"}
+                    ? `${unreadCount} chưa đọc`
+                    : "Tất cả đã đọc"}
                 </span>
                 {notificationData.length > 5 && !showAllNotifications && (
                   <span className="text-gray-500 text-xs">
@@ -275,6 +339,19 @@ const NotificationDropdown: React.FC = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                   <span className="text-xs font-medium">Dọn dẹp</span>
+                </button>
+              )}
+              {notificationData.some((n) => !n.isRead) && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  disabled={actionLoading === "mark"}
+                  className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 text-emerald-600 hover:from-green-100 hover:to-emerald-100 hover:text-emerald-700 disabled:opacity-50 transition-all duration-200 shadow-sm border border-emerald-200"
+                  title="Đánh dấu tất cả là đã đọc"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-xs font-medium">
+                    Đánh dấu tất cả đã đọc
+                  </span>
                 </button>
               )}
 
@@ -384,10 +461,11 @@ const NotificationDropdown: React.FC = () => {
                               return (
                                 <div
                                   key={notification.id}
-                                  className={`relative overflow-hidden rounded-lg border transition-all duration-300 cursor-pointer ${isUnread
-                                    ? "bg-white border-white shadow-lg ring-white hover:shadow-2xl"
-                                    : "bg-gray-200 border-gray-100 opacity-90 shadow-lg hover:shadow-xl"
-                                    }`}
+                                  className={`relative overflow-hidden rounded-lg border transition-all duration-300 cursor-pointer ${
+                                    isUnread
+                                      ? "bg-white border-white shadow-lg ring-white hover:shadow-2xl"
+                                      : "bg-gray-200 border-gray-100 opacity-90 shadow-lg hover:shadow-xl"
+                                  }`}
                                   onClick={() =>
                                     notification.eventId &&
                                     handleNotificationClick(notification)
@@ -401,26 +479,29 @@ const NotificationDropdown: React.FC = () => {
                                     <div className="flex items-start justify-between">
                                       <div className="flex items-start space-x-3 flex-1">
                                         <div
-                                          className={`flex-shrink-0 p-2 rounded-full ${isUnread
-                                            ? "bg-blue-100 shadow-sm"
-                                            : "bg-gray-400"
-                                            }`}
+                                          className={`flex-shrink-0 p-2 rounded-full ${
+                                            isUnread
+                                              ? "bg-blue-100 shadow-sm"
+                                              : "bg-gray-400"
+                                          }`}
                                         >
                                           <Bell
-                                            className={`w-4 h-4 ${isUnread
-                                              ? "text-blue-700"
-                                              : "text-white"
-                                              }`}
+                                            className={`w-4 h-4 ${
+                                              isUnread
+                                                ? "text-blue-700"
+                                                : "text-white"
+                                            }`}
                                           />
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center justify-between">
                                             <h3
-                                              className={`text-sm font-semibold truncate ${isUnread
-                                                ? "text-black"
-                                                : "text-black-300"
-                                                }`}
+                                              className={`text-sm font-semibold truncate ${
+                                                isUnread
+                                                  ? "text-black"
+                                                  : "text-black-300"
+                                              }`}
                                             >
                                               {notification.title}
                                             </h3>
@@ -433,10 +514,11 @@ const NotificationDropdown: React.FC = () => {
                                                     notification.id
                                                   );
                                                 }}
-                                                className={`p-1 rounded-full transition-colors ${isUnread
-                                                  ? "hover:bg-blue-200 text-blue-600 hover:text-blue-800"
-                                                  : "hover:bg-gray-500 text-black-300 hover:text-black-200"
-                                                  }`}
+                                                className={`p-1 rounded-full transition-colors ${
+                                                  isUnread
+                                                    ? "hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                                                    : "hover:bg-gray-500 text-black-300 hover:text-black-200"
+                                                }`}
                                                 title={
                                                   isExpanded
                                                     ? "Thu gọn"
@@ -444,31 +526,35 @@ const NotificationDropdown: React.FC = () => {
                                                 }
                                               >
                                                 <MoreHorizontal
-                                                  className={`w-4 h-4 transition-transform ${isExpanded
-                                                    ? "rotate-90"
-                                                    : ""
-                                                    }`}
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    isExpanded
+                                                      ? "rotate-90"
+                                                      : ""
+                                                  }`}
                                                 />
                                               </button>
                                             </div>
                                           </div>
 
                                           <p
-                                            className={`text-sm mt-1 ${isExpanded ? "" : "line-clamp-2"
-                                              } ${isUnread
+                                            className={`text-sm mt-1 ${
+                                              isExpanded ? "" : "line-clamp-2"
+                                            } ${
+                                              isUnread
                                                 ? "text-gray-800"
                                                 : "text-black-400"
-                                              }`}
+                                            }`}
                                           >
                                             {notification.message}
                                           </p>
 
                                           <div className="flex items-center justify-between mt-2">
                                             <div
-                                              className={`flex items-center text-xs ${isUnread
-                                                ? "text-gray-600"
-                                                : "text-black-400"
-                                                }`}
+                                              className={`flex items-center text-xs ${
+                                                isUnread
+                                                  ? "text-gray-600"
+                                                  : "text-black-400"
+                                              }`}
                                             >
                                               <Clock className="w-3 h-3 mr-1" />
                                               {new Date(
@@ -478,10 +564,11 @@ const NotificationDropdown: React.FC = () => {
 
                                             {notification.eventId && (
                                               <div
-                                                className={`text-xs font-medium cursor-pointer ${isUnread
-                                                  ? "text-blue-700"
-                                                  : "text-black-400"
-                                                  }`}
+                                                className={`text-xs font-medium cursor-pointer ${
+                                                  isUnread
+                                                    ? "text-blue-700"
+                                                    : "text-black-400"
+                                                }`}
                                               >
                                                 Click để thực hiện thao tác
                                               </div>
@@ -493,76 +580,85 @@ const NotificationDropdown: React.FC = () => {
 
                                     {isExpanded && (
                                       <div
-                                        className={`mt-4 pt-4 border-t ${isUnread
-                                          ? "border-gray-500"
-                                          : "border-gray-500"
-                                          }`}
+                                        className={`mt-4 pt-4 border-t ${
+                                          isUnread
+                                            ? "border-gray-500"
+                                            : "border-gray-500"
+                                        }`}
                                       >
                                         <div
-                                          className={`rounded-lg p-3 ${isUnread
-                                            ? "bg-gray-200"
-                                            : "bg-gray-700"
-                                            }`}
+                                          className={`rounded-lg p-3 ${
+                                            isUnread
+                                              ? "bg-gray-200"
+                                              : "bg-gray-700"
+                                          }`}
                                         >
                                           <h4
-                                            className={`text-xs font-medium mb-2 ${isUnread
-                                              ? "text-gray-800"
-                                              : "text-gray-300"
-                                              }`}
+                                            className={`text-xs font-medium mb-2 ${
+                                              isUnread
+                                                ? "text-gray-800"
+                                                : "text-gray-300"
+                                            }`}
                                           >
                                             Chi tiết thông báo
                                           </h4>
                                           <div className="space-y-2 text-sm">
                                             <div>
                                               <span
-                                                className={`font-medium ${isUnread
-                                                  ? "text-gray-700"
-                                                  : "text-gray-400"
-                                                  }`}
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
                                               >
                                                 Tiêu đề:
                                               </span>
                                               <p
-                                                className={`mt-1 ${isUnread
-                                                  ? "text-black"
-                                                  : "text-gray-300"
-                                                  }`}
+                                                className={`mt-1 ${
+                                                  isUnread
+                                                    ? "text-black"
+                                                    : "text-gray-300"
+                                                }`}
                                               >
                                                 {notification.title}
                                               </p>
                                             </div>
                                             <div>
                                               <span
-                                                className={`font-medium ${isUnread
-                                                  ? "text-gray-700"
-                                                  : "text-gray-400"
-                                                  }`}
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
                                               >
                                                 Nội dung đầy đủ:
                                               </span>
                                               <p
-                                                className={`mt-1 whitespace-pre-wrap ${isUnread
-                                                  ? "text-gray-800"
-                                                  : "text-gray-300"
-                                                  }`}
+                                                className={`mt-1 whitespace-pre-wrap ${
+                                                  isUnread
+                                                    ? "text-gray-800"
+                                                    : "text-gray-300"
+                                                }`}
                                               >
                                                 {notification.message}
                                               </p>
                                             </div>
                                             <div>
                                               <span
-                                                className={`font-medium ${isUnread
-                                                  ? "text-gray-700"
-                                                  : "text-gray-400"
-                                                  }`}
+                                                className={`font-medium ${
+                                                  isUnread
+                                                    ? "text-gray-700"
+                                                    : "text-gray-400"
+                                                }`}
                                               >
                                                 Thời gian tạo:
                                               </span>
                                               <p
-                                                className={`mt-1 ${isUnread
-                                                  ? "text-gray-800"
-                                                  : "text-gray-300"
-                                                  }`}
+                                                className={`mt-1 ${
+                                                  isUnread
+                                                    ? "text-gray-800"
+                                                    : "text-gray-300"
+                                                }`}
                                               >
                                                 {new Date(
                                                   notification.createdTime

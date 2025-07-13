@@ -16,11 +16,11 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
+  Ruler,
+  Weight,
 } from "lucide-react";
 import { FecthStudentById } from "@/services/UserService";
 import { Student } from "@/types/Student";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function HealthCheckupRecords() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -151,7 +151,6 @@ export default function HealthCheckupRecords() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="flex items-center gap-3 mb-6">
@@ -269,7 +268,7 @@ export default function HealthCheckupRecords() {
                   <Stethoscope className="w-5 h-5 text-blue-500" />
                   Hồ sơ sức khỏe
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
                     <div className="p-2.5 bg-blue-100 rounded-lg">
                       <Eye className="w-5 h-5 text-blue-600" />
@@ -306,6 +305,32 @@ export default function HealthCheckupRecords() {
                       </p>
                       <p className="text-base font-semibold text-gray-900">
                         {student.healthProfile.dental || "Chưa có thông tin"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="p-2.5 bg-blue-100 rounded-lg">
+                      <Ruler className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">
+                        Chiều cao
+                      </p>
+                      <p className="text-base font-semibold text-gray-900">
+                        {student.healthProfile.height ? `${student.healthProfile.height} cm` : "Chưa có thông tin"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="p-2.5 bg-blue-100 rounded-lg">
+                      <Weight className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">
+                        Cân nặng
+                      </p>
+                      <p className="text-base font-semibold text-gray-900">
+                        {student.healthProfile.weight ? `${student.healthProfile.weight} kg` : "Chưa có thông tin"}
                       </p>
                     </div>
                   </div>
@@ -441,7 +466,7 @@ export default function HealthCheckupRecords() {
 
                             {/* Right Side - Medical Data */}
                             <div className="flex-1">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {/* Vision */}
                                 <div className="group">
                                   <div className="flex items-center gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors duration-200">
@@ -488,6 +513,40 @@ export default function HealthCheckupRecords() {
                                       </p>
                                       <p className="text-base font-semibold text-gray-900">
                                         {record.dental || "Chưa có thông tin"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Height */}
+                                <div className="group">
+                                  <div className="flex items-center gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors duration-200">
+                                    <div className="p-2.5 bg-white rounded-xl border border-gray-200 group-hover:border-gray-300 transition-colors duration-200">
+                                      <Ruler className="w-5 h-5 text-gray-700" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs font-medium text-gray-500 mb-1">
+                                        Chiều cao
+                                      </p>
+                                      <p className="text-base font-semibold text-gray-900">
+                                        {record.height ? `${record.height} cm` : "Chưa có thông tin"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Weight */}
+                                <div className="group">
+                                  <div className="flex items-center gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors duration-200">
+                                    <div className="p-2.5 bg-white rounded-xl border border-gray-200 group-hover:border-gray-300 transition-colors duration-200">
+                                      <Weight className="w-5 h-5 text-gray-700" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs font-medium text-gray-500 mb-1">
+                                        Cân nặng
+                                      </p>
+                                      <p className="text-base font-semibold text-gray-900">
+                                        {record.weight ? `${record.weight} kg` : "Chưa có thông tin"}
                                       </p>
                                     </div>
                                   </div>

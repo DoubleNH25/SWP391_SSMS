@@ -1,6 +1,3 @@
-import lineClamp from '@tailwindcss/line-clamp';
-import lineClamp from '@tailwindcss/line-clamp';
-import lineClamp from '@tailwindcss/line-clamp';
 import scrollbar from 'tailwind-scrollbar';
 // tailwind.config.js
 export default {
@@ -26,7 +23,10 @@ export default {
         accent: "var(--accent)",
         "accent-foreground": "var(--accent-foreground)",
       },
+      boxShadow: {
+        datepicker: "var(--shadow-datepicker)",
+      },
     },
   },
-  plugins: [lineClamp(),scrollbar()],
+  plugins: [scrollbar],
 };

@@ -1,6 +1,6 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 🌈 Custom theme variables (nếu cần dùng cho theming/dark mode) */
 :root {
@@ -28,3 +28,29 @@
   --accent: #10b981;
   --accent-foreground: #ffffff;
 }
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Blog content image style */
+.blog-content img,
+.prose img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.5rem auto;
+  border-radius: 0.5rem;
+}
+

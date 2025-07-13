@@ -1,6 +1,7 @@
 ﻿using SMMS.Domain.Base;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using SMMS.Domain.Enum;
 
 namespace SMMS.Domain.Entity
 {
@@ -26,7 +27,11 @@ namespace SMMS.Domain.Entity
         public DateTime Time { get; set; }
 		public DateTime RecordDate { get; set; }
         public bool IsLatest { get; set; }
+        public double Weight { get; set; }
+        public double Height { get; set; }
 
-        public virtual ICollection<ConselingSchedule> ConselingSchedules { get; set; }
+        public CheckingStatus CheckingStatus { get; set; }
+
+		public virtual ICollection<ConselingSchedule> ConselingSchedules { get; set; }
     }
 }

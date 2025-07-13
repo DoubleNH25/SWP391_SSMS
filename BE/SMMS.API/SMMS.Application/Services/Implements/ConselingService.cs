@@ -1,5 +1,4 @@
-﻿
-using SMMS.Application.DataObject.ResponseObject;
+﻿using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
@@ -62,8 +61,8 @@ namespace SMMS.Application.Services.Implements
 			// Notify Parent/////////////////////////////
 			await _notificationService.CreateNotificationAsync(
 				schedule.ParentId,
-				"Counseling Schedule Request",
-				$"A counseling session has been proposed for your child {student.StudentCode}-{student.FullName}. Please confirm or reject the request.",
+				"Yêu cầu tư vấn",
+				$"Lịch tư vấn cho con của bạn: {student.StudentCode}-{student.FullName}. Hãy đồng ý hoặc từ chối yêu cầu",
 				schedule.Id
 			);
 
@@ -71,7 +70,7 @@ namespace SMMS.Application.Services.Implements
 			await _repositoryManager.SaveAsync();
 			return true;
 		}
-		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId)
+		public async Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId, string? parentRejectNote)
 		{
 			var schedule = _repositoryManager.ConselingRepository
 				.FindByCondition(cs => cs.Id == conselingScheduleId && cs.ParentId == parentId, true)
@@ -79,17 +78,21 @@ namespace SMMS.Application.Services.Implements
 			if (schedule == null) return false;
 
 			schedule.Status = status;
+			if (status == ApprovalStatus.Rejected)
+			{
+				schedule.ParentRejectNote = parentRejectNote;
+			}
 			schedule.LastUpdatedBy = parentId;
 			schedule.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.ConselingRepository.Update(schedule);
 
 			// Notify Nurse//////////////////////////////////////////
 			var message = status == ApprovalStatus.Approved
-				? $"Your counseling request has been approved. Scheduled for: {schedule.MeetingDate}."
-				: "Your counseling request has been rejected.";
+				? $"Yêu cầu tư vấn đã được đồng ý. Lịch hẹn vào ngày: {schedule.MeetingDate}."
+				: "Yêu cầu tư vấn đã bị từ chối.";
 			await _notificationService.CreateNotificationAsync(
 				schedule.MedicalStaffId,
-				$"Counseling Schedule {status}",
+				$"Lịch tư vấn - {status}",
 				message, schedule.MedicalStaffId
 			);
 
@@ -126,11 +129,48 @@ namespace SMMS.Application.Services.Implements
 					CreatedTime = schedule.CreatedTime,
 					CreatedBy = schedule.CreatedBy,
 					UpdatedTime = schedule.LastUpdatedTime,
-					UpdatedBy = schedule.LastUpdatedBy
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
 				});
 			}
 			return responses;
 
+		}
+		public async Task<List<ConselingResponse>> GetAllSchedulesAsync()
+		{
+			var schedules = _repositoryManager.ConselingRepository
+				.FindAll(false)
+				.ToList();
+			var responses = new List<ConselingResponse>();
+			foreach (var schedule in schedules)
+			{
+				var student = _repositoryManager.StudentRepository
+					.FindByCondition(s => s.Id == schedule.StudentId, false)
+					.FirstOrDefault();
+				var parent = _repositoryManager.UserRepository
+					.FindByCondition(u => u.Id == schedule.ParentId, false)
+					.FirstOrDefault();
+				var healthCheckup = _repositoryManager.HealthCheckRepository
+					.FindByCondition(hcr => hcr.Id == schedule.HealthCheckupId, false)
+					.FirstOrDefault();
+				responses.Add(new ConselingResponse
+				{
+					Id = schedule.Id,
+					StudentId = student?.Id,
+					StudentName = student?.FullName,
+					ParentName = parent?.FullName,
+					HealthCheckupId = healthCheckup?.Id,
+					MeetingDate = schedule.MeetingDate,
+					Note = schedule.Note,
+					Status = schedule.Status,
+					CreatedTime = schedule.CreatedTime,
+					CreatedBy = schedule.CreatedBy,
+					UpdatedTime = schedule.LastUpdatedTime,
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
+				});
+			}
+			return responses;
 		}
 		public async Task<List<ConselingResponse>> GetSchedulesByPIdAsync(string parentId)
 		{
@@ -162,7 +202,8 @@ namespace SMMS.Application.Services.Implements
 					CreatedTime = schedule.CreatedTime,
 					CreatedBy = schedule.CreatedBy,
 					UpdatedTime = schedule.LastUpdatedTime,
-					UpdatedBy = schedule.LastUpdatedBy
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
 				});
 			}
 			return responses;

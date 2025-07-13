@@ -55,8 +55,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					student.ParentId,
-					"New Vaccination Record",
-					$"A new vaccination record for {student.FullName} is updated."
+					"Ghi chép tiêm vaccine mới",
+					$"Ghi chép tiêm vaccine mới của {student.FullName} đã được cập nhật."
 					, record.Id
 				);
 			}

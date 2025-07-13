@@ -1,83 +1,66 @@
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
-import { auth } from "@/types/Firebase";
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+  UserCredential,
+} from "firebase/auth";
+import { auth } from "@/utils/firebase";
 
-class PhoneAuthService {
-  private confirmationResult: ConfirmationResult | null = null;
-  private recaptchaVerifier: RecaptchaVerifier | null = null;
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+let confirmationResult: ConfirmationResult | null = null;
 
-  private formatPhoneNumber(phoneNumber: string): string {
-    const cleaned = phoneNumber.replace(/\D/g, "");
-
-    if (cleaned.startsWith("0")) return "+84" + cleaned.slice(1);
-    if (cleaned.startsWith("84")) return "+" + cleaned;
-    if (cleaned.startsWith("+84")) return cleaned;
-
-    throw new Error("Số điện thoại không hợp lệ.");
-  }
-  
-  setupInvisibleRecaptcha(containerId = "recaptcha-container") {
-    if (!this.recaptchaVerifier) {
-      this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-        size: "invisible",
-        callback: (response: any) => {
-          console.log("Recaptcha verified:", response);
-        },
-        'expired-callback': () => {
-          this.recaptchaVerifier?.clear();
-          this.recaptchaVerifier = null;
-        },
-      });
+export const initReCAPTCHA = (containerId = "recaptcha-container"
+  , onVerified?: () => void
+): Promise<void> => {
+  return new Promise(async (resolve) => {
+    // Nếu đã tồn tại reCAPTCHA, xóa nó để render lại
+    if (recaptchaVerifier) {
+      recaptchaVerifier.clear();
+      recaptchaVerifier = null;
+      const el = document.getElementById(containerId);
+      if (el) el.innerHTML = ""; // clear DOM
     }
-    return this.recaptchaVerifier;
-  }
-  
 
-  async sendOTP(phoneNumber: string): Promise<void> {
-    try {
-      const formattedPhone = this.formatPhoneNumber(phoneNumber);
-      const verifier = this.setupInvisibleRecaptcha();
-      this.confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      throw error;
-    }
-  }
+    // Tạo mới
+    recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: "normal",
+      callback: (response: string) => {
+        if (onVerified) onVerified(); 
+        resolve();
+      },
+      "expired-callback": () => {
+        console.warn("⚠️ reCAPTCHA expired");
+      },
+    });
 
-  async verifyOTP(otp: string): Promise<string> {
-    try {
-      if (!this.confirmationResult) throw new Error("Chưa gửi OTP");
-      const result = await this.confirmationResult.confirm(otp);
-      return await result.user.getIdToken();
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-      throw error;
-    }
+    await recaptchaVerifier.render().then((widgetId) => {
+      console.log("🛡️ reCAPTCHA widget ID:", widgetId);
+    });
+  });
+};
+
+export const sendOTP = async (phone: string): Promise<void> => {
+  if (!recaptchaVerifier) {
+    throw new Error("Vui lòng khởi tạo reCAPTCHA trước.");
   }
 
-  async signInWithPhone(phoneNumber: string, otp: string): Promise<string> {
-    try {
-      await this.sendOTP(phoneNumber);
-      return await this.verifyOTP(otp);
-    } catch (error) {
-      console.error("Error signing in with phone:", error);
-      throw error;
-    }
+  try {
+    confirmationResult = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
+    console.log("✅ OTP sent");
+  } catch (error: any) {
+    console.error("❌ Lỗi gửi OTP:", error);
+    throw new Error("Không thể gửi OTP: " + (error?.message || "Lỗi không xác định"));
+  }
+};
+
+export const verifyOTP = async (code: string): Promise<UserCredential> => {
+  if (!confirmationResult) {
+    throw new Error("Chưa gửi OTP hoặc chưa có xác nhận hợp lệ.");
   }
 
-  async registerWithPhone(phoneNumber: string, otp: string): Promise<string> {
-    try {
-      await this.sendOTP(phoneNumber);
-      return await this.verifyOTP(otp);
-    } catch (error) {
-      console.error("Error registering with phone:", error);
-      throw error;
-    }
+  try {
+    return await confirmationResult.confirm(code);
+  } catch (error: any) {
+    throw new Error("Mã OTP sai hoặc đã hết hạn.");
   }
-
-  reset() {
-    this.recaptchaVerifier = null;
-    this.confirmationResult = null;
-  }
-}
-
-export default new PhoneAuthService();
+};

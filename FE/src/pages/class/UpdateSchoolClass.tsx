@@ -1,11 +1,10 @@
 import Input from "@/components/ui/form/InputField";
 import Label from "@/components/ui/form/Label";
 import { FecthSchoolClassById, FecthUpdateSchoolClass } from "@/services/SchoolClassService";
-import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";;
+import { SchoolClassCreateUpdateViewModel } from "@/types/SchoolClass";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 
 export default function UpdateSchoolClass() {
   const { schoolClassId } = useParams<{ schoolClassId: string }>();
@@ -75,17 +74,15 @@ export default function UpdateSchoolClass() {
       }
       const success = await FecthUpdateSchoolClass(schoolClassId, formData);
       if (success) {
-        navigate('/class');
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate('/dashboard/class');
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error('Update failed');
       }
-    } catch (err ) {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,32 +90,31 @@ export default function UpdateSchoolClass() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/class");
+    navigate("/dashboard/class");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-gray-500">Đang tải...</div>
       ) : error ? (
         <div role="alert" className="text-center text-red-500 p-4 bg-red-100 rounded">
           <p>{error}</p>
           {error.includes('authenticated') ? (
             <button
               onClick={() => window.location.href = '/login'}
-              aria-label="Log in to continue"
+              aria-label="Đăng nhập để tiếp tục"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Log In
+              Đăng nhập
             </button>
           ) : (
             <button
               onClick={() => window.location.reload()}
-              aria-label="Retry loading student data"
+              aria-label="Thử lại tải dữ liệu lớp học"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retry
+              Thử lại
             </button>
           )}
         </div>
@@ -126,7 +122,7 @@ export default function UpdateSchoolClass() {
         <>
           <div className="px-6 py-5">
             <h3 className="text-base font-medium text-gray-800">
-              Update Class
+              Cập nhật lớp học
             </h3>
             {error && <p className="text-red-500">{error}</p>}
           </div>
@@ -135,27 +131,27 @@ export default function UpdateSchoolClass() {
               <div className="space-y-6">
                 <div className="space-y-6">
                   <div>
-                    <Label htmlFor="input-name">Class Name</Label>
+                    <Label htmlFor="input-name">Tên lớp</Label>
                     <Input
                       type="text"
                       name="className"
                       id="input-name"
                       onChange={handleInputChange}
                       value={formData.className}
-                      placeholder="Please enter name" />
+                      placeholder="Nhập tên lớp" />
                   </div>
                   <div>
-                    <Label htmlFor="input-class">Class Room</Label>
+                    <Label htmlFor="input-class">Phòng học</Label>
                     <Input
                       type="text"
                       name="classRoom"
                       id="input-name"
                       onChange={handleInputChange}
                       value={formData.classRoom}
-                      placeholder="Please enter name" />
+                      placeholder="Nhập phòng học" />
                   </div>
                   <div>
-                    <Label htmlFor="input-class">Quantity</Label>
+                    <Label htmlFor="input-class">Sĩ số</Label>
                     <Input
                       type="number"
                       name="quantity"
@@ -163,7 +159,7 @@ export default function UpdateSchoolClass() {
                       min="0"
                       onChange={handleInputChange}
                       value={formData.quantity}
-                      placeholder="Please enter name" />
+                      placeholder="Nhập sĩ số" />
                   </div>
                 </div>
               </div>
@@ -172,7 +168,7 @@ export default function UpdateSchoolClass() {
                   type="submit"
                   className="mt-4 bg-blue-500 w-[10%] hover:bg-blue-600 text-white py-2 rounded"
                 >
-                  {loading ? 'Saving...' : 'Save'}
+                  {loading ? 'Đang lưu...' : 'Lưu'}
                 </button>
                 <button
                   onClick={handleCancel}
@@ -180,7 +176,7 @@ export default function UpdateSchoolClass() {
                   disabled={loading}
                   className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                 >
-                  Cancel
+                  Hủy
                 </button>
               </div>
             </div>

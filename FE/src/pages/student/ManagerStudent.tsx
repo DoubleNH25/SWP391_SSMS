@@ -20,8 +20,7 @@ import {
 import { FecthClass } from "@/services/SchoolClassService";
 import { Student } from "@/types/Student";
 import { SchoolClass } from "@/types/SchoolClass";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
@@ -45,6 +44,7 @@ export default function StudentManager() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
+  const [selectedClass, setSelectedClass] = useState<string>("all");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [sortField, setSortField] = useState<"studentCode">("studentCode");
   const navigate = useNavigate();
@@ -79,7 +79,10 @@ export default function StudentManager() {
     const matchesGrade =
       selectedGrade === "all" ||
       student.studentClass.className.startsWith(selectedGrade);
-    return matchesClass && matchesSearch && matchesGrade;
+    const matchesSelectedClass =
+      selectedClass === "all" ||
+      student.studentClass.id === selectedClass;
+    return matchesClass && matchesSearch && matchesGrade && matchesSelectedClass;
   });
 
   // Sort students based on student code
@@ -126,7 +129,7 @@ export default function StudentManager() {
   };
 
   const handleAddStudent = () => {
-    navigate("/student/add-student");
+    navigate("/dashboard/student/add-student");
   };
 
   const handleConfirmDeleteStudent = async () => {
@@ -136,7 +139,7 @@ export default function StudentManager() {
       const success = await FecthDeleteStudents(selectedStudentId);
       if (success) {
         setStudents(students.filter((user) => user.id !== selectedStudentId));
-        toast.success("Student deleted successfully");
+        showToast.success("Student deleted successfully");
       } else {
         throw new Error("Deletion failed");
       }
@@ -144,9 +147,8 @@ export default function StudentManager() {
       setSelectedStudentId(null);
       setError(null);
     } catch (error) {
-      toast.error(
-        `Failed to delete student: ${
-          error instanceof Error ? error.message : "Unknown error"
+      showToast.error(
+        `Failed to delete student: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     } finally {
@@ -165,11 +167,11 @@ export default function StudentManager() {
   };
 
   const handleUpdateStudent = (studentId: string) => {
-    navigate(`/student/update-student/${studentId}`);
+    navigate(`/dashboard/student/update-student/${studentId}`);
   };
 
   const handleViewHealthProfile = (studentId: string) => {
-    navigate(`/healthprofile/manager-health-profile/${studentId}`);
+    navigate(`/dashboard/healthprofile/manager-health-profile/${studentId}`);
   };
 
   const handleItemsPerPageChange = (
@@ -181,7 +183,7 @@ export default function StudentManager() {
 
   const handleImport = async (file: File) => {
     if (!file) {
-      toast.error("Vui lòng chọn file Excel!");
+      showToast.error("Vui lòng chọn file Excel!");
       return;
     }
     setImportLoading(true);
@@ -190,15 +192,14 @@ export default function StudentManager() {
       if (success) {
         const fetchedStudents = await FecthStudents();
         setStudents(fetchedStudents);
-        toast.success("Import học sinh thành công!");
+        showToast.success("Import học sinh thành công!");
         setIsImportModalOpen(false);
       } else {
         throw new Error("Import thất bại");
       }
     } catch (error) {
-      toast.error(
-        `Lỗi khi import file: ${
-          error instanceof Error ? error.message : "Lỗi không xác định"
+      showToast.error(
+        `Lỗi khi import file: ${error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     } finally {
@@ -219,6 +220,7 @@ export default function StudentManager() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedGrade("all");
+    setSelectedClass("all");
     setCurrentPage(1);
     // Remove classId from URL parameters
     const newSearchParams = new URLSearchParams(searchParams);
@@ -243,7 +245,7 @@ export default function StudentManager() {
   };
 
   const handleViewHealthCheckupRecords = (studentId: string) => {
-    navigate(`/student/${studentId}/health-checkup-records`);
+    navigate(`/dashboard/student/${studentId}/health-checkup-records`);
   };
 
   return (
@@ -253,7 +255,6 @@ export default function StudentManager() {
         icon={<Users className="w-6 h-6 text-blue-600" />}
         description="Quản lý thông tin học sinh trong hệ thống"
       />
-      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Search and Filter Controls */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
@@ -262,7 +263,7 @@ export default function StudentManager() {
             <h2 className="text-lg font-semibold text-gray-900">
               Bộ lọc tìm kiếm
             </h2>
-            {(searchTerm || selectedGrade !== "all" || classIdFilter) && (
+            {(searchTerm || selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) && (
               <button
                 onClick={handleClearFilters}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -272,8 +273,8 @@ export default function StudentManager() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="md:col-span-2">
               <Label htmlFor="search">Tìm kiếm</Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -300,7 +301,7 @@ export default function StudentManager() {
                 )}
               </div>
             </div>
-            <div className="w-1/2">
+            <div>
               <Label htmlFor="grade">Khối lớp</Label>
               <Select
                 options={[
@@ -319,8 +320,27 @@ export default function StudentManager() {
                 placeholder="Chọn khối lớp"
               />
             </div>
+            <div>
+              <Label htmlFor="class">Lớp</Label>
+              <Select
+                options={[
+                  { value: "all", label: "Tất cả" },
+                  ...classes.map((cls) => ({
+                    value: cls.id,
+                    label: cls.className,
+                  })),
+                ]}
+                defaultValue={selectedClass}
+                onChange={(value) => {
+                  setSelectedClass(value);
+                  setCurrentPage(1);
+                }}
+                className="w-full"
+                placeholder="Chọn lớp"
+              />
+            </div>
           </div>
-          {(searchTerm || selectedGrade !== "all" || classIdFilter) && (
+          {(searchTerm || selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) && (
             <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
               <svg
                 className="w-4 h-4"
@@ -341,12 +361,18 @@ export default function StudentManager() {
                   <span className="font-medium">"{searchTerm}"</span>
                 )}
                 {searchTerm &&
-                  (selectedGrade !== "all" || classIdFilter) &&
+                  (selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) &&
                   " và "}
                 {selectedGrade !== "all" && (
                   <span className="font-medium">khối {selectedGrade}</span>
                 )}
-                {selectedGrade !== "all" && classIdFilter && " và "}
+                {selectedGrade !== "all" && (selectedClass !== "all" || classIdFilter) && " và "}
+                {selectedClass !== "all" && (
+                  <span className="font-medium">
+                    lớp {classes.find(cls => cls.id === selectedClass)?.className}
+                  </span>
+                )}
+                {selectedClass !== "all" && classIdFilter && " và "}
                 {classIdFilter && (
                   <span className="font-medium">
                     lớp {getFilteredClassName()}
@@ -420,7 +446,7 @@ export default function StudentManager() {
             acceptedFileTypes={[".xlsx", ".xls"]}
             maxFileSize={10}
           />
-          <div className="flex items-center justify-end mb-6 absolute right-[16px] top-[140px]">
+          <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[140px]">
             <div className="flex items-center gap-2">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
@@ -446,7 +472,7 @@ export default function StudentManager() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button
                         onClick={handleSortStudentCode}
-                        className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                        className="flex items-center gap-1 hover:text-gray-700 transition-colors uppercase"
                       >
                         Mã học sinh
                         {sortField === "studentCode" &&
@@ -646,11 +672,10 @@ export default function StudentManager() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                          currentPage === page
-                            ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                            : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                        }`}
+                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === page
+                          ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                          : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                          }`}
                       >
                         {page}
                       </button>

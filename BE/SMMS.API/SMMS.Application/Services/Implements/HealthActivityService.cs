@@ -62,8 +62,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					admin.Id,
-					"New Health Activity Needs Approval",
-					$"Activity: {healthActivity.Name} created by Nurse requires your approval.",
+					"Hoạt động kiểm tra sức khỏe mới cần được duyệt",
+					$"Hoạt Động: {healthActivity.Name} cần được duyệt ngay bây giờ.",
 					healthActivity.Id
 				);
 			}
@@ -84,7 +84,7 @@ namespace SMMS.Application.Services.Implements
 
 		private async Task CreateActivityConsentsAsync(HealthActivity healthActivity)
 		{
-			var classIds = healthActivity.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList();
+			var classIds = healthActivity.HealthActivityClasses.Where(hac => hac.DeletedTime == null).Select(hac => hac.SchoolClassId).ToList();
 			var students = await _repositoryManager.StudentRepository
 			   .FindByCondition(s => classIds.Contains(s.ClassId) && s.DeletedTime == null, false)
 			   .ToListAsync();
@@ -110,8 +110,8 @@ namespace SMMS.Application.Services.Implements
 				// Create notification for each consent/////////////////////////////////////
 				await _notificationService.CreateNotificationAsync(
 					student.ParentId,
-							"New Health Activity for Your Child",
-							$"Activity: {healthActivity.Name} for your child: {student.FullName}. Please confirm participation.",
+							"Hoạt động kiểm tra sức khỏe mới cho con bạn",
+							$"Hoạt Động: {healthActivity.Name} cho con bạn: {student.FullName}. Hãy xác nhận tham gia/từ chối.",
 					consent.Id
 
 				);
@@ -133,7 +133,7 @@ namespace SMMS.Application.Services.Implements
 					Description = ha.Description,
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
-					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
+					ClassIds = ha.HealthActivityClasses.Where(hac => hac.DeletedTime == null).Select(hac => hac.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -152,7 +152,7 @@ namespace SMMS.Application.Services.Implements
 					Description = ha.Description,
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
-					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
+					ClassIds = ha.HealthActivityClasses.Where(hac => hac.DeletedTime == null).Select(hac => hac.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -171,7 +171,7 @@ namespace SMMS.Application.Services.Implements
 					Description = ha.Description,
 					ScheduledDate = ha.ScheduledDate,
 					Status = ha.Status,
-					ClassIds = ha.HealthActivityClasses.Select(hac => hac.SchoolClassId).ToList()
+					ClassIds = ha.HealthActivityClasses.Where(hac => hac.DeletedTime == null).Select(hac => hac.SchoolClassId).ToList()
 				}).ToList());
 		}
 
@@ -191,14 +191,20 @@ namespace SMMS.Application.Services.Implements
 				// Notify Nurse////////////////////////
 				await _notificationService.CreateNotificationAsync(
 					healthActivity.UserId,
-					"Health Activity Approved",
-					$"Your activity: {healthActivity.Name} has been approved.",
+					"Hoạt động kiểm tra sức khỏe đã được đồng ý",
+					$"Hoạt động: {healthActivity.Name} đã được duyệt.",
 					healthActivity.Id
 				);
 			}
 			else if (action == "reject")
 			{
 				healthActivity.Status = ApprovalStatus.Rejected;
+				await _notificationService.CreateNotificationAsync(
+					healthActivity.UserId,
+					"Hoạt động kiểm tra sức khỏe đã bị từ chối",
+					$"Hoạt động: {healthActivity.Name} đã bị từ chối.",
+					healthActivity.Id
+				);
 			}
 			else
 			{
@@ -217,21 +223,72 @@ namespace SMMS.Application.Services.Implements
 			var activity = _repositoryManager.HealthActivityRepository
 				.FindByCondition(ha => ha.Id == healthActivityId 
 					&& ha.Status == ApprovalStatus.Pending, true)
+				.Include(ha => ha.HealthActivityClasses)
 				.FirstOrDefault();
 			if (activity == null) return false;
 
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
+				.FirstOrDefault();
 			if (user == null) return false;
-			if (activity.UserId != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
+			if (activity.UserId != userId && (user.Role?.RoleName != "Admin" && user.Role?.RoleName != "Manager"))
 			{
 				return false;
 			}
 
+			// Validate that all requested class IDs exist
+			var existingClassIds = _repositoryManager.ClassRepository
+				.FindByCondition(c => request.ClassIds.Contains(c.Id) && c.DeletedTime == null, false)
+				.Select(c => c.Id)
+				.ToList();
+			if (existingClassIds.Count != request.ClassIds.Count)
+			{
+				throw new Exception("Một hoặc nhiều lớp không tồn tại.");
+			}
+
+			// Update activity properties
 			activity.Name = request.Name ?? string.Empty;
 			activity.Description = request.Description ?? string.Empty;
 			activity.ScheduledDate = request.ScheduledDate;
 			activity.LastUpdatedBy = userId;
 			activity.LastUpdatedTime = DateTimeOffset.UtcNow;
+
+			// Update class associations
+			var currentClassIds = activity.HealthActivityClasses
+				.Where(hac => hac.DeletedTime == null) // Chỉ lấy những class chưa bị soft delete
+				.Select(hac => hac.SchoolClassId)
+				.ToList();
+			var newClassIds = request.ClassIds.ToList();
+
+			// Remove classes that are no longer in the request
+			var classesToRemove = activity.HealthActivityClasses
+				.Where(hac => hac.DeletedTime == null && !newClassIds.Contains(hac.SchoolClassId))
+				.ToList();
+			foreach (var classToRemove in classesToRemove)
+			{
+				classToRemove.DeletedBy = userId;
+				classToRemove.DeletedTime = DateTimeOffset.UtcNow;
+			}
+
+			// Add new classes
+			var classesToAdd = newClassIds
+				.Where(classId => !currentClassIds.Contains(classId))
+				.Select(classId => new HealthActivityClass
+				{
+					HealthActivityId = healthActivityId,
+					SchoolClassId = classId,
+					CreatedBy = userId,
+					CreatedTime = DateTimeOffset.UtcNow
+				})
+				.ToList();
+
+			// Add new class associations to the activity
+			foreach (var classToAdd in classesToAdd)
+			{
+				activity.HealthActivityClasses.Add(classToAdd);
+			}
+
 			_repositoryManager.HealthActivityRepository.Update(activity);
 			await _repositoryManager.SaveAsync();
 			return true;
@@ -244,9 +301,12 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (activity == null) return false;
 			
-			var user = _repositoryManager.UserRepository.FindByCondition(u => u.Id == userId, false).FirstOrDefault();
+			var user = _repositoryManager.UserRepository
+				.FindByCondition(u => u.Id == userId, false)
+				.Include(u => u.Role)
+				.FirstOrDefault();
 			if (user == null) return false;
-			if (activity.UserId != userId && user.Role.RoleName != "Admin" && user.Role.RoleName != "Manager")
+			if (activity.UserId != userId && (user.Role?.RoleName != "Admin" && user.Role?.RoleName != "Manager"))
 			{
 				return false;
 			}

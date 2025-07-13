@@ -1,5 +1,7 @@
 ﻿
 
+using SMMS.Domain.Enum;
+
 namespace SMMS.Application.DataObject.ResponseObject
 {
 	public class HealthCheckUpResponse
@@ -14,9 +16,12 @@ namespace SMMS.Application.DataObject.ResponseObject
 		public string? Hearing { get; set; }
 		public string? Dental { get; set; }
 		public double? BMI { get; set; }
+		public double? Weight { get; set; }
+		public double? Height { get; set; }
 		public string? AbnormalNote { get; set; }
 		public DateTime Time { get; set; }
 		public DateTime RecordDate { get; set; }
 		public bool IsLatest { get; set; }
+		public CheckingStatus CheckingStatus { get; set; }
 	}
 }

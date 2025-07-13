@@ -136,18 +136,6 @@ namespace SMMS.API.Controllers
 
         //---------------Medical Usage----------------
 
-        [HttpPost("usage")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> CreateMedicalUsage([FromBody] CreateMedicalUsageRequest request)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _medicalService.CreateMedicalUsageAsync(userId, request);
-            if (!result)
-                return BadRequest("Failed to create medical usage.");
-
-            return Ok("MedicalUsage created successfully.");
-        }
-
         [HttpDelete("usage/{id}")]
         [Authorize(Roles = "Admin,Manager,Nurse")]
         public async Task<IActionResult> DeleteMedicalUsage(string id)
@@ -169,98 +157,6 @@ namespace SMMS.API.Controllers
         }
 
         //---------------Medical Request----------------
-
-        [HttpPost("request")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> CreateMedicalRequest([FromBody] CreateMedicalRequestRequest request)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _medicalService.CreateMedicalRequestAsync(userId, request);
-            if (!result)
-                return BadRequest("Failed to create medical request.");
-
-            return Ok("Medical request created successfully.");
-        }
-
-        [HttpGet("request")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> GetAllMedicalRequests()
-        {
-            var result = await _medicalService.GetAllMedicalRequestsAsync();
-            return Ok(result);
-        }
-
-        [HttpGet("request/{id}")]
-        [Authorize(Roles = "Admin,Manager,Nurse,Parent")]
-        public async Task<IActionResult> GetMedicalRequestById(string id)
-        {
-            var result = await _medicalService.GetMedicalRequestByIdAsync(id);
-            return Ok(result);
-        }
-
-        [HttpPut("request/{id}")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> UpdateMedicalRequest(string id, [FromBody] UpdateMedicalRequestRequest request)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("User not authenticated.");
-                }
-
-                var result = await _medicalService.UpdateMedicalRequestAsync(id, request, userId);
-                return Ok(new {
-                    success = true,
-                    message = "Medical request updated successfully.",
-                    data = result
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { success = false, message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "An error occurred while updating the medical request." });
-            }
-        }
-
-        [HttpDelete("request/{id}")]
-        [Authorize(Roles = "Admin,Manager,Nurse")]
-        public async Task<IActionResult> DeleteMedicalRequest(string id)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _medicalService.DeleteMedicalRequestAsync(id, userId);
-            if (!result) return BadRequest("Failed to delete medical request.");
-            return Ok("Medical request deleted successfully.");
-        }
-
-        [HttpGet("request/student/{studentId}")]
-        [Authorize(Roles = "Admin,Manager,Nurse,Parent")]
-        public async Task<IActionResult> GetMedicalRequestsByStudent(string studentId)
-        {
-            var result = await _medicalService.GetMedicalRequestsByStudentAsync(studentId);
-            return Ok(result);
-        }
-
-        [HttpGet("request/parent/{parentId}")]
-        [Authorize(Roles = "Admin,Manager,Nurse,Parent")]
-        public async Task<IActionResult> GetMedicalRequestsByParent(string parentId)
-        {
-            var result = await _medicalService.GetMedicalRequestsByParentAsync(parentId);
-            return Ok(result);
-        }
 
         [HttpGet("request/daily/{date}")]
         [Authorize(Roles = "Admin,Manager,Nurse")]

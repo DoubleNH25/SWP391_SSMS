@@ -3,14 +3,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDownIcon,
   CalenderIcon,
-  PieChartIcon,
+  DashboardIcon,
   UserCircleIcon,
-  DocsIcon,
   TaskIcon,
   TimeIcon,
-  CheckCircleIcon,
+  HomeIcon,
+  BlogIcon,
+  RequestIcon,
+  StethoscopeIcon,
+  BackIcon,
+  ListIcon,
 } from "@/components/icons";
-import { Home as HomeIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useSidebar } from "@/components/context/sidebar";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 
@@ -30,103 +34,127 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <HomeIcon />,
-    name: "Trang chủ",
-    path: "/home",
+    icon: <HomeIcon className="w-5 h-5 mx-auto scale-[0.9]" />,
+    name: "Tổng quan",
+    path: "/dashboard",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
-    icon: <PieChartIcon />,
+    icon: <DashboardIcon className="w-5 h-5 mx-auto scale-[1.1]" />,
     name: "Bảng điều khiển",
     allowedRoles: ["Admin", "Manager", "Nurse"],
     subItems: [
       {
         name: "Người dùng",
-        path: "/user",
+        path: "/dashboard/user",
         pro: false,
         allowedRoles: ["Admin"],
       },
       {
-        name: "Học sinh",
-        path: "/student",
+        name: "Lớp học",
+        path: "/dashboard/class",
         pro: false,
-        allowedRoles: ["Admin", "Manager", "Nurse"],
+        allowedRoles: ["Admin"],
       },
-      { name: "Lớp học", path: "/class", pro: false, allowedRoles: ["Admin"] },
       {
         name: "Thuốc",
-        path: "/medical/manager-medical",
+        path: "/dashboard/medical/manager-medical",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
     ],
   },
   {
-    icon: <DocsIcon />,
+    icon: <BlogIcon className="w-4 h-4 mx-auto" />,
     name: "Blog",
-    path: "/blog",
-    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
+    path: "/dashboard/blog",
+    allowedRoles: ["Admin", "Manager"],
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <UserCircleIcon className="w-5 h-5 mx-auto" />,
     name: "Hồ sơ sức khỏe",
-    path: "/parent/health-profiles",
+    path: "/dashboard/parent/health-profiles",
     allowedRoles: ["Parent"],
   },
   {
-    icon: <CalenderIcon />,
+    icon: <CalenderIcon className="w-5 h-5 mx-auto" />,
     name: "Lịch",
-    path: "/calendar",
+    path: "/dashboard/calendar",
     allowedRoles: ["Admin", "Manager", "Nurse"],
   },
   {
-    icon: <TaskIcon />,
+    icon: <TaskIcon className="w-5 h-5 mx-auto" />,
     name: "Sự kiện y tế",
     allowedRoles: ["Admin", "Manager", "Nurse"],
     subItems: [
       {
         name: "Quản lý chờ duyệt",
-        path: "/pending-medical-events",
+        path: "/dashboard/pending-medical-events",
         pro: false,
         allowedRoles: ["Admin", "Manager"],
       },
       {
         name: "Lịch sử phê duyệt",
-        path: "/approved-medical-events",
+        path: "/dashboard/approved-medical-events",
         pro: false,
         allowedRoles: ["Admin", "Manager", "Nurse"],
       },
     ],
   },
   {
-    icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
+    icon: <StethoscopeIcon className="w-5 h-5 mx-auto scale-[0.9]" />,
     name: "Kiểm tra sức khỏe",
-    path: "/parent/health-checkup",
+    path: "/dashboard/parent/health-checkup",
     allowedRoles: ["Parent"],
   },
   {
-    icon: <TimeIcon />,
+    icon: <TimeIcon className="w-5 h-5 mx-auto" />,
     name: "Lịch tư vấn",
-    path: "/conseling-schedules",
-    allowedRoles: ["Nurse"],
+    allowedRoles: ["Admin", "Manager", "Nurse"],
+    subItems: [
+      {
+        name: "Quản lý lịch tư vấn",
+        path: "/dashboard/conseling-schedules",
+        pro: false,
+        allowedRoles: ["Admin", "Manager", "Nurse"],
+      },
+      {
+        name: "Học sinh bất thường",
+        path: "/dashboard/conseling-schedules/abnormal",
+        pro: false,
+        allowedRoles: ["Admin", "Manager", "Nurse"],
+      },
+    ],
   },
   {
-    icon: <DocsIcon />,
+    icon: <RequestIcon className="w-5 h-5 mx-auto" />,
     name: "Yêu cầu thuốc",
-    path: "/medical/medical-request",
+    path: "/dashboard/medical/medical-request",
     allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
   {
-    icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
+    icon: <AlertTriangle className="w-5 h-5 mx-auto" />,
+    name: "Sự cố y tế",
+    path: "/dashboard/medicalincident/manager",
+    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
+  },
+  {
+    icon: <ListIcon className="w-5 h-5 mx-auto" />,
     name: "Xác nhận hoạt động y tế",
-    path: "/activity-medical",
+    path: "/dashboard/activity-medical",
     allowedRoles: ["Parent"],
   },
   {
-    icon: <CheckCircleIcon colorInterpolation={"black"} className="w-4 h-4" />,
-    name: "Quản lý đơn thuốc",
-    path: "/medical/manager-medical-request",
+    icon: <StethoscopeIcon className="w-5 h-5 mx-auto scale-[0.9]" />,
+    name: "Thuốc học sinh",
+    path: "/dashboard/medical/manager-medical-request",
     allowedRoles: ["Admin", "Manager", "Nurse"],
+  },
+  {
+    icon: <BackIcon className="w-5 h-5 mx-auto" />,
+    name: "Quay về trang chủ",
+    path: "/",
+    allowedRoles: ["Admin", "Manager", "Nurse", "Parent"],
   },
 ];
 
@@ -228,17 +256,17 @@ const AppSidebar: React.FC = () => {
               {nav.subItems ? (
                 <button
                   onClick={(e) => handleSubmenuToggle(index, menuType, e)}
-                  className={`menu-item group w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[15px] font-medium
-                    ${
-                      isParentActive
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }
-                    ${
-                      !isExpanded && !isHovered
-                        ? "lg:justify-center"
-                        : "lg:justify-start"
-                    }`}
+                  className={`menu-item group w-full flex items-center px-4 py-3 rounded-lg transition-all text-[15px] font-medium
+                  ${
+                    isParentActive
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }
+                  ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center gap-0"
+                      : "lg:justify-start gap-3"
+                  }`}
                 >
                   <span className="flex-shrink-0 w-5 h-5">{nav.icon}</span>
                   {isVisible && (
@@ -290,8 +318,8 @@ const AppSidebar: React.FC = () => {
                           className={`block py-2 px-3 rounded-lg transition-all text-[14px] font-medium
                             ${
                               isActive(subItem.path)
-                                ? "text-blue-700"
-                                : "text-gray-600 hover:text-gray-900"
+                                ? "text-blue-700 bg-blue-200"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                             }`}
                         >
                           {subItem.name}
@@ -315,8 +343,8 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 h-screen bg-green-50 border-r border-gray-200 transition-all duration-300 ${
-        isExpanded ? "w-64" : "w-20"
+      className={`fixed top-0 left-0 z-40 h-screen bg-blue-50 border-r border-gray-200 transition-all duration-300 ${
+        isExpanded || isHovered ? "w-64" : "w-20"
       } ${
         isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       }`}

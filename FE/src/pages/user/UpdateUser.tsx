@@ -5,8 +5,7 @@ import { FecthUpdateUsers, FecthUserById } from "@/services/UserService";
 import { UserUpdate } from "@/types/User";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from "@/components/ui/Toast";
 
 export default function UpdateUser() {
   const { userId } = useParams<{ userId: string }>();
@@ -75,17 +74,15 @@ export default function UpdateUser() {
       }
       const success = await FecthUpdateUsers(userId as string, formData);
       if (success) {
-        navigate('/user');
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate('/dashboard/user');
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error('Update failed');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred, please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,32 +90,31 @@ export default function UpdateUser() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/user");
+    navigate("/dashboard/user");
   }
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-gray-500">Đang tải...</div>
       ) : error ? (
         <div role="alert" className="text-center text-red-500 p-4 bg-red-100 rounded">
           <p>{error}</p>
           {error.includes('authenticated') ? (
             <button
               onClick={() => window.location.href = '/login'}
-              aria-label="Log in to continue"
+              aria-label="Đăng nhập để tiếp tục"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Log In
+              Đăng nhập
             </button>
           ) : (
             <button
               onClick={() => window.location.reload()}
-              aria-label="Retry loading user data"
+              aria-label="Thử lại tải dữ liệu người dùng"
               className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retry
+              Thử lại
             </button>
           )}
         </div>
@@ -129,7 +125,7 @@ export default function UpdateUser() {
           >
             <div className="px-6 py-5">
               <h3 className="text-base font-medium text-gray-800">
-                Update User
+                Cập nhật người dùng
               </h3>
               {error && (
                 <div className="text-red-500 text-sm text-center mb-4">{error}</div>
@@ -147,30 +143,30 @@ export default function UpdateUser() {
                         value={formData.email}
                         type="text"
                         id="input-email"
-                        placeholder="Please enter email" />
+                        placeholder="Nhập email" />
                     </div>
                     <div>
-                      <Label htmlFor="input-phone">Phone</Label>
+                      <Label htmlFor="input-phone">Số điện thoại</Label>
                       <Input
                         name="phone"
                         onChange={handleInputChange}
                         value={formData.phone}
                         type="text"
                         id="input-phone"
-                        placeholder="Please enter phone" />
+                        placeholder="Nhập số điện thoại" />
                     </div>
                     <div>
-                      <Label htmlFor="input-name">Full Name</Label>
+                      <Label htmlFor="input-name">Họ và tên</Label>
                       <Input
                         name="fullName"
                         onChange={handleInputChange}
                         value={formData.fullName}
                         type="text"
                         id="input-name"
-                        placeholder="Please enter name" />
+                        placeholder="Nhập họ và tên" />
                     </div>
                     <div>
-                      <Label htmlFor="input-password">Password</Label>
+                      <Label htmlFor="input-password">Mật khẩu</Label>
                       <div className="relative">
                         <Input
                           name="password"
@@ -178,7 +174,7 @@ export default function UpdateUser() {
                           value={formData.password}
                           id="input-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
+                          placeholder="Nhập mật khẩu"
                         />
                         <button
                           type="button"
@@ -200,7 +196,7 @@ export default function UpdateUser() {
                     type="submit"
                     className="mt-4 bg-blue-500 w-[10%] hover:bg-blue-600 text-white py-2 rounded"
                   >
-                    {loading ? 'Saving...' : 'Save'}
+                    {loading ? 'Đang lưu...' : 'Lưu'}
                   </button>
                   <button
                     onClick={handleCancel}
@@ -208,7 +204,7 @@ export default function UpdateUser() {
                     disabled={loading}
                     className="mt-4 w-[10%] ml-4 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded"
                   >
-                    Cancel
+                    Hủy
                   </button>
                 </div>
               </div>

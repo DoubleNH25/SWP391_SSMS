@@ -7,8 +7,10 @@ import Select from "@/components/ui/form/Select";
 import DatePicker from "@/components/ui/form/DateField";
 import Label from "@/components/ui/form/Label";
 import { Student } from "@/types/Student";
-import { toast } from "react-toastify";
 import { DateUtils } from "@/utils/DateUtils";
+import { showToast } from "../ui/Toast";
+import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
+import { UploadBlogImage } from "@/services/BlogService";
 
 interface Medication {
   id: string;
@@ -57,13 +59,20 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     },
   ]);
 
+  // Thêm state cho ảnh đơn thuốc
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+
+  // Thêm state errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Add useEffect to log IDs when modal opens
   useEffect(() => {
     if (isOpen) {
       console.log("Modal opened with:", {
         studentId,
         parentId,
-        student: selectedStudent
+        student: selectedStudent,
       });
     }
     console.log(parentId);
@@ -95,7 +104,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
   const updateMedication = (
     id: string,
     field: keyof Medication,
-    value: any
+    value: string | number | string[]
   ) => {
     setMedications(
       medications.map((med) =>
@@ -123,11 +132,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-            ...med,
-            timeToAdminister: med.timeToAdminister.map((time, i) =>
-              i === index ? value : time
-            ),
-          }
+              ...med,
+              timeToAdminister: med.timeToAdminister.map((time, i) =>
+                i === index ? value : time
+              ),
+            }
           : med
       )
     );
@@ -138,40 +147,100 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-            ...med,
-            timeToAdminister: med.timeToAdminister.filter(
-              (_, i) => i !== index
-            ),
-          }
+              ...med,
+              timeToAdminister: med.timeToAdminister.filter(
+                (_, i) => i !== index
+              ),
+            }
           : med
       )
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate medications
-    const validMedications = medications.filter(
-      (med) =>
-        med.medicationName.trim() !== "" &&
-        med.dosage.trim() !== "" &&
-        med.totalQuantity.trim() !== "" &&
-        med.startDate !== "" &&
-        med.endDate !== ""
-    );
-
-    if (validMedications.length === 0) {
-      toast.error("Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc", {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+    const newErrors: Record<string, string> = {};
+    const validMedications = medications.filter((med) => {
+      let valid = true;
+      if (!med.medicationName.trim()) {
+        newErrors[`medicationName-${med.id}`] = "Vui lòng nhập tên thuốc";
+        valid = false;
+      }
+      if (!med.dosage.trim()) {
+        newErrors[`dosage-${med.id}`] = "Vui lòng nhập liều lượng";
+        valid = false;
+      }
+      if (
+        !med.totalQuantity.trim() ||
+        isNaN(Number(med.totalQuantity)) ||
+        Number(med.totalQuantity) < 1
+      ) {
+        newErrors[`totalQuantity-${med.id}`] =
+          "Vui lòng nhập tổng số lượng lớn hơn 0.";
+        valid = false;
+      }
+      if (!med.startDate) {
+        newErrors[`startDate-${med.id}`] = "Vui lòng chọn ngày bắt đầu";
+        valid = false;
+      }
+      if (!med.endDate) {
+        newErrors[`endDate-${med.id}`] = "Vui lòng chọn ngày kết thúc";
+        valid = false;
+      }
+      if (med.startDate && med.endDate && med.endDate < med.startDate) {
+        newErrors[`endDate-${med.id}`] =
+          "Ngày kết thúc không được nhỏ hơn ngày bắt đầu";
+        valid = false;
+      }
+      if (!med.frequency || med.frequency < 1) {
+        newErrors[`frequency-${med.id}`] = "Vui lòng nhập tần suất lớn hơn 0.";
+        valid = false;
+      }
+      return valid;
+    });
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      showToast.error("Vui lòng kiểm tra lại thông tin đơn thuốc!");
       return;
     }
 
-    onSubmit(validMedications);
-    handleClose();
+    // Map dữ liệu sang format API
+    const medicalRequestItems = validMedications.map((med) => ({
+      medicationName: med.medicationName,
+      form: med.form,
+      dosage: med.dosage,
+      route: med.route,
+      frequency: med.frequency,
+      totalQuantity: Number(med.totalQuantity),
+      timeToAdminister: med.timeToAdminister.filter((t) => t),
+      startDate: med.startDate,
+      endDate: med.endDate,
+      notes: med.note,
+    }));
+
+    const payload = {
+      parentId: parentId,
+      studentId: studentId,
+      medicalRequestItems: medicalRequestItems,
+      imageUrl: imageUrl, // Thêm imageUrl vào payload
+    };
+
+    console.log("Payload gửi API:", payload);
+
+    try {
+      await FecthCreateMedicalRequest(payload);
+      showToast.success("Tạo đơn thuốc thành công!");
+      onSubmit(validMedications); // Gọi lại để cập nhật UI bên ngoài nếu cần
+      handleClose();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        showToast.error(
+          err.message || "Tạo đơn thuốc thất bại. Vui lòng thử lại."
+        );
+      } else {
+        showToast.error("Tạo đơn thuốc thất bại. Vui lòng thử lại.");
+      }
+    }
   };
 
   const handleClose = () => {
@@ -213,7 +282,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       showCloseButton={false}
-      className="max-w-6xl w-full overflow-y-auto max-h-[95vh]"
+      className="max-w-6xl w-full overflow-y-auto max-h-[95vh] bg-gray-50 ring-1 ring-gray-200"
     >
       <div className="bg-white">
         {/* Header */}
@@ -226,7 +295,9 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                     Tạo đơn thuốc - Học sinh: {selectedStudent.fullName} -{" "}
                     {selectedStudent.studentCode}
                   </h2>
-                  <p className="text-gray-500 text-sm">Lớp: {selectedStudent.studentClass.className}</p>
+                  <p className="text-gray-500 text-sm">
+                    Lớp: {selectedStudent.studentClass.className}
+                  </p>
                 </div>
               )}
             </div>
@@ -239,18 +310,44 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
             </Button>
           </div>
         </div>
+        {/* Upload ảnh đơn thuốc */}
+        <div className="px-8 pt-4">
+          <label className="block text-sm font-medium mb-1">
+            Ảnh đơn thuốc
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              if (e.target.files && e.target.files[0]) {
+                setUploading(true);
+                try {
+                  const res = await UploadBlogImage(e.target.files[0]);
+                  setImageUrl(res.imageUrl);
+                } catch {
+                  showToast.error("Upload ảnh thất bại");
+                } finally {
+                  setUploading(false);
+                }
+              }
+            }}
+            className="block"
+            disabled={uploading}
+          />
+          {uploading && (
+            <div className="text-sm text-blue-600 mt-1">Đang tải ảnh...</div>
+          )}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt="Preview"
+              className="mt-2 max-h-40 rounded shadow"
+            />
+          )}
+        </div>
         {/* Content */}
         <div className="p-2 space-y-3 max-h-[65vh] overflow-y-auto">
-          <div className="flex items-center gap-2 w-full">
-            <Label htmlFor="search">Nhập tên người gửi</Label>
-            <Input
-              id="search"
-              type="text"
-              placeholder="Nhập tên người gửi"
-              value={parentId}
-              className="h-11 w-full"
-            />
-          </div>
+          {/* Không hiển thị trường nhập tên người gửi/parentId nữa */}
           {medications.map((medication, index) => (
             <div
               key={medication.id}
@@ -307,6 +404,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         placeholder="Nhập tên thuốc"
                         className="h-11"
                       />
+                      {errors[`medicationName-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`medicationName-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
 
                     <div className="">
@@ -352,6 +454,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         placeholder="VD: 2 viên/lần, 5ml/lần"
                         className="h-11"
                       />
+                      {errors[`dosage-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`dosage-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -379,16 +486,31 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         id={`totalQuantity-${medication.id}`}
                         type="number"
                         value={medication.totalQuantity}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "totalQuantity",
-                            e.target.value
-                          )
-                        }
+                        min="1"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || Number(val) < 1) {
+                            updateMedication(
+                              medication.id,
+                              "totalQuantity",
+                              ""
+                            );
+                          } else {
+                            updateMedication(
+                              medication.id,
+                              "totalQuantity",
+                              val
+                            );
+                          }
+                        }}
                         placeholder="Số lượng"
                         className="h-11"
                       />
+                      {errors[`totalQuantity-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`totalQuantity-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -407,17 +529,22 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         id={`frequency-${medication.id}`}
                         type="number"
                         value={medication.frequency}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "frequency",
-                            parseInt(e.target.value)
-                          )
-                        }
                         min="1"
-                        max="6"
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (isNaN(val) || val < 1) {
+                            updateMedication(medication.id, "frequency", 1);
+                          } else {
+                            updateMedication(medication.id, "frequency", val);
+                          }
+                        }}
                         className="mt-1"
                       />
+                      {errors[`frequency-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`frequency-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -492,12 +619,20 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         }}
                         defaultDate={medication.startDate}
                       />
+                      {errors[`startDate-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`startDate-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <DatePicker
                         id={`endDate-${medication.id}`}
                         label="Ngày kết thúc *"
-                        minDate={DateUtils.customFormatDateOnly(new Date())}
+                        minDate={
+                          medication.startDate ||
+                          DateUtils.customFormatDateOnly(new Date())
+                        }
                         maxDate={"9999-12-31"}
                         placeholder="Chọn ngày kết thúc"
                         onChange={(selectedDates) => {
@@ -511,6 +646,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         }}
                         defaultDate={medication.endDate}
                       />
+                      {errors[`endDate-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`endDate-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

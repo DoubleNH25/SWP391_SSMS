@@ -6,6 +6,7 @@ using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
+using SMMS.Application.Helpers.Implements;
 
 namespace SMMS.Application.Services.Implements
 {
@@ -13,11 +14,13 @@ namespace SMMS.Application.Services.Implements
     {
 		private readonly IRepositoryManager _repositoryManager;
 		private readonly INotificationService _notificationService;
+		private readonly CloudinaryService _cloudinaryService;
 
-		public MedicalService(IRepositoryManager repositoryManager, INotificationService notificationService)
+		public MedicalService(IRepositoryManager repositoryManager, INotificationService notificationService, CloudinaryService cloudinaryService)
 		{
 			_repositoryManager = repositoryManager;
 			_notificationService = notificationService;
+			_cloudinaryService = cloudinaryService;
 		}
 
 
@@ -32,7 +35,7 @@ namespace SMMS.Application.Services.Implements
                     .FindByCondition(s => s.Name == request.Name && !s.DeletedTime.HasValue, false)
                     .FirstOrDefault();
 
-                if (stock == null)
+                if (stock != null)
                 {
                     throw new Exception("Stock is already exist");
                 }
@@ -43,6 +46,7 @@ namespace SMMS.Application.Services.Implements
                     DetailInformation = request.DetailInformation,
                     Quantity = request.Quantity,
                     ExpiryDate = request.ExpiryDate,
+                    Supplier = request.Supplier,
                     Status = MedicalStockStatus.Available,
                     CreatedTime = DateTime.Now,
                     CreatedBy = userId,
@@ -104,6 +108,7 @@ namespace SMMS.Application.Services.Implements
                     DetailInformation = medicalStock.DetailInformation,
                     Quantity = medicalStock.Quantity,
                     ExpiryDate = medicalStock.ExpiryDate,
+                    Supplier = medicalStock.Supplier,
                 };
             }
             catch (Exception ex)
@@ -125,6 +130,7 @@ namespace SMMS.Application.Services.Implements
                     DetailInformation = u.DetailInformation,
                     ExpiryDate = u.ExpiryDate,
                     Quantity = u.Quantity,
+                    Supplier = u.Supplier,
                     Status = u.Status,
                 }).ToList();
 
@@ -153,6 +159,7 @@ namespace SMMS.Application.Services.Implements
                 medicalStock.DetailInformation = model.DetailInformation;
                 medicalStock.Quantity = model.Quantity;
                 medicalStock.ExpiryDate = model.ExpiryDate;
+                medicalStock.Supplier = model.Supplier;
                 medicalStock.Status = model.Status;
                 medicalStock.LastUpdatedBy = userId;
                 medicalStock.LastUpdatedTime = DateTime.Now;
@@ -176,6 +183,7 @@ namespace SMMS.Application.Services.Implements
         {
             try
             {
+                // Tạo Incident
                 var medicalIncident = new MedicalIncident
                 {
                     StudentId = request.StudentId,
@@ -191,21 +199,66 @@ namespace SMMS.Application.Services.Implements
                 _repositoryManager.MedicalIncidentRepository.Create(medicalIncident);
                 await _repositoryManager.SaveAsync();
 
-				// Notify Parent///////////////////////////
-				var student = await _repositoryManager.StudentRepository
-					.FindByCondition(s => s.Id == request.StudentId && s.DeletedTime == null, false)
-					.FirstOrDefaultAsync();
-				if (student != null)
-				{
-					await _notificationService.CreateNotificationAsync(
-						student.ParentId,
-						"New Medical Incident",
-						$"An incident involving {student.FullName} has been reported."
-						, medicalIncident.Id
-					);
-				}
+                // Xử lý Usage
+                var stockIds = request.MedicalUsageDetails.Select(m => m.MedicalStockId).Distinct().ToList();
 
-				return true;
+                var medicalStocks = _repositoryManager.MedicalStockRepository
+                    .FindByCondition(ms => stockIds.Contains(ms.Id) && !ms.DeletedTime.HasValue, true)
+                    .ToDictionary(ms => ms.Id);
+
+                foreach (var detail in request.MedicalUsageDetails)
+                {
+                    if (!medicalStocks.TryGetValue(detail.MedicalStockId, out var stock))
+                    {
+                        throw new InvalidOperationException($"Không tìm thấy thuốc với ID: {detail.MedicalStockId}");
+                    }
+
+                    if (stock.Quantity < detail.Quantity)
+                    {
+                        throw new InvalidOperationException($"Thuốc '{stock.Name}' không đủ số lượng. Còn lại: {stock.Quantity}");
+                    }
+
+                    stock.Quantity -= detail.Quantity;
+                    if (stock.Quantity == 0)
+                    {
+                        stock.Status = MedicalStockStatus.OutOfStock;
+                    }
+
+                    var usage = new MedicalUsage
+                    {
+                        MedicalIncidentId = medicalIncident.Id,
+                        MedicalStockId = stock.Id,
+                        Status = "Is Using",
+                        MedicalName = stock.Name,
+                        Dosage = detail.Dosage,
+                        Quantity = detail.Quantity,
+                        Supplier = stock.Supplier,
+                        CreatedBy = userId,
+                        CreatedTime = DateTime.Now,
+                    };
+
+                    _repositoryManager.MedicalUsageRepository.Create(usage);
+                    _repositoryManager.MedicalStockRepository.Update(stock);
+                }
+
+                await _repositoryManager.SaveAsync();
+
+                // Gửi thông báo cho phụ huynh
+                var student = await _repositoryManager.StudentRepository
+                    .FindByCondition(s => s.Id == request.StudentId && s.DeletedTime == null, false)
+                    .FirstOrDefaultAsync();
+
+                if (student != null)
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        student.ParentId,
+                        "Sự kiện tai nạn y tế mới",
+                        $"Một tai nạn y tế của {student.FullName} vừa được báo cáo.",
+                        medicalIncident.Id
+                    );
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -280,7 +333,8 @@ namespace SMMS.Application.Services.Implements
                         MedicalName = mu.MedicalName,
                         Dosage = mu.Dosage,
                         Quantity = mu.Quantity,
-                        Status = mu.Status
+                        Status = mu.Status,
+                        Supplier = mu.Supplier
                     }).ToList() ?? new List<ListMedicalUsageResponse>()
                 };
             }
@@ -383,55 +437,6 @@ namespace SMMS.Application.Services.Implements
 
         //-----------------------------------------Medical Usage------------------------------------------------
 
-        public async Task<bool> CreateMedicalUsageAsync(string userId, CreateMedicalUsageRequest request)
-        {
-            var stockIds = request.MedicalUsageDetails.Select(m => m.MedicalStockId).Distinct().ToList();
-
-            // Lấy tất cả MedicalStock cần thiết một lần
-            var medicalStocks = _repositoryManager.MedicalStockRepository
-                .FindByCondition(ms => stockIds.Contains(ms.Id) && !ms.DeletedTime.HasValue, true)
-                .ToDictionary(ms => ms.Id);
-
-            foreach (var detail in request.MedicalUsageDetails)
-            {
-                if (!medicalStocks.TryGetValue(detail.MedicalStockId, out var stock))
-                {
-                    throw new InvalidOperationException($"Không tìm thấy thuốc với ID: {detail.MedicalStockId}");
-                }
-
-                if (stock.Quantity < detail.Quantity)
-                {
-                    throw new InvalidOperationException($"Thuốc '{stock.Name}' không đủ số lượng. Còn lại: {stock.Quantity}");
-                }
-
-                // Trừ số lượng thuốc và cập nhật trạng thái
-                stock.Quantity -= detail.Quantity;
-                if (stock.Quantity == 0)
-                {
-                    stock.Status = MedicalStockStatus.OutOfStock;
-                }
-
-                // Tạo MedicalUsage mới
-                var usage = new MedicalUsage
-                {
-                    MedicalIncidentId = request.MedicalIncidentId,
-                    MedicalStockId = stock.Id,
-                    Status = "Is Using",
-                    MedicalName = stock.Name,
-                    Dosage = detail.Dosage,
-                    Quantity = detail.Quantity,
-                    CreatedBy = userId,
-                    CreatedTime = DateTime.Now,
-                };
-
-                _repositoryManager.MedicalUsageRepository.Create(usage);
-                _repositoryManager.MedicalStockRepository.Update(stock);
-            }
-
-            await _repositoryManager.SaveAsync();
-            return true;
-        }
-
         public async Task<bool> DeleteMedicalUsageAsync(string id, string userId)
         {
             try
@@ -510,6 +515,7 @@ namespace SMMS.Application.Services.Implements
 
                     medicalUsage.MedicalStockId = newStock.Id;
                     medicalUsage.MedicalName = newStock.Name;
+                    medicalUsage.Supplier = newStock.Supplier;
                 }
                 else
                 {
@@ -545,6 +551,11 @@ namespace SMMS.Application.Services.Implements
         {
             try
             {
+                // Kiểm tra MedicalRequestItems không null hoặc rỗng
+                if (request.MedicalRequestItems == null || !request.MedicalRequestItems.Any())
+                {
+                    throw new Exception("Medical request must contain at least one medication item.");
+                }
                 // Lấy thông tin Parent để có ParentName và PhoneNumber
                 var parent = await _repositoryManager.UserRepository
                     .FindByCondition(u => u.Id == request.ParentId && !u.DeletedTime.HasValue, false)
@@ -577,13 +588,23 @@ namespace SMMS.Application.Services.Implements
                         Notes = item.Notes,
                         Status = "Active",
                         CreatedTime = DateTimeOffset.Now,
-                        CreatedBy = userId
+                        CreatedBy = userId,
+                        ImageUrl = request.ImageUrl // Gán ảnh toàn bộ request
                     };
+
+                    if (item.Image != null)
+                    {
+                        var imageUrl = await _cloudinaryService.UploadImageAsync(item.Image);
+                        medicalRequest.ImageUrl = imageUrl;
+                    }
 
                     medicalRequests.Add(medicalRequest);
                     _repositoryManager.MedicalRequestRepository.Create(medicalRequest);
 
-                    // Tự động tạo các bản ghi MedicationRequestAdministration dựa trên lịch trình
+                    // Lưu ngay để đảm bảo Id đã có
+                    await _repositoryManager.SaveAsync();
+
+                    // Tạo các bản ghi MedicationRequestAdministration dựa trên lịch trình
                     var administrationSchedules = GenerateMedicationAdministrationSchedule(
                         medicalRequest.Id,
                         item.TimeToAdminister,
@@ -597,6 +618,7 @@ namespace SMMS.Application.Services.Implements
                     }
                 }
 
+                // Lưu lại các administration
                 await _repositoryManager.SaveAsync();
 
                 // Notify Parent
@@ -608,8 +630,8 @@ namespace SMMS.Application.Services.Implements
                 {
                     await _notificationService.CreateNotificationAsync(
                         request.ParentId,
-                        "New Medical Request Created",
-                        $"Medical request for {student.FullName} has been created with {request.MedicalRequestItems.Count} medication(s).",
+                        "Yêu cầu thuốc mới cho học sinh",
+                        $"Yêu cầu thuốc cho {student.FullName} được tạo với {request.MedicalRequestItems.Count} đơn.",
                         medicalRequests.First().Id
                     );
                 }
@@ -618,6 +640,9 @@ namespace SMMS.Application.Services.Implements
             }
             catch (Exception ex)
             {
+                // Trả về inner exception chi tiết nếu có
+                if (ex.InnerException != null)
+                    throw new Exception($"{ex.Message} | Inner: {ex.InnerException.Message}", ex.InnerException);
                 throw new Exception(ex.Message);
             }
         }
@@ -657,7 +682,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -707,6 +733,7 @@ namespace SMMS.Application.Services.Implements
                     Notes = medicalRequest.Notes,
                     Status = medicalRequest.Status,
                     CreatedTime = medicalRequest.CreatedTime,
+                    ImageUrl = medicalRequest.ImageUrl,
                     Administrations = medicalRequest.MedicationRequestAdministrations?.Select(a => new MedicationAdministrationResponse
                     {
                         Id = a.Id,
@@ -775,6 +802,12 @@ namespace SMMS.Application.Services.Implements
                 medicalRequest.LastUpdatedBy = userId;
                 medicalRequest.LastUpdatedTime = DateTimeOffset.Now;
 
+                if (request.Image != null)
+                {
+                    var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
+                    medicalRequest.ImageUrl = imageUrl;
+                }
+
                 // Cập nhật status nếu cần
                 if (medicalRequest.RemainingQuantity == 0)
                 {
@@ -813,6 +846,7 @@ namespace SMMS.Application.Services.Implements
                     Notes = medicalRequest.Notes,
                     Status = medicalRequest.Status,
                     CreatedTime = medicalRequest.CreatedTime,
+                    ImageUrl = medicalRequest.ImageUrl,
                     Administrations = medicalRequest.MedicationRequestAdministrations?.Select(a => new MedicationAdministrationResponse
                     {
                         Id = a.Id,
@@ -912,7 +946,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -955,7 +990,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -1255,7 +1291,8 @@ namespace SMMS.Application.Services.Implements
                         .Where(a => a.WasTaken)
                         .OrderByDescending(a => a.AdministeredAt)
                         .Select(a => a.AdministeredAt)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    ImageUrl = mr.ImageUrl
                 }).ToList();
             }
             catch (Exception ex)
@@ -1362,6 +1399,38 @@ namespace SMMS.Application.Services.Implements
         public async Task<DailyCompletedMedicationSummary> GetTodayCompletedMedicationHistoryAsync()
         {
             return await GetCompletedMedicationHistoryAsync(DateTime.Today);
+        }
+
+        // Dashboard Count Features
+        public async Task<int> GetTodayMedicalRequestsCountAsync()
+        {
+            var today = DateTime.Today;
+            return await _repositoryManager.MedicalRequestRepository
+                .FindByCondition(m => !m.DeletedTime.HasValue &&
+                                    m.CreatedTime.Date == today, false)
+                .CountAsync();
+        }
+
+        public async Task<int> GetMedicalIncidentsCountAsync()
+        {
+            return await _repositoryManager.MedicalIncidentRepository
+                .FindByCondition(m => !m.DeletedTime.HasValue, false)
+                .CountAsync();
+        }
+
+        public async Task<User?> GetParentByStudentIdAsync(string studentId)
+        {
+            // Tìm student
+            var student = await _repositoryManager.StudentRepository
+                .FindByCondition(s => s.Id == studentId && s.DeletedTime == null, false)
+                .FirstOrDefaultAsync();
+            if (student == null || string.IsNullOrEmpty(student.ParentId))
+                return null;
+            // Tìm parent
+            var parent = await _repositoryManager.UserRepository
+                .FindByCondition(u => u.Id == student.ParentId && u.DeletedTime == null, false)
+                .FirstOrDefaultAsync();
+            return parent;
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CloudinaryDotNet.Actions;
+using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Entity;
+using SMMS.Domain.Enum;
 using SMMS.Domain.Interface.Repositories;
 namespace SMMS.Application.Services.Implements
 {
@@ -35,9 +37,12 @@ namespace SMMS.Application.Services.Implements
 						Vision = hcr.Vision,
 						Hearing = hcr.Hearing,
 						Dental = hcr.Dental,
+						Weight = hcr.Weight,
+						Height = hcr.Height,
 						BMI = hcr.BMI,
 						AbnormalNote = hcr.AbnormalNote,
-						RecordDate = hcr.RecordDate
+						RecordDate = hcr.RecordDate,
+						CheckingStatus = hcr.CheckingStatus
 					})
 				.ToListAsync();
 
@@ -63,9 +68,12 @@ namespace SMMS.Application.Services.Implements
 						Vision = hcr.Vision,
 						Hearing = hcr.Hearing,
 						Dental = hcr.Dental,
+						Weight = hcr.Weight,
+						Height = hcr.Height,
 						BMI = hcr.BMI,
 						AbnormalNote = hcr.AbnormalNote,
-						RecordDate = hcr.RecordDate
+						RecordDate = hcr.RecordDate,
+						CheckingStatus = hcr.CheckingStatus
 					})
 				.ToListAsync();
 
@@ -78,12 +86,15 @@ namespace SMMS.Application.Services.Implements
 				.FirstOrDefault();
 			if (record == null) return false;
 
-			record.Vision = request.Vision;
-			record.Hearing = request.Hearing;
-			record.Dental = request.Dental;
+			record.Vision = request.Vision ?? string.Empty;
+			record.Hearing = request.Hearing ?? string.Empty;
+			record.Dental = request.Dental ?? string.Empty;
 			record.BMI = request.BMI;
-			record.AbnormalNote = request.AbnormalNote;
+			record.Weight = request.Weight;
+			record.Height = request.Height;
+			record.AbnormalNote = request.AbnormalNote ?? string.Empty;
 			record.RecordDate = DateTimeOffset.UtcNow.DateTime;
+			record.CheckingStatus = request.CheckingStatus;
 			record.LastUpdatedBy = nurseId;
 			record.LastUpdatedTime = DateTimeOffset.UtcNow;
 			_repositoryManager.HealthCheckRepository.Update(record);
@@ -98,8 +109,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					student.ParentId,
-					"New Health Checkup Record",
-					$"A new health checkup record for {student.FullName} is available."
+					"Ghi chép kiểm tra sức khỏe mới",
+					$"Một ghi chép kiểm tra sức khỏe mới của {student.FullName} đã hoàn tất."
 					, record.Id
 				);
 			}
@@ -121,6 +132,10 @@ namespace SMMS.Application.Services.Implements
 				_repositoryManager.HealthProfileRepository.Update(oldProfile);
 			}
 
+			string? parentNote = oldProfiles
+				.OrderByDescending(p => p.CreatedTime)
+				.FirstOrDefault()?.ParentNote;
+
 			var newProfile = new HealthProfile
 			{
 				StudentId = record.StudentId,
@@ -128,9 +143,12 @@ namespace SMMS.Application.Services.Implements
 				Hearing = record.Hearing,
 				Dental = record.Dental,
 				BMI = record.BMI,
+				Weight = record.Weight,
+				Height = record.Height,
 				AbnormalNote = record.AbnormalNote,
 				CreatedBy = "System",
-				CreatedTime = DateTimeOffset.UtcNow
+				CreatedTime = DateTimeOffset.UtcNow,
+				ParentNote = parentNote
 			};
 			_repositoryManager.HealthProfileRepository.Create(newProfile);
 		}
@@ -154,10 +172,13 @@ namespace SMMS.Application.Services.Implements
 						Hearing = hcr.Hearing,
 						Dental = hcr.Dental,
 						BMI = hcr.BMI,
+						Weight = hcr.Weight,
+						Height = hcr.Height,
 						AbnormalNote = hcr.AbnormalNote,
 						RecordDate = hcr.RecordDate,
 						Time = hcr.Time,
-						IsLatest = hcr.IsLatest
+						IsLatest = hcr.IsLatest,
+						CheckingStatus = hcr.CheckingStatus
 					})
 				.ToListAsync();
 		}
@@ -187,10 +208,13 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,
-						IsLatest = x.hcr.IsLatest
+						IsLatest = x.hcr.IsLatest,
+						CheckingStatus = x.hcr.CheckingStatus
 					}
 				)
 				.ToListAsync();
@@ -220,10 +244,86 @@ namespace SMMS.Application.Services.Implements
 						Hearing = x.hcr.Hearing,
 						Dental = x.hcr.Dental,
 						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
 						AbnormalNote = x.hcr.AbnormalNote,
 						RecordDate = x.hcr.RecordDate,
 						Time = x.hcr.Time,
-						IsLatest = x.hcr.IsLatest
+						IsLatest = x.hcr.IsLatest,
+						CheckingStatus = x.hcr.CheckingStatus
+					}
+				)
+				.ToListAsync();
+		}
+
+		public async Task<List<HealthCheckUpResponse>> GetAbnormalCheckupRecordsAsync()
+		{
+			return await _repositoryManager.HealthCheckRepository
+				.FindByCondition(hcr => hcr.CheckingStatus == CheckingStatus.Abnormal && hcr.DeletedTime == null, false)
+				.Include(hcr => hcr.Student)
+				.GroupJoin(
+					_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),
+					hcr => hcr.LastUpdatedBy,
+					user => user.Id,
+					(hcr, users) => new { hcr, users }
+				)
+				.SelectMany(
+					x => x.users.DefaultIfEmpty(),
+					(x, user) => new HealthCheckUpResponse
+					{
+						HealthCheckUpId = x.hcr.Id,
+						HealthActivityId = x.hcr.HealthActivityId,
+						StudentId = x.hcr.StudentId,
+						StudentName = x.hcr.Student.FullName,
+						NurseId = x.hcr.LastUpdatedBy,
+						NurseName = user != null ? user.FullName : "Pending To Update",
+						Vision = x.hcr.Vision,
+						Hearing = x.hcr.Hearing,
+						Dental = x.hcr.Dental,
+						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
+						AbnormalNote = x.hcr.AbnormalNote,
+						RecordDate = x.hcr.RecordDate,
+						Time = x.hcr.Time,
+						IsLatest = x.hcr.IsLatest,
+						CheckingStatus = x.hcr.CheckingStatus
+					}
+				)
+				.ToListAsync();
+		}
+		public async Task<List<HealthCheckUpResponse>> GetNormalCheckupRecordsAsync()
+		{
+			return await _repositoryManager.HealthCheckRepository
+				.FindByCondition(hcr => hcr.CheckingStatus == CheckingStatus.Normal && hcr.DeletedTime == null, false)
+				.Include(hcr => hcr.Student)
+				.GroupJoin(
+					_repositoryManager.UserRepository.FindByCondition(u => u.DeletedTime == null, false),
+					hcr => hcr.LastUpdatedBy,
+					user => user.Id,
+					(hcr, users) => new { hcr, users }
+				)
+				.SelectMany(
+					x => x.users.DefaultIfEmpty(),
+					(x, user) => new HealthCheckUpResponse
+					{
+						HealthCheckUpId = x.hcr.Id,
+						HealthActivityId = x.hcr.HealthActivityId,
+						StudentId = x.hcr.StudentId,
+						StudentName = x.hcr.Student.FullName,
+						NurseId = x.hcr.LastUpdatedBy,
+						NurseName = user != null ? user.FullName : "Pending To Update",
+						Vision = x.hcr.Vision,
+						Hearing = x.hcr.Hearing,
+						Dental = x.hcr.Dental,
+						BMI = x.hcr.BMI,
+						Weight = x.hcr.Weight,
+						Height = x.hcr.Height,
+						AbnormalNote = x.hcr.AbnormalNote,
+						RecordDate = x.hcr.RecordDate,
+						Time = x.hcr.Time,
+						IsLatest = x.hcr.IsLatest,
+						CheckingStatus = x.hcr.CheckingStatus
 					}
 				)
 				.ToListAsync();

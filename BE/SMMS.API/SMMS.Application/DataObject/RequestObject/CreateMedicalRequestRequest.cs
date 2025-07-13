@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SMMS.Application.DataObject.RequestObject
 {
@@ -12,6 +13,8 @@ namespace SMMS.Application.DataObject.RequestObject
 
         [Required]
         public List<MedicalRequestItem> MedicalRequestItems { get; set; }
+
+        public string? ImageUrl { get; set; } // Thêm trường này cho ảnh toàn bộ request
     }
 
     public class MedicalRequestItem
@@ -44,5 +47,7 @@ namespace SMMS.Application.DataObject.RequestObject
         public DateTime EndDate { get; set; }
 
         public string? Notes { get; set; }
+
+        public IFormFile? Image { get; set; } // Ảnh đơn thuốc hoặc liên quan
     }
 }

@@ -33,6 +33,8 @@ namespace SMMS.Application.Services.Implements
 				Hearing = request.Hearing ?? string.Empty,
 				Dental = request.Dental ?? string.Empty,
 				BMI = request.BMI,
+				Weight = request.Weight,
+				Height = request.Height,
 				AbnormalNote = request.AbnormalNote,
 				VaccinationHistory = request.VaccinationHistory,
 				CreatedBy = "Nurse",
@@ -56,6 +58,8 @@ namespace SMMS.Application.Services.Implements
 					Hearing = hp.Hearing,
 					Dental = hp.Dental,
 					BMI = hp.BMI,
+					Weight = hp.Weight,
+					Height = hp.Height,
 					AbnormalNote = hp.AbnormalNote,
 					VaccinationHistory = hp.VaccinationHistory
 				}).FirstOrDefault());
@@ -73,6 +77,8 @@ namespace SMMS.Application.Services.Implements
 			healthProfile.Hearing = request.Hearing ?? string.Empty;
 			healthProfile.Dental = request.Dental ?? string.Empty;
 			healthProfile.BMI = request.BMI;
+			healthProfile.Weight = request.Weight;
+			healthProfile.Height = request.Height;
 			healthProfile.AbnormalNote = request.AbnormalNote;
 			healthProfile.VaccinationHistory = request.VaccinationHistory;
 			healthProfile.LastUpdatedBy = "Nurse";

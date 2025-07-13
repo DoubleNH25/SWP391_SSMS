@@ -1,5 +1,6 @@
 ﻿using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
+using SMMS.Domain.Entity;
 using SMMS.Domain.Enum;
 
 namespace SMMS.Application.Services.Interfaces
@@ -36,12 +37,15 @@ namespace SMMS.Application.Services.Interfaces
         Task<DailyCompletedMedicationSummary> GetCompletedMedicationHistoryAsync(DateTime date);
         Task<DailyCompletedMedicationSummary> GetTodayCompletedMedicationHistoryAsync();
         Task<List<ListMedicalRequestResponse>> SearchMedicalRequestsAsync(string? medicationName, string? studentId, DateTime? date, string? status);
+        Task<User?> GetParentByStudentIdAsync(string studentId);
 
 
         //---------------Medical Usage----------------
-        Task<bool> CreateMedicalUsageAsync(string userId, CreateMedicalUsageRequest request);
         Task<bool> DeleteMedicalUsageAsync(string id, string userId);
         Task<bool> UpdateMedicalUsageAsync(string id, UpdateMedicalUsageRequest model, string userId);
 
+        //---------------Dashboard Count Features----------------
+        Task<int> GetTodayMedicalRequestsCountAsync();
+        Task<int> GetMedicalIncidentsCountAsync();
     }
 }

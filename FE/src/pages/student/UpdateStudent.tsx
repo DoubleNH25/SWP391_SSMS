@@ -8,8 +8,7 @@ import { FecthStudentById, FecthUpdateStudents } from "@/services/UserService";
 import { StudentUpdate } from "@/types/Student";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/components/ui/Toast";
 import { DateUtils } from "@/utils/DateUtils";
 
 export default function UpdateStudents() {
@@ -159,23 +158,17 @@ export default function UpdateStudents() {
         return;
       }
       const payload = prepareStudentUpdateData(formData);
-      console.log("payload", payload);
       const success = await FecthUpdateStudents(studentId, payload);
       if (success) {
-        navigate("/student");
-        setTimeout(() => {
-          toast.success("Cập nhật thành công");
-        }, 100);
+        navigate("/dashboard/student");
+        showToast.success("Cập nhật thành công");
       } else {
         throw new Error("Update failed");
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred, please try again.";
+      const errorMessage = err instanceof Error ? err.message : "An error occurred, please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,14 +176,13 @@ export default function UpdateStudents() {
 
   const handleCancel = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/student");
+    navigate("/dashboard/student");
   };
 
   return (
     <div className="p-6 bg-white">
-      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-gray-500">Đang tải...</div>
       ) : error ? (
         <div
           role="alert"
@@ -200,10 +192,10 @@ export default function UpdateStudents() {
           {error.includes("authenticated") ? (
             <button
               onClick={() => navigate("/login")}
-              aria-label="Log in to continue"
+              aria-label="Đăng nhập để tiếp tục"
               className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
             >
-              Log In
+              Đăng nhập
             </button>
           ) : (
             <button
@@ -212,10 +204,10 @@ export default function UpdateStudents() {
                 loadUser();
                 handleGetClass();
               }}
-              aria-label="Retry loading student data"
+              aria-label="Thử lại tải dữ liệu học sinh"
               className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
             >
-              Retry
+              Thử lại
             </button>
           )}
         </div>
@@ -223,7 +215,7 @@ export default function UpdateStudents() {
         <>
           <div className="px-6 py-5">
             <h3 className="text-xl font-semibold text-gray-800">
-              Update Student
+              Cập nhật học sinh
             </h3>
             {error && <p className="text-red-600 mt-2">{error}</p>}
           </div>
@@ -236,7 +228,7 @@ export default function UpdateStudents() {
                       htmlFor="input-name"
                       className="text-gray-700 font-medium"
                     >
-                      Full Name
+                      Họ và tên
                     </Label>
                     <Input
                       type="text"
@@ -244,15 +236,15 @@ export default function UpdateStudents() {
                       id="input-name"
                       onChange={handleInputChange}
                       value={formData.fullName}
-                      placeholder="Please enter name"
+                      placeholder="Nhập họ và tên"
                       className="mt-1 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-700 font-medium">Gender</Label>
+                    <Label className="text-gray-700 font-medium">Giới tính</Label>
                     <Select
-                      options={options}
-                      placeholder="Select an option"
+                      options={[{ value: "Male", label: "Nam" }, { value: "Female", label: "Nữ" }]}
+                      placeholder="Chọn giới tính"
                       onChange={handleSelectChange}
                       defaultValue={formData.gender}
                       className="mt-1 focus:ring-emerald-500 focus:border-emerald-500"
@@ -261,8 +253,8 @@ export default function UpdateStudents() {
                   <div>
                     <DatePicker
                       id="date-picker"
-                      label="Date of Birth"
-                      placeholder="Select a date"
+                      label="Ngày sinh"
+                      placeholder="Chọn ngày sinh"
                       defaultDate={
                         formData.dateOfBirth
                           ? new Date(formData.dateOfBirth)
@@ -281,19 +273,19 @@ export default function UpdateStudents() {
                       htmlFor="input-class"
                       className="text-gray-700 font-medium"
                     >
-                      Class
+                      Lớp học
                     </Label>
                     <SearchableSelect
                       options={classOptions}
                       defaultValue={formData.classId}
-                      placeholder="Select a class"
+                      placeholder="Chọn lớp học"
                       onChange={handleClassChange}
                       className="mt-1 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
                     <Label className="text-gray-700 font-medium">
-                      Upload image
+                      Tải lên ảnh
                     </Label>
                     <input
                       type="file"
@@ -309,7 +301,7 @@ export default function UpdateStudents() {
                   className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg transition-colors duration-200"
                   disabled={loading}
                 >
-                  {loading ? "Saving..." : "Save"}
+                  {loading ? "Đang lưu..." : "Lưu"}
                 </button>
                 <button
                   onClick={handleCancel}
@@ -317,7 +309,7 @@ export default function UpdateStudents() {
                   disabled={loading}
                   className="ml-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-6 rounded-lg transition-colors duration-200"
                 >
-                  Cancel
+                  Hủy
                 </button>
               </div>
             </div>

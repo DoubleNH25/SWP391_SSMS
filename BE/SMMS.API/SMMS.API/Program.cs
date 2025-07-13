@@ -10,7 +10,9 @@ using SMMS.Application.Services.Implements;
 using SMMS.Application.Services.Interfaces;
 using SMMS.Domain.Interface.Repositories;
 using SMMS.Infrastructure.Context;
+using SMMS.Infrastructure.Hubs;
 using SMMS.Infrastructure.Implements;
+using StackExchange.Redis;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -39,15 +41,17 @@ catch (Exception ex)
 builder.Services.AddControllers()
 	   .AddJsonOptions(options =>
 		   options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", policy =>
 	{
 		policy
-			.AllowAnyOrigin()
-			.AllowAnyMethod() 
-			.AllowAnyHeader(); 
+			.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+			.AllowAnyMethod()
+			.AllowAnyHeader()
+			.AllowCredentials();
 	});
 });
 
@@ -56,6 +60,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 	options.MultipartBodyLengthLimit = 104857600; // 100 MB //Ok
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("Redis");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -109,6 +118,9 @@ builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IMedicalService, MedicalService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
+builder.Services.AddScoped<SendMailService>();
+
 
 
 // Infrastructure Services
@@ -133,6 +145,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			ValidAudience = builder.Configuration["JwtSettings:Audience"],
 			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
 		};
+		options.Events = new JwtBearerEvents
+		{
+			OnMessageReceived = context =>
+			{
+				var accessToken = context.Request.Query["access_token"];
+				var path = context.HttpContext.Request.Path;
+				if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))
+				{
+					context.Token = accessToken;
+				}
+				return Task.CompletedTask;
+			}
+		};
 	});
 
 var app = builder.Build();
@@ -150,5 +175,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

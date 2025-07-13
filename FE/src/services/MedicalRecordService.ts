@@ -55,6 +55,23 @@ export async function FecthMedicalHealthCheckupRecord(id: string,date: string): 
 }
 
 
+export async function FecthMedicalHealthCheckupRecordAbnormal(): Promise<MedicalHealthCheckupRecord[]> {
+  if (!localStorage.getItem('token')) {
+    console.error('User is not authenticated');
+    return [];
+  }
+  try {
+    const response = await ApiClient<MedicalHealthCheckupRecord[]>({
+      method: 'GET',
+      endpoint: `nurse/health-checkup-records/abnormal`,
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error(`Failed to get health profile: ${err}`);
+    return [];
+  }
+}
+
 export async function FecthUpdateHealthCheckupRecord(id: string, record: HealthCheckupRecord): Promise<boolean> {
   if (!id || !record) {
     throw new Error("ID and record data are required");
@@ -81,6 +98,24 @@ export async function FecthConselingSchedules(): Promise<ConselingSchedulesAND[]
     const response = await ApiClient<ConselingSchedulesAND[]>({
       method: 'GET',
       endpoint: '/nurse/get-all-conseling-schedules',
+    });
+    return response?.data || [];
+  } catch (err) {
+    console.error(`Failed to get conseling schedules: ${err}`);
+    return [];
+  }
+}
+
+
+export async function FecthConselingSchedulesByParent(): Promise<ConselingSchedulesAND[]> {
+  if (!localStorage.getItem('token')) {
+    console.error('User is not authenticated');
+    return [];
+  }
+  try {
+    const response = await ApiClient<ConselingSchedulesAND[]>({
+      method: 'GET',
+      endpoint: '/parents/get-all-conseling-schedules',
     });
     return response?.data || [];
   } catch (err) {

@@ -83,7 +83,7 @@ namespace SMMS.API.Controllers
 			{
 				return BadRequest("Invalid status. Only Accepted or Rejected are allowed.");
 			}
-			var result = await _conselingService.UpdateScheduleStatusAsync(request.ConselingScheduleId, request.Status, parentId);
+			var result = await _conselingService.UpdateScheduleStatusAsync(request.ConselingScheduleId, request.Status, parentId, request.ParentRejectNote);
 			if (!result) return BadRequest("Failed to accept counseling schedule. Schedule not found or nurse ID mismatch.");
 			return Ok(true);
 		}

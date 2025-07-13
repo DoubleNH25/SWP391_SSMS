@@ -13,8 +13,7 @@ import {
 } from "@/types/VaccinationCampaigns";
 import { CalendarEvent } from "@/types/CalendarEvent";
 import { DateUtils } from "@/utils/DateUtils";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   FecthCreateMedicalEvent,
   FecthDeleteMedicalEvents,
@@ -36,6 +35,8 @@ import ViewEventsModal from "@/components/calendar/ViewEventsModal";
 import DailySchedule from "@/components/calendar/DailySchedule";
 import PageHeader from "@/components/ui/PageHeader";
 import { CalendarDays } from "lucide-react";
+import { showToast } from "@/components/ui/Toast";
+import { DecodeJWT } from "@/utils/DecodeJWT";
 
 type FormData =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
@@ -67,6 +68,15 @@ const Calendar: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+
+  // Get current user role
+  const currentUserRole = useMemo(() => {
+    const payload = DecodeJWT();
+    return payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null;
+  }, []);
+
+  // Check if user is Admin (restricted from create/edit/delete)
+  const isAdmin = currentUserRole === "Admin";
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -192,12 +202,18 @@ const Calendar: React.FC = () => {
   }, []);
 
   const handleDateSelect = useCallback((date: string) => {
+    // Prevent Admin users from creating new events
+    if (isAdmin) {
+      showToast.error("Admin không thể tạo sự kiện mới");
+      return;
+    }
+
     const selected = new Date(date);
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
     if (selected < currentDate) {
-      toast.error("Không thể tạo sự kiện trong quá khứ!");
+      showToast.error("Không thể tạo sự kiện trong quá khứ!");
       return;
     }
 
@@ -224,30 +240,40 @@ const Calendar: React.FC = () => {
         };
       }
     });
-  }, []);
+  }, [isAdmin]);
 
   const handleEventClick = useCallback(
     async (event: CalendarEvent) => {
+      // For Admin users, only allow viewing approved events
+      if (isAdmin) {
+        if (event.extendedProps.calendar === "Approved") {
+          showToast.info("Admin chỉ có thể xem sự kiện đã được phê duyệt");
+        } else {
+          showToast.error("Admin không được phép thao tác với sự kiện chưa được duyệt");
+        }
+        return;
+      }
+
       const eventDate = new Date(event.start);
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 
       if (event.extendedProps.calendar === "Approved") {
         if (event.extendedProps.eventType === "medical") {
-          navigate(`/medical-health-checkup-record/${event.start}`);
+          navigate(`/dashboard/medical-health-checkup-record/${event.start}/${event.id}`);
         } else {
-          navigate(`/medical-vaccination-record/${event.start}`);
+          navigate(`/dashboard/medical-vaccination-record/${event.start}/${event.id}`);
         }
         return;
       }
 
       if (eventDate < currentDate) {
-        toast.error("Không thể chỉnh sửa sự kiện trong quá khứ");
+        showToast.error("Không thể chỉnh sửa sự kiện trong quá khứ");
         return;
       }
 
       if (event.extendedProps.calendar !== "Pending") {
-        toast.error("Không thể cập nhật hoặc xóa sự kiện này");
+        showToast.error("Không thể cập nhật hoặc xóa sự kiện này");
         return;
       }
 
@@ -323,7 +349,7 @@ const Calendar: React.FC = () => {
       } catch (error) {
         console.error("Error fetching event details:", error);
         toast.dismiss(loadingToastId);
-        toast.error("Không thể tải thông tin sự kiện");
+        showToast.error("Không thể tải thông tin sự kiện");
         // Fallback to basic data without classes
         setSelectedClasses([]);
         setFormData(
@@ -355,11 +381,20 @@ const Calendar: React.FC = () => {
         openModal();
       }
     },
-    [navigate, openModal]
+    [navigate, openModal, isAdmin]
   );
 
   const handleMedicalInputChange = useCallback(
     (field: keyof MedicalEventUpdateCreateViewModel, value: string) => {
+      // Clear validation error for this field when user starts typing
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+
       setFormData((prev) => {
         if (prev.type === "medical") {
           return {
@@ -373,11 +408,20 @@ const Calendar: React.FC = () => {
         return prev;
       });
     },
-    []
+    [validationErrors]
   );
 
   const handleVaccinationInputChange = useCallback(
     (field: keyof VaccinationCampaignsUpdateCreateViewModel, value: string) => {
+      // Clear validation error for this field when user starts typing
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+
       setFormData((prev) => {
         if (prev.type === "vaccination") {
           return {
@@ -391,7 +435,7 @@ const Calendar: React.FC = () => {
         return prev;
       });
     },
-    []
+    [validationErrors]
   );
 
   function prepareMedicalData(
@@ -422,6 +466,12 @@ const Calendar: React.FC = () => {
         | VaccinationCampaignsUpdateCreateViewModel
     ): Record<string, string> => {
       const errors: Record<string, string> = {};
+
+      // Validate classes selection for both types
+      if (!selectedClasses || selectedClasses.length === 0 || (selectedClasses.length === 1 && selectedClasses[0] === "")) {
+        errors.classes = "Phải chọn ít nhất một lớp!";
+      }
+
       if (type === "medical") {
         // Validate Medical Event fields
         if (!data.name?.trim()) {
@@ -432,9 +482,6 @@ const Calendar: React.FC = () => {
         }
         if (!(data as MedicalEventUpdateCreateViewModel).scheduledDate) {
           errors.scheduledDate = "Ngày dự kiến là bắt buộc!";
-        }
-        if (!selectedClasses || selectedClasses.length === 0) {
-          errors.classes = "Phải chọn ít nhất một lớp!";
         }
 
         // Validate scheduled date
@@ -482,9 +529,6 @@ const Calendar: React.FC = () => {
         }
         if (!(data as VaccinationCampaignsUpdateCreateViewModel).mfg) {
           errors.mfg = "Ngày sản xuất là bắt buộc!";
-        }
-        if (!selectedClasses || selectedClasses.length === 0) {
-          errors.classes = "Phải chọn ít nhất một lớp!";
         }
 
         // Validate dates
@@ -560,13 +604,29 @@ const Calendar: React.FC = () => {
   );
 
   const handleAddOrUpdateEvent = useCallback(async () => {
+    // Prevent Admin users from creating or updating events
+    if (isAdmin) {
+      showToast.error("Admin không thể tạo hoặc cập nhật sự kiện");
+      return;
+    }
+
     if (loading) return;
     const { type, data } = formData;
 
+    // Always validate first, even for updates
+    const validationErrors = validateFormData(type, data);
+    if (Object.keys(validationErrors).length > 0) {
+      setValidationErrors(validationErrors);
+      return;
+    }
+
+    // Clear validation errors if all fields are valid
+    setValidationErrors({});
     setLoading(true);
+
     try {
       if (selectedEvent) {
-        // Update mode - no validation needed
+        // Update mode
         if (type === "medical") {
           const payload = prepareMedicalData(data);
           const success = await FecthUpdateMedicalEvent(
@@ -574,25 +634,9 @@ const Calendar: React.FC = () => {
             payload
           );
           if (success) {
-            setEvents((prev) =>
-              prev.map((event) =>
-                event.id === selectedEvent.id
-                  ? {
-                    ...event,
-                    title: data.name,
-                    start: DateUtils.customFormatDate(data.scheduledDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      description: data.description || "",
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
-                  : event
-              )
-            );
-            console.log("Update medical event success", payload.scheduledDate);
-            toast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
+            // Reload events to get updated data including classIds
+            await fetchEvents();
+            showToast.success("Cập nhật lịch kiểm tra sức khỏe thành công");
           }
         } else {
           const payload = prepareVaccinationCampaignData(data);
@@ -601,39 +645,13 @@ const Calendar: React.FC = () => {
             payload
           );
           if (success) {
-            setEvents((prev) =>
-              prev.map((event) =>
-                event.id === selectedEvent.id
-                  ? {
-                    ...event,
-                    title: data.name,
-                    start: DateUtils.customFormatDate(data.startDate),
-                    allDay: false,
-                    extendedProps: {
-                      ...event.extendedProps,
-                      vaccineName: data.vaccineName || "",
-                      vaccineType: data.vaccineType || "",
-                      exp: DateUtils.customFormatDate(data.exp),
-                      mfg: DateUtils.customFormatDate(data.mfg),
-                      calendar: event.extendedProps.calendar,
-                    },
-                  }
-                  : event
-              )
-            );
-            toast.success("Cập nhật chiến dịch tiêm chủng thành công");
+            // Reload events to get updated data including classIds
+            await fetchEvents();
+            showToast.success("Cập nhật chiến dịch tiêm chủng thành công");
           }
         }
       } else {
-        // Create mode - validate all fields
-        const validationErrors = validateFormData(type, data);
-        if (Object.keys(validationErrors).length > 0) {
-          setValidationErrors(validationErrors);
-          return;
-        }
-
-        // Clear validation errors if all fields are valid
-        setValidationErrors({});
+        // Create mode
         if (type === "medical") {
           const payload = prepareMedicalData(data);
           const response = await FecthCreateMedicalEvent(payload);
@@ -654,7 +672,7 @@ const Calendar: React.FC = () => {
               },
             },
           ]);
-          toast.success("Tạo lịch kiểm tra sức khỏe thành công");
+          showToast.success("Tạo lịch kiểm tra sức khỏe thành công");
         } else {
           const payload = prepareVaccinationCampaignData(data);
           const response = await FecthCreateVaccinationCampaign(payload);
@@ -678,22 +696,28 @@ const Calendar: React.FC = () => {
               },
             },
           ]);
-          toast.success("Tạo chiến dịch tiêm chủng thành công");
+          showToast.success("Tạo chiến dịch tiêm chủng thành công");
         }
       }
       closeModal();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
-      toast.error(`Không thể lưu sự kiện: ${errorMessage}`);
+      showToast.error(`Không thể lưu sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  }, [formData, selectedEvent, closeModal, loading, validateFormData]);
+  }, [formData, selectedEvent, closeModal, loading, validateFormData, fetchEvents, isAdmin]);
 
   const handleDeleteEvent = useCallback(async () => {
+    // Prevent Admin users from deleting events
+    if (isAdmin) {
+      showToast.error("Admin không thể xóa sự kiện");
+      return;
+    }
+
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
-      toast.error("Không thể xóa sự kiện này");
+      showToast.error("Không thể xóa sự kiện này");
       return;
     }
     if (loading) return;
@@ -704,20 +728,19 @@ const Calendar: React.FC = () => {
           ? await FecthDeleteMedicalEvents(selectedEvent.id)
           : await FecthDeleteVaccinationCampaign(selectedEvent.id);
       if (success) {
-        setEvents((prev) =>
-          prev.filter((event) => event.id !== selectedEvent.id)
-        );
-        toast.success("Xóa sự kiện thành công");
+        // Reload events to get updated data
+        await fetchEvents();
+        showToast.success("Xóa sự kiện thành công");
       }
       closeModal();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
-      toast.error(`Không thể xóa sự kiện: ${errorMessage}`);
+      showToast.error(`Không thể xóa sự kiện: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  }, [selectedEvent, closeModal, loading]);
+  }, [selectedEvent, closeModal, loading, fetchEvents, isAdmin]);
 
   const navigateMonth = useCallback((direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -735,6 +758,15 @@ const Calendar: React.FC = () => {
     if (!medicalData) return null;
 
     const handleClassChange = (classIds: string[]) => {
+      // Clear class validation error when user selects classes
+      if (validationErrors.classes) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.classes;
+          return newErrors;
+        });
+      }
+
       setSelectedClasses(classIds);
       handleMedicalInputChange(
         "classIds",
@@ -775,6 +807,15 @@ const Calendar: React.FC = () => {
     if (!vaccinationData) return null;
 
     const handleClassChange = (classIds: string[]) => {
+      // Clear class validation error when user selects classes
+      if (validationErrors.classes) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.classes;
+          return newErrors;
+        });
+      }
+
       setSelectedClasses(classIds);
       handleVaccinationInputChange(
         "classIds",
@@ -818,6 +859,7 @@ const Calendar: React.FC = () => {
         onAddNewEvent={() => setViewEventsDate(null)}
         onSetFormData={setFormData}
         classOptions={classOptions}
+        isAdmin={isAdmin}
       />
     );
   }, [
@@ -827,6 +869,7 @@ const Calendar: React.FC = () => {
     loading,
     handleEventClick,
     closeModal,
+    isAdmin,
   ]);
 
   const DailyScheduleComponent = useMemo(() => {
@@ -839,6 +882,7 @@ const Calendar: React.FC = () => {
         onOpenModal={openModal}
         onSetFormData={setFormData}
         classOptions={classOptions}
+        isAdmin={isAdmin}
       />
     );
   }, [
@@ -848,6 +892,7 @@ const Calendar: React.FC = () => {
     handleEventClick,
     openModal,
     classOptions,
+    isAdmin,
   ]);
 
   const isFormValid = useMemo(() => {
@@ -856,12 +901,16 @@ const Calendar: React.FC = () => {
     }
     const { type, data } = formData;
 
+    // Check if at least one class is selected (not empty)
+    const hasValidClasses = selectedClasses && selectedClasses.length > 0 &&
+      !(selectedClasses.length === 1 && selectedClasses[0] === "");
+
     if (type === "medical") {
       return (
         data.name?.trim() &&
         data.description?.trim() &&
         data.scheduledDate &&
-        selectedClasses.length > 0
+        hasValidClasses
       );
     } else if (type === "vaccination") {
       return (
@@ -871,7 +920,7 @@ const Calendar: React.FC = () => {
         data.startDate &&
         data.exp &&
         data.mfg &&
-        selectedClasses.length > 0
+        hasValidClasses
       );
     }
 
@@ -920,23 +969,6 @@ const Calendar: React.FC = () => {
         title="Lịch kiểm tra sức khỏe và tiêm chủng"
         icon={<CalendarDays className="w-6 h-6 text-purple-600" />}
         description="Quản lý và theo dõi các hoạt động kiểm tra sức khỏe và tiêm chủng trong trường"
-      />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="!top-20 !z-50"
-        style={{
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
       />
       {loading && !events.length ? (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -996,6 +1028,7 @@ const Calendar: React.FC = () => {
                 setCurrentDate(new Date());
                 setSelectedDate(DateUtils.customFormatDateOnly(new Date()));
               }}
+              isAdmin={isAdmin}
             />
 
             <div className="lg:w-1/3">{DailyScheduleComponent}</div>
@@ -1003,12 +1036,38 @@ const Calendar: React.FC = () => {
 
           <Modal
             isOpen={isOpen}
+            isFullscreen={false}
             onClose={closeModal}
             className={`${formData.type === "medical" ? "" : "max-w-3xl"} 
-          max-w-lg w-full p-6 bg-white rounded-lg shadow-lg`}
+          max-w-3xl w-full p-6 bg-white rounded-lg shadow-lg`}
           >
             {viewEventsDate ? (
               ViewEventsModalComponent
+            ) : isAdmin ? (
+              // Admin view-only interface
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Xem sự kiện
+                </h3>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Chế độ xem Admin</h3>
+                  <p className="text-gray-600 mb-4">
+                    Admin chỉ có thể xem các sự kiện đã được phê duyệt.
+                    Không thể tạo, chỉnh sửa hoặc xóa sự kiện.
+                  </p>
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">

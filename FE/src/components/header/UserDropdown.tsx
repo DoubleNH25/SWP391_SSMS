@@ -119,7 +119,7 @@ export default function UserDropdown() {
               Chỉnh sửa hồ sơ
             </DropdownItem>
           </li>
-          <li>
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -168,7 +168,7 @@ export default function UserDropdown() {
               </svg>
               Hỗ trợ
             </DropdownItem>
-          </li>
+          </li> */}
         </ul>
         <Link
           to="/signin"

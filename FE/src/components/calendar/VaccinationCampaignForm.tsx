@@ -154,6 +154,7 @@ const VaccinationCampaignForm = ({
               selectedClasses={selectedClasses}
               onClassChange={handleClassChange}
               placeholder="Chọn lớp hoặc khối"
+              hasError={!!validationErrors.classes}
             />
             {validationErrors.classes && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.classes}</p>

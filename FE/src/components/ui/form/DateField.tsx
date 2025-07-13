@@ -16,6 +16,7 @@ type PropsType = {
   minDate?: string;
   maxDate?: string;
   enableTime?: boolean; // Added to support time selection
+  position?: "auto" | "above" | "below";
 };
 
 export default function DatePicker({
@@ -27,20 +28,22 @@ export default function DatePicker({
   placeholder,
   minDate,
   maxDate,
-  enableTime = false, 
+  enableTime = false,
+  position = "auto",
 }: PropsType) {
   useEffect(() => {
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
       static: true,
       monthSelectorType: "static",
-      dateFormat: enableTime ? "Y-m-d H:i" : "Y-m-d", 
+      dateFormat: enableTime ? "Y-m-d H:i" : "Y-m-d",
       minDate: minDate ?? "1900-01-01",
       maxDate: maxDate ?? "today",
       defaultDate,
       onChange,
       enableTime,
       time_24hr: true,
+      position: position || "auto",
     });
 
     return () => {
@@ -48,7 +51,7 @@ export default function DatePicker({
         flatPickr.destroy();
       }
     };
-  }, [mode, onChange, id, defaultDate, minDate, maxDate, enableTime]);
+  }, [mode, onChange, id, defaultDate, minDate, maxDate, enableTime, position]);
 
   return (
     <div className="w-full">
