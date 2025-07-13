@@ -61,8 +61,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					admin.Id,
-					"New Vaccination Campaign Needs Approval",
-					$"Campaign: {campaign.Name} created by Nurse requires your approval."
+					"Chiến dịch tiêm chủng mới cần xét duyệt",
+					$"Chiến dịch tiêm chủng: {campaign.Name} cần được xét duyệt ngay bây giờ."
 					, campaign.Id
 				);
 			}
@@ -102,14 +102,20 @@ namespace SMMS.Application.Services.Implements
 				// Notify Nurse///////////////////////
 				await _notificationService.CreateNotificationAsync(
 					vaccination.UserId,
-					"Vaccination Campaign Approved",
-					$"Your campaign: {vaccination.Name} has been approved."
+					"Chiến dịch tiêm chủng đã được chấp nhận",
+					$"Chiến dịch: {vaccination.Name} đã được duyệt."
 					, vaccination.Id
 				);
 			}
 			else if (action == "reject")
 			{
 				vaccination.Status = ApprovalStatus.Rejected;
+				await _notificationService.CreateNotificationAsync(
+					vaccination.UserId,
+					"Chiến dịch tiêm chủng đã bị từ chối",
+					$"Chiến dịch: {vaccination.Name} đã từ chối."
+					, vaccination.Id
+				);
 			}
 			else
 			{
@@ -151,8 +157,8 @@ namespace SMMS.Application.Services.Implements
 				// Create notification for each consent/////////////////////////////////////
 				await _notificationService.CreateNotificationAsync(
 						student.ParentId,
-						"New Vaccination Campaign for Your Child",
-						$"Campaign: {campaign.Name}. Please confirm participation."
+						"Chiến dịch tiêm chủng mới cho con của bạn",
+						$"Chiến dịch: {campaign.Name}. Hãy xác nhận chiến dịch."
 						, campaign.Id
 					);
 			}

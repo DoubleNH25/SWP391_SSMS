@@ -62,8 +62,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					admin.Id,
-					"New Health Activity Needs Approval",
-					$"Activity: {healthActivity.Name} created by Nurse requires your approval.",
+					"Hoạt động kiểm tra sức khỏe mới cần được duyệt",
+					$"Hoạt Động: {healthActivity.Name} cần được duyệt ngay bây giờ.",
 					healthActivity.Id
 				);
 			}
@@ -110,8 +110,8 @@ namespace SMMS.Application.Services.Implements
 				// Create notification for each consent/////////////////////////////////////
 				await _notificationService.CreateNotificationAsync(
 					student.ParentId,
-							"New Health Activity for Your Child",
-							$"Activity: {healthActivity.Name} for your child: {student.FullName}. Please confirm participation.",
+							"Hoạt động kiểm tra sức khỏe mới cho con bạn",
+							$"Hoạt Động: {healthActivity.Name} cho con bạn: {student.FullName}. Hãy xác nhận tham gia/từ chối.",
 					consent.Id
 
 				);
@@ -191,14 +191,20 @@ namespace SMMS.Application.Services.Implements
 				// Notify Nurse////////////////////////
 				await _notificationService.CreateNotificationAsync(
 					healthActivity.UserId,
-					"Health Activity Approved",
-					$"Your activity: {healthActivity.Name} has been approved.",
+					"Hoạt động kiểm tra sức khỏe đã được đồng ý",
+					$"Hoạt động: {healthActivity.Name} đã được duyệt.",
 					healthActivity.Id
 				);
 			}
 			else if (action == "reject")
 			{
 				healthActivity.Status = ApprovalStatus.Rejected;
+				await _notificationService.CreateNotificationAsync(
+					healthActivity.UserId,
+					"Hoạt động kiểm tra sức khỏe đã bị từ chối",
+					$"Hoạt động: {healthActivity.Name} đã bị từ chối.",
+					healthActivity.Id
+				);
 			}
 			else
 			{

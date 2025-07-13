@@ -61,8 +61,8 @@ namespace SMMS.Application.Services.Implements
 			// Notify Parent/////////////////////////////
 			await _notificationService.CreateNotificationAsync(
 				schedule.ParentId,
-				"Counseling Schedule Request",
-				$"A counseling session has been proposed for your child {student.StudentCode}-{student.FullName}. Please confirm or reject the request.",
+				"Yêu cầu tư vấn",
+				$"Lịch tư vấn cho con của bạn: {student.StudentCode}-{student.FullName}. Hãy đồng ý hoặc từ chối yêu cầu",
 				schedule.Id
 			);
 
@@ -88,11 +88,11 @@ namespace SMMS.Application.Services.Implements
 
 			// Notify Nurse//////////////////////////////////////////
 			var message = status == ApprovalStatus.Approved
-				? $"Your counseling request has been approved. Scheduled for: {schedule.MeetingDate}."
-				: "Your counseling request has been rejected.";
+				? $"Yêu cầu tư vấn đã được đồng ý. Lịch hẹn vào ngày: {schedule.MeetingDate}."
+				: "Yêu cầu tư vấn đã bị từ chối.";
 			await _notificationService.CreateNotificationAsync(
 				schedule.MedicalStaffId,
-				$"Counseling Schedule {status}",
+				$"Lịch tư vấn - {status}",
 				message, schedule.MedicalStaffId
 			);
 
@@ -135,6 +135,42 @@ namespace SMMS.Application.Services.Implements
 			}
 			return responses;
 
+		}
+		public async Task<List<ConselingResponse>> GetAllSchedulesAsync()
+		{
+			var schedules = _repositoryManager.ConselingRepository
+				.FindAll(false)
+				.ToList();
+			var responses = new List<ConselingResponse>();
+			foreach (var schedule in schedules)
+			{
+				var student = _repositoryManager.StudentRepository
+					.FindByCondition(s => s.Id == schedule.StudentId, false)
+					.FirstOrDefault();
+				var parent = _repositoryManager.UserRepository
+					.FindByCondition(u => u.Id == schedule.ParentId, false)
+					.FirstOrDefault();
+				var healthCheckup = _repositoryManager.HealthCheckRepository
+					.FindByCondition(hcr => hcr.Id == schedule.HealthCheckupId, false)
+					.FirstOrDefault();
+				responses.Add(new ConselingResponse
+				{
+					Id = schedule.Id,
+					StudentId = student?.Id,
+					StudentName = student?.FullName,
+					ParentName = parent?.FullName,
+					HealthCheckupId = healthCheckup?.Id,
+					MeetingDate = schedule.MeetingDate,
+					Note = schedule.Note,
+					Status = schedule.Status,
+					CreatedTime = schedule.CreatedTime,
+					CreatedBy = schedule.CreatedBy,
+					UpdatedTime = schedule.LastUpdatedTime,
+					UpdatedBy = schedule.LastUpdatedBy,
+					ParentRejectNote = schedule.ParentRejectNote
+				});
+			}
+			return responses;
 		}
 		public async Task<List<ConselingResponse>> GetSchedulesByPIdAsync(string parentId)
 		{

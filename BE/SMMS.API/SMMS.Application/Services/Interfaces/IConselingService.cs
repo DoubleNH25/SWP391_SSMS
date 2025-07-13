@@ -9,6 +9,7 @@ namespace SMMS.Application.Services.Interfaces
 		Task<bool> RequestConselingScheduleAsync(string studentId, string healthCheckupId, DateTime requestedDate, string note);
 		Task<bool> UpdateScheduleStatusAsync(string conselingScheduleId, ApprovalStatus status, string parentId, string? parentRejectNote);
 		Task<List<ConselingResponse>> GetSchedulesByNIdAsync(string nurseId);
+		Task<List<ConselingResponse>> GetAllSchedulesAsync();
 		Task<List<ConselingResponse>> GetSchedulesByPIdAsync(string parentId);
 	}
 }

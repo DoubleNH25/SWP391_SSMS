@@ -252,8 +252,8 @@ namespace SMMS.Application.Services.Implements
                 {
                     await _notificationService.CreateNotificationAsync(
                         student.ParentId,
-                        "New Medical Incident",
-                        $"An incident involving {student.FullName} has been reported.",
+                        "Sự kiện tai nạn y tế mới",
+                        $"Một tai nạn y tế của {student.FullName} vừa được báo cáo.",
                         medicalIncident.Id
                     );
                 }
@@ -630,8 +630,8 @@ namespace SMMS.Application.Services.Implements
                 {
                     await _notificationService.CreateNotificationAsync(
                         request.ParentId,
-                        "New Medical Request Created",
-                        $"Medical request for {student.FullName} has been created with {request.MedicalRequestItems.Count} medication(s).",
+                        "Yêu cầu thuốc mới cho học sinh",
+                        $"Yêu cầu thuốc cho {student.FullName} được tạo với {request.MedicalRequestItems.Count} đơn.",
                         medicalRequests.First().Id
                     );
                 }

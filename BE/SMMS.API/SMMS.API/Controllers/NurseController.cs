@@ -148,14 +148,10 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("get-all-conseling-schedules")]
+		[Authorize(Roles = "Admin,Manager,Nurse")]
 		public async Task<IActionResult> GetAllConselingSchedules()
 		{
-			var nurseId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			if (string.IsNullOrEmpty(nurseId))
-			{
-				return Unauthorized("Nurse ID not found in claims.");
-			}
-			var schedules = await _conselingService.GetSchedulesByNIdAsync(nurseId);
+			var schedules = await _conselingService.GetAllSchedulesAsync();
 			if (schedules == null || !schedules.Any()) return NotFound("No counseling schedules found.");
 			return Ok(schedules);
 		}

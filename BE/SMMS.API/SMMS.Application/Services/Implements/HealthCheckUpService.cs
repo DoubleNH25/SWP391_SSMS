@@ -109,8 +109,8 @@ namespace SMMS.Application.Services.Implements
 			{
 				await _notificationService.CreateNotificationAsync(
 					student.ParentId,
-					"New Health Checkup Record",
-					$"A new health checkup record for {student.FullName} is available."
+					"Ghi chép kiểm tra sức khỏe mới",
+					$"Một ghi chép kiểm tra sức khỏe mới của {student.FullName} đã hoàn tất."
 					, record.Id
 				);
 			}
