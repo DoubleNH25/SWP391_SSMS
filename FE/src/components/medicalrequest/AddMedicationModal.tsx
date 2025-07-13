@@ -21,7 +21,7 @@ interface FormOption {
 interface AddMedicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Record<string, unknown>) => void;
   students: StudentOption[];
   medicines: MedicineOption[];
   forms: FormOption[];
@@ -218,7 +218,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             <Input
               name="frequency"
               type="number"
-              min={1}
+              min={"1"}
               value={String(formData.frequency)}
               onChange={handleChange}
             />
@@ -233,7 +233,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             <Input
               name="totalQuantity"
               type="number"
-              min={1}
+              min={"1"}
               value={String(formData.totalQuantity)}
               onChange={handleChange}
             />
@@ -294,6 +294,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
               type="date"
               value={formData.endDate}
               onChange={handleChange}
+              min={formData.startDate || undefined}
             />
             {errors.endDate && (
               <div className="text-red-500 text-xs">{errors.endDate}</div>

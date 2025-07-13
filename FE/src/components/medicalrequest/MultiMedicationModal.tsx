@@ -10,6 +10,7 @@ import { Student } from "@/types/Student";
 import { DateUtils } from "@/utils/DateUtils";
 import { showToast } from "../ui/Toast";
 import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
+import { UploadBlogImage } from "@/services/BlogService";
 
 interface Medication {
   id: string;
@@ -58,13 +59,17 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     },
   ]);
 
+  // Thêm state cho ảnh đơn thuốc
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+
   // Add useEffect to log IDs when modal opens
   useEffect(() => {
     if (isOpen) {
       console.log("Modal opened with:", {
         studentId,
         parentId,
-        student: selectedStudent
+        student: selectedStudent,
       });
     }
     console.log(parentId);
@@ -96,7 +101,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
   const updateMedication = (
     id: string,
     field: keyof Medication,
-    value: any
+    value: string | number | string[]
   ) => {
     setMedications(
       medications.map((med) =>
@@ -124,11 +129,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-            ...med,
-            timeToAdminister: med.timeToAdminister.map((time, i) =>
-              i === index ? value : time
-            ),
-          }
+              ...med,
+              timeToAdminister: med.timeToAdminister.map((time, i) =>
+                i === index ? value : time
+              ),
+            }
           : med
       )
     );
@@ -139,11 +144,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       medications.map((med) =>
         med.id === medicationId
           ? {
-            ...med,
-            timeToAdminister: med.timeToAdminister.filter(
-              (_, i) => i !== index
-            ),
-          }
+              ...med,
+              timeToAdminister: med.timeToAdminister.filter(
+                (_, i) => i !== index
+              ),
+            }
           : med
       )
     );
@@ -161,7 +166,9 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     );
 
     if (validMedications.length === 0) {
-      showToast.error("Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc");
+      showToast.error(
+        "Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc"
+      );
       return;
     }
 
@@ -180,18 +187,27 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     }));
 
     const payload = {
-      studentId,
-      parentId,
-      medicalRequestItems,
+      parentId: parentId,
+      studentId: studentId,
+      medicalRequestItems: medicalRequestItems,
+      imageUrl: imageUrl, // Thêm imageUrl vào payload
     };
+
+    console.log("Payload gửi API:", payload);
 
     try {
       await FecthCreateMedicalRequest(payload);
       showToast.success("Tạo đơn thuốc thành công!");
       onSubmit(validMedications); // Gọi lại để cập nhật UI bên ngoài nếu cần
       handleClose();
-    } catch (err: any) {
-      showToast.error(err.message || "Tạo đơn thuốc thất bại. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        showToast.error(
+          err.message || "Tạo đơn thuốc thất bại. Vui lòng thử lại."
+        );
+      } else {
+        showToast.error("Tạo đơn thuốc thất bại. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -234,7 +250,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       showCloseButton={false}
-      className="max-w-6xl w-full overflow-y-auto max-h-[95vh]"
+      className="max-w-6xl w-full overflow-y-auto max-h-[95vh] bg-gray-50 ring-1 ring-gray-200"
     >
       <div className="bg-white">
         {/* Header */}
@@ -247,7 +263,9 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                     Tạo đơn thuốc - Học sinh: {selectedStudent.fullName} -{" "}
                     {selectedStudent.studentCode}
                   </h2>
-                  <p className="text-gray-500 text-sm">Lớp: {selectedStudent.studentClass.className}</p>
+                  <p className="text-gray-500 text-sm">
+                    Lớp: {selectedStudent.studentClass.className}
+                  </p>
                 </div>
               )}
             </div>
@@ -260,18 +278,44 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
             </Button>
           </div>
         </div>
+        {/* Upload ảnh đơn thuốc */}
+        <div className="px-8 pt-4">
+          <label className="block text-sm font-medium mb-1">
+            Ảnh đơn thuốc
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              if (e.target.files && e.target.files[0]) {
+                setUploading(true);
+                try {
+                  const res = await UploadBlogImage(e.target.files[0]);
+                  setImageUrl(res.imageUrl);
+                } catch {
+                  showToast.error("Upload ảnh thất bại");
+                } finally {
+                  setUploading(false);
+                }
+              }
+            }}
+            className="block"
+            disabled={uploading}
+          />
+          {uploading && (
+            <div className="text-sm text-blue-600 mt-1">Đang tải ảnh...</div>
+          )}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt="Preview"
+              className="mt-2 max-h-40 rounded shadow"
+            />
+          )}
+        </div>
         {/* Content */}
         <div className="p-2 space-y-3 max-h-[65vh] overflow-y-auto">
-          <div className="flex items-center gap-2 w-full">
-            <Label htmlFor="search">Nhập tên người gửi</Label>
-            <Input
-              id="search"
-              type="text"
-              placeholder="Nhập tên người gửi"
-              value={parentId}
-              className="h-11 w-full"
-            />
-          </div>
+          {/* Không hiển thị trường nhập tên người gửi/parentId nữa */}
           {medications.map((medication, index) => (
             <div
               key={medication.id}
