@@ -8,14 +8,11 @@ import {
 } from "@/types/MedicalRecord";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ChevronDownIcon,
-  ChevronUpIcon,
   CalendarIcon,
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  XCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Modal } from "@/components/ui/modal";
@@ -47,18 +44,20 @@ export default function ManagerRecord() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openItemIndex, setOpenItemId] = useState<string | null>(null);
   const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 8;
+  const recordsPerPage = 3;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conselingSchedules, setConselingSchedules] = useState<
     ConselingSchedulesAND[]
   >([]);
   const [selectedConseling, setSelectedConseling] =
     useState<ConselingSchedulesAND | null>(null);
+  const [parentRejectNote, setParentRejectNote] = useState<string>("");
+  const [showRejectNoteInput, setShowRejectNoteInput] =
+    useState<boolean>(false);
 
   // Filter states
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -116,6 +115,8 @@ export default function ManagerRecord() {
   const handleCloseModal = useCallback(() => {
     setIsConsultModalOpen(false);
     setSelectedConseling(null);
+    setParentRejectNote("");
+    setShowRejectNoteInput(false);
   }, []);
 
   // Logic: Khi xác nhận/từ chối, luôn gửi conselingScheduleId lấy từ selectedConseling.id
@@ -125,11 +126,20 @@ export default function ManagerRecord() {
         showToast.error("Không tìm thấy lịch tư vấn phù hợp!");
         return;
       }
+
+      // Validate reject note if rejecting
+      if (status === "Rejected" && !parentRejectNote.trim()) {
+        showToast.error("Vui lòng nhập lý do từ chối!");
+        return;
+      }
+
       try {
         setIsSubmitting(true);
+        console.log(selectedConseling.id);
         await UpdateActivityConsentSchedules({
           conselingScheduleId: selectedConseling.id,
           status,
+          parentRejectNote: status === "Rejected" ? parentRejectNote : "",
         });
         showToast.success(
           status === "Approved"
@@ -145,7 +155,7 @@ export default function ManagerRecord() {
         setIsSubmitting(false);
       }
     },
-    [selectedConseling, fetchAllData, handleCloseModal] // Depend vào selectedConseling!
+    [selectedConseling, parentRejectNote, fetchAllData, handleCloseModal] // Depend vào selectedConseling!
   );
 
   // Mở modal và lấy thông tin tư vấn ứng với healthCheckUpId
@@ -153,13 +163,22 @@ export default function ManagerRecord() {
     (schedule: ConselingSchedulesAND) => {
       setSelectedConseling(schedule);
       setIsConsultModalOpen(true);
+      setShowRejectNoteInput(false);
+      setParentRejectNote("");
     },
     []
   );
 
-  const handleSort = useCallback(() => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  }, []);
+  // Handle reject button click
+  const handleRejectClick = () => {
+    setShowRejectNoteInput(true);
+  };
+
+  // Handle cancel reject
+  const handleCancelReject = () => {
+    setShowRejectNoteInput(false);
+    setParentRejectNote("");
+  };
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
@@ -375,7 +394,6 @@ export default function ManagerRecord() {
 
               {/* Sort Control */}
               <div className="flex flex-wrap items-center gap-3">
-                
                 {hasActiveFilters && (
                   <button
                     onClick={handleClearFilters}
@@ -537,10 +555,7 @@ export default function ManagerRecord() {
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2"
-          style={{ alignItems: "start" }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedRecords.map((item) => {
             // Type guard to check if it's a health checkup record
             const isHealthCheckup = "healthCheckUpId" in item;
@@ -556,175 +571,223 @@ export default function ManagerRecord() {
               return (
                 <div
                   key={healthCheckupItem.healthCheckUpId}
-                  className={`relative bg-white rounded-xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${
+                  className={`relative bg-white rounded-lg shadow border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-md ${
                     hasAbnormalities(healthCheckupItem)
-                      ? "border-orange-200 ring-1 ring-orange-100"
+                      ? "border-orange-200"
+                      : schedule?.status === "Pending"
+                      ? "border-amber-200"
                       : "border-gray-200"
                   }`}
                 >
-                  {/* Status Indicators */}
-                  <div className="absolute top-[1rem] right-[13%] flex flex-col items-end gap-[2.3rem] z-10">
-                    {hasAbnormalities(healthCheckupItem) && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 text-xs font-medium rounded-full border border-orange-200">
-                        <ExclamationTriangleIcon className="w-3 h-3" />
-                        <span>Bất thường</span>
-                      </div>
-                    )}
-                    {schedule && (
-                      <>
-                        {schedule.status === "Pending" && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs font-medium rounded-full border border-amber-200">
-                            <CalendarIcon className="w-3 h-3" />
-                            <span>Chờ xác nhận</span>
+                  <div className="p-6">
+                    {/* Student Header */}
+                    <div className="text-center mb-6">
+                      <div className="relative inline-block mb-4">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                          <div className="text-2xl font-bold text-gray-700">
+                            {healthCheckupItem.studentName
+                              .trim()
+                              .split(" ")
+                              .pop()
+                              ?.charAt(0)}
                           </div>
-                        )}
-                        {schedule.status === "Approved" && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-200">
-                            <CheckCircleIcon className="w-3 h-3" />
-                            <span>Đã xác nhận</span>
-                          </div>
-                        )}
-                        {schedule.status === "Rejected" && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full border border-red-200">
-                            <XCircleIcon className="w-3 h-3" />
-                            <span>Đã từ chối</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  <div
-                    className="p-4 cursor-pointer relative"
-                    onClick={() =>
-                      setOpenItemId(
-                        openItemIndex === healthCheckupItem.healthCheckUpId
-                          ? null
-                          : healthCheckupItem.healthCheckUpId
-                      )
-                    }
-                  >
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {healthCheckupItem.studentName}
-                        </h3>
-                        <p className="text-sm text-gray-500 mb-3">
-                          Ngày khám:{" "}
-                          {DateUtils.customFormatDateOnly(
-                            healthCheckupItem.recordDate
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 border border-gray-200">
+                          {hasAbnormalities(healthCheckupItem) ? (
+                            <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                          ) : schedule?.status === "Pending" ? (
+                            <CalendarIcon className="w-4 h-4 text-amber-500" />
+                          ) : (
+                            <CheckCircleIcon className="w-4 h-4 text-green-500" />
                           )}
-                        </p>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></div>
-                          <span className="font-medium">Y tá:</span>
-                          <span className="ml-2 truncate">
-                            {healthCheckupItem.nurseName}
+                        </div>
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                        {healthCheckupItem.studentName}
+                      </h2>
+                      <div className="flex items-center justify-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <CalendarIcon className="w-4 h-4 text-gray-500" />
+                          <span>
+                            {DateUtils.customFormatDateOnly(
+                              healthCheckupItem.recordDate
+                            )}
                           </span>
                         </div>
+                        <span>•</span>
+                        <div className="flex items-center gap-1">
+                          <span>{healthCheckupItem.nurseName}</span>
+                        </div>
                       </div>
-                      <div className="flex-shrink-0 text-gray-400">
-                        {openItemIndex === healthCheckupItem.healthCheckUpId ? (
-                          <ChevronUpIcon className="w-5 h-5" />
-                        ) : (
-                          <ChevronDownIcon className="w-5 h-5" />
-                        )}
+                      {hasAbnormalities(healthCheckupItem) && (
+                        <div className="flex items-center justify-center gap-1 mb-2">
+                          <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                          <span className="text-sm text-orange-600 font-medium">
+                            Cần chú ý: Có ghi chú bất thường
+                          </span>
+                        </div>
+                      )}
+                      {schedule?.status === "Pending" && (
+                        <div className="flex items-center justify-center gap-1 mb-2">
+                          <CalendarIcon className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm text-amber-600 font-medium">
+                            Cần xác nhận tư vấn
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Health Information Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      {/* Vision */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            Thị lực
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.vision || "N/A"}
+                        </div>
                       </div>
+
+                      {/* Hearing */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            Thính lực
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.hearing || "N/A"}
+                        </div>
+                      </div>
+
+                      {/* Dental */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            Răng miệng
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.dental || "N/A"}
+                        </div>
+                      </div>
+
+                      {/* BMI */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            BMI
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.bmi || "N/A"}
+                        </div>
+                      </div>
+
+                      {/* Height */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            Chiều cao
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.height
+                            ? `${healthCheckupItem.height} cm`
+                            : "N/A"}
+                        </div>
+                      </div>
+
+                      {/* Weight */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                            Cân nặng
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          {healthCheckupItem.weight
+                            ? `${healthCheckupItem.weight} kg`
+                            : "N/A"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Abnormal Notes */}
+                    {hasAbnormalities(healthCheckupItem) && (
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <ExclamationTriangleIcon className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">
+                            Ghi chú bất thường
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-800">
+                          {healthCheckupItem.abnormalNote || "Không có"}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      {/* Approve/Reject Button - Only show for abnormal records or existing schedules */}
+                      {(schedule || hasAbnormalities(healthCheckupItem)) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (schedule) {
+                              handleOpenConsultForm(schedule);
+                            } else if (hasAbnormalities(healthCheckupItem)) {
+                              // Create a mock schedule for abnormal records without consultation
+                              const mockSchedule: ConselingSchedulesAND = {
+                                id: `${healthCheckupItem.healthCheckUpId}`,
+                                studentId: healthCheckupItem.studentId || "",
+                                studentName: healthCheckupItem.studentName,
+                                parentName: "Phụ huynh",
+                                healthCheckupId:
+                                  healthCheckupItem.healthCheckUpId || "",
+                                meetingDate: new Date(),
+                                status: "Pending",
+                                note: "Hồ sơ sức khỏe bất thường cần xác nhận",
+                                createdTime: new Date(),
+                                createdBy: "System",
+                                updatedTime: new Date(),
+                                updatedBy: "System",
+                              };
+                              handleOpenConsultForm(mockSchedule);
+                            }
+                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium rounded transition-colors ${
+                            schedule?.status === "Pending"
+                              ? "text-white bg-amber-500 hover:bg-amber-600 border border-amber-500"
+                              : schedule?.status === "Approved"
+                              ? "text-white bg-green-500 hover:bg-green-600 border border-green-500"
+                              : schedule?.status === "Rejected"
+                              ? "text-white bg-red-500 hover:bg-red-600 border border-red-500"
+                              : "text-white bg-orange-500 hover:bg-orange-600 border border-orange-500"
+                          }`}
+                        >
+                          <CalendarIcon className="w-4 h-4" />
+                          {schedule?.status === "Pending"
+                            ? "Xác nhận tư vấn"
+                            : schedule?.status === "Approved"
+                            ? "Đã xác nhận"
+                            : schedule?.status === "Rejected"
+                            ? "Đã từ chối"
+                            : "Xác nhận hồ sơ bất thường"}
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  {openItemIndex === healthCheckupItem.healthCheckUpId && (
-                    <div className="border-t border-gray-100 bg-gray-50/50">
-                      <div className="p-5 space-y-4">
-                        {schedule && (
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenConsultForm(schedule);
-                            }}
-                            title={
-                              schedule.status === "Pending"
-                                ? "Có lịch tư vấn chờ xác nhận"
-                                : "Xem lịch tư vấn"
-                            }
-                            className={`group w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${
-                              schedule.status === "Pending"
-                                ? "text-amber-700 bg-amber-100 hover:bg-amber-200 ring-amber-300 shadow-amber-200"
-                                : "text-blue-600 bg-blue-50 hover:bg-blue-100 ring-blue-300"
-                            }`}
-                          >
-                            <CalendarIcon className="w-5 h-5" />
-                            <span className="font-medium text-sm">
-                              {schedule.status === "Pending"
-                                ? "Xác nhận tư vấn"
-                                : "Xem lịch tư vấn"}
-                            </span>
-                            {schedule.status === "Pending" && (
-                              <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse border-2 border-white"></span>
-                            )}
-                          </Button>
-                        )}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-white p-3 rounded-lg border border-gray-100">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                              Thị lực
-                            </div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {healthCheckupItem.vision}
-                            </div>
-                          </div>
-                          <div className="bg-white p-3 rounded-lg border border-gray-100">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                              Thính lực
-                            </div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {healthCheckupItem.hearing}
-                            </div>
-                          </div>
-                          <div className="bg-white p-3 rounded-lg border border-gray-100">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                              Răng miệng
-                            </div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {healthCheckupItem.dental}
-                            </div>
-                          </div>
-                          <div className="bg-white p-3 rounded-lg border border-gray-100">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                              BMI
-                            </div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {healthCheckupItem.bmi}
-                            </div>
-                          </div>
-                        </div>
-
-                        {hasAbnormalities(healthCheckupItem) && (
-                          <div
-                            className={`bg-white p-4 rounded-lg border-l-4 ${
-                              hasAbnormalities(healthCheckupItem)
-                                ? "border-orange-400 bg-orange-50/50"
-                                : "border-gray-200"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              {hasAbnormalities(healthCheckupItem) && (
-                                <ExclamationTriangleIcon className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                              )}
-                              <div className="flex-1">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                                  Ghi chú bất thường
-                                </div>
-                                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                                  {healthCheckupItem.abnormalNote}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             } else {
@@ -780,7 +843,7 @@ export default function ManagerRecord() {
           onClose={handleCloseModal}
           showCloseButton={true}
           isFullscreen={false}
-          className="max-w-md"
+          className="max-w-xl w-full"
         >
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -823,25 +886,73 @@ export default function ManagerRecord() {
             ) : (
               <div>Không tìm thấy thông tin lịch tư vấn.</div>
             )}
-            <div className="flex justify-end gap-3 mt-8">
+            {/* Reject Note Input */}
+            {showRejectNoteInput && (
+              <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                    <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-red-800">
+                    Lý do từ chối tư vấn
+                  </h4>
+                </div>
+                <textarea
+                  value={parentRejectNote}
+                  onChange={(e) => setParentRejectNote(e.target.value)}
+                  placeholder="Vui lòng nhập lý do từ chối tư vấn..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-red-600 mt-2">
+                  * Lý do từ chối là bắt buộc khi từ chối tư vấn
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
               {selectedConseling?.status === "Pending" ? (
                 <>
-                  <Button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() => handleSubmit("Rejected")}
-                    className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {isSubmitting ? "Đang xử lý..." : "Từ chối"}
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() => handleSubmit("Approved")}
-                    className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {isSubmitting ? "Đang xử lý..." : "Xác nhận"}
-                  </Button>
+                  {showRejectNoteInput ? (
+                    <>
+                      <Button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={handleCancelReject}
+                        className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        Hủy
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={isSubmitting || !parentRejectNote.trim()}
+                        onClick={() => handleSubmit("Rejected")}
+                        className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {isSubmitting ? "Đang xử lý..." : "Xác nhận từ chối"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={handleRejectClick}
+                        className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        Từ chối
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={() => handleSubmit("Approved")}
+                        className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {isSubmitting ? "Đang xử lý..." : "Xác nhận"}
+                      </Button>
+                    </>
+                  )}
                 </>
               ) : (
                 <Button
@@ -862,7 +973,7 @@ export default function ManagerRecord() {
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-black bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Trước
             </Button>
@@ -873,7 +984,7 @@ export default function ManagerRecord() {
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentPage === page
                     ? "bg-blue-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50"
+                    : "bg-white border text-black border-gray-200 hover:bg-gray-50"
                 }`}
               >
                 {page}
@@ -884,7 +995,7 @@ export default function ManagerRecord() {
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-white border text-black border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Sau
             </Button>

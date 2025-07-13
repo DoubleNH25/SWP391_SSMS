@@ -87,6 +87,7 @@ const NotificationDropdown: React.FC = () => {
 
           if (
             notification.title.toLowerCase().includes("health") ||
+            notification.title.toLowerCase().includes("health") ||
             notification.message.toLowerCase().includes("health") ||
             notification.title.toLowerCase().includes("sức khỏe")
           ) {
@@ -102,7 +103,11 @@ const NotificationDropdown: React.FC = () => {
             notification.message.toLowerCase().includes("vaccination") ||
             notification.title.toLowerCase().includes("tiêm chủng")
           ) {
-            navigate(`/dashboard/activity-medical`);
+            if (role === "Nurse") {
+              navigate(`/dashboard/approved-medical-events`);
+            } else {
+              navigate(`/dashboard/activity-medical`);
+            }
           } else if (
             notification.title.toLowerCase().includes("medical") ||
             notification.message.toLowerCase().includes("medical") ||

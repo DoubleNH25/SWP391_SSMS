@@ -18,6 +18,7 @@ export interface ConselingSchedulesAND {
     updatedTime: Date;
     updatedBy: string;
     status: string;
+    parentRejectNote?: string;
 }
 
 export interface ConselingSchedulesANDUpdate {

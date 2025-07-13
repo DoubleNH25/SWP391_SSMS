@@ -150,7 +150,6 @@ export default function ConfirmOTP() {
           otp: otpCode,
         } as VerifyOTPEmailRequest;
         const resetToken = await FecthVerifyEmailOTP(data);
-        console.log("Reset token", resetToken);
         setIsVerified(true);
         // Navigate to reset password page with the reset token
         navigate("/reset-password", {
@@ -164,8 +163,6 @@ export default function ConfirmOTP() {
         // Handle phone OTP verification (existing logic)
         const userCredential = await verifyOTP(otpCode);
         const idToken = await userCredential.user.getIdToken();
-        console.log("IdToken", idToken);
-        console.log("Phone", phone);
         const verifyOTPRequest: VerifyOTPRequest = {
           idToken,
           phoneNumber: phone,

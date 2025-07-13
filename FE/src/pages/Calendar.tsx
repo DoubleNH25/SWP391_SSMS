@@ -36,6 +36,7 @@ import DailySchedule from "@/components/calendar/DailySchedule";
 import PageHeader from "@/components/ui/PageHeader";
 import { CalendarDays } from "lucide-react";
 import { showToast } from "@/components/ui/Toast";
+import { DecodeJWT } from "@/utils/DecodeJWT";
 
 type FormData =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
@@ -67,6 +68,15 @@ const Calendar: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+
+  // Get current user role
+  const currentUserRole = useMemo(() => {
+    const payload = DecodeJWT();
+    return payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null;
+  }, []);
+
+  // Check if user is Admin (restricted from create/edit/delete)
+  const isAdmin = currentUserRole === "Admin";
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -192,6 +202,12 @@ const Calendar: React.FC = () => {
   }, []);
 
   const handleDateSelect = useCallback((date: string) => {
+    // Prevent Admin users from creating new events
+    if (isAdmin) {
+      showToast.error("Admin không thể tạo sự kiện mới");
+      return;
+    }
+
     const selected = new Date(date);
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
@@ -224,10 +240,20 @@ const Calendar: React.FC = () => {
         };
       }
     });
-  }, []);
+  }, [isAdmin]);
 
   const handleEventClick = useCallback(
     async (event: CalendarEvent) => {
+      // For Admin users, only allow viewing approved events
+      if (isAdmin) {
+        if (event.extendedProps.calendar === "Approved") {
+          showToast.info("Admin chỉ có thể xem sự kiện đã được phê duyệt");
+        } else {
+          showToast.error("Admin không được phép thao tác với sự kiện chưa được duyệt");
+        }
+        return;
+      }
+
       const eventDate = new Date(event.start);
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
@@ -355,7 +381,7 @@ const Calendar: React.FC = () => {
         openModal();
       }
     },
-    [navigate, openModal]
+    [navigate, openModal, isAdmin]
   );
 
   const handleMedicalInputChange = useCallback(
@@ -578,6 +604,12 @@ const Calendar: React.FC = () => {
   );
 
   const handleAddOrUpdateEvent = useCallback(async () => {
+    // Prevent Admin users from creating or updating events
+    if (isAdmin) {
+      showToast.error("Admin không thể tạo hoặc cập nhật sự kiện");
+      return;
+    }
+
     if (loading) return;
     const { type, data } = formData;
 
@@ -597,7 +629,6 @@ const Calendar: React.FC = () => {
         // Update mode
         if (type === "medical") {
           const payload = prepareMedicalData(data);
-          console.log(payload);
           const success = await FecthUpdateMedicalEvent(
             selectedEvent.id,
             payload
@@ -676,9 +707,15 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData, selectedEvent, closeModal, loading, validateFormData, fetchEvents]);
+  }, [formData, selectedEvent, closeModal, loading, validateFormData, fetchEvents, isAdmin]);
 
   const handleDeleteEvent = useCallback(async () => {
+    // Prevent Admin users from deleting events
+    if (isAdmin) {
+      showToast.error("Admin không thể xóa sự kiện");
+      return;
+    }
+
     if (!selectedEvent || selectedEvent.extendedProps.calendar !== "Pending") {
       showToast.error("Không thể xóa sự kiện này");
       return;
@@ -703,7 +740,7 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedEvent, closeModal, loading, fetchEvents]);
+  }, [selectedEvent, closeModal, loading, fetchEvents, isAdmin]);
 
   const navigateMonth = useCallback((direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -822,6 +859,7 @@ const Calendar: React.FC = () => {
         onAddNewEvent={() => setViewEventsDate(null)}
         onSetFormData={setFormData}
         classOptions={classOptions}
+        isAdmin={isAdmin}
       />
     );
   }, [
@@ -831,6 +869,7 @@ const Calendar: React.FC = () => {
     loading,
     handleEventClick,
     closeModal,
+    isAdmin,
   ]);
 
   const DailyScheduleComponent = useMemo(() => {
@@ -843,6 +882,7 @@ const Calendar: React.FC = () => {
         onOpenModal={openModal}
         onSetFormData={setFormData}
         classOptions={classOptions}
+        isAdmin={isAdmin}
       />
     );
   }, [
@@ -852,6 +892,7 @@ const Calendar: React.FC = () => {
     handleEventClick,
     openModal,
     classOptions,
+    isAdmin,
   ]);
 
   const isFormValid = useMemo(() => {
@@ -987,6 +1028,7 @@ const Calendar: React.FC = () => {
                 setCurrentDate(new Date());
                 setSelectedDate(DateUtils.customFormatDateOnly(new Date()));
               }}
+              isAdmin={isAdmin}
             />
 
             <div className="lg:w-1/3">{DailyScheduleComponent}</div>
@@ -1001,6 +1043,31 @@ const Calendar: React.FC = () => {
           >
             {viewEventsDate ? (
               ViewEventsModalComponent
+            ) : isAdmin ? (
+              // Admin view-only interface
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Xem sự kiện
+                </h3>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Chế độ xem Admin</h3>
+                  <p className="text-gray-600 mb-4">
+                    Admin chỉ có thể xem các sự kiện đã được phê duyệt.
+                    Không thể tạo, chỉnh sửa hoặc xóa sự kiện.
+                  </p>
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">

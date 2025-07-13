@@ -12,6 +12,7 @@ interface DailyScheduleProps {
   onOpenModal: () => void;
   onSetFormData: (formData: FormDataType | ((prev: FormDataType) => FormDataType)) => void;
   classOptions: { value: string; label: string }[];
+  isAdmin?: boolean;
 }
 type FormDataType =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
@@ -24,7 +25,8 @@ const DailySchedule = ({
   onEventClick,
   onOpenModal,
   onSetFormData,
-  classOptions
+  classOptions,
+  isAdmin = false
 }: DailyScheduleProps) => {
   if (!selectedDate) return null;
 
@@ -89,13 +91,15 @@ const DailySchedule = ({
         <h3 className="text-xl font-bold text-gray-900">
           Lịch cho {new Date(selectedDate).toLocaleDateString()}
         </h3>
-        <button
-          onClick={handleAddEvent}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-          disabled={loading}
-        >
-          Thêm sự kiện
-        </button>
+        {!isAdmin && (
+          <button
+            onClick={handleAddEvent}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+            disabled={loading}
+          >
+            Thêm sự kiện
+          </button>
+        )}
       </div>
 
       <div className="space-y-3 max-h-[400px] overflow-y-auto">

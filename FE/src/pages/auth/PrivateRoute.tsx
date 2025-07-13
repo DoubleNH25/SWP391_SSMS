@@ -10,15 +10,15 @@ function PrivateRoute({
 }) {
   const payload = DecodeJWT();
   if (!payload) {
-    return <Navigate to="/dang-nhap" />;
+    return <Navigate to="/login" />;
   }
   const role =
     payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
   if (!role) {
-    return <Navigate to="/khong-co-quyen" />;
+    return <Navigate to="/unauthorized" />;
   }
   if (!allowedRoles.includes(role)) {
-    return <Navigate to="/khong-co-quyen" />;
+    return <Navigate to="/unauthorized" />;
   }
   return children;
 }

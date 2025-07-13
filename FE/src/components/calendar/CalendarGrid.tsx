@@ -13,6 +13,7 @@ interface CalendarGridProps {
   onNavigateMonth: (direction: "prev" | "next") => void;
   onToday: () => void;
   classOptions: { value: string; label: string }[];
+  isAdmin?: boolean;
 }
 
 const CalendarGrid = ({
@@ -24,7 +25,8 @@ const CalendarGrid = ({
   onViewMoreEvents,
   onNavigateMonth,
   onToday,
-  classOptions
+  classOptions,
+  isAdmin = false
 }: CalendarGridProps) => {
   const monthNames = [
     "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
@@ -126,12 +128,12 @@ const CalendarGrid = ({
           return (
             <div
               key={index}
-              className={`min-h-[120px] border border-gray-200 p-2 ${isPast ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+              className={`min-h-[120px] border border-gray-200 p-2 ${isPast ? 'bg-gray-100 cursor-not-allowed' : isAdmin ? 'cursor-not-allowed bg-gray-50' : 'cursor-pointer'
                 } ${isSelected
                   ? "bg-blue-100 hover:bg-blue-200"
-                  : isPast ? '' : "hover:bg-gray-100"
+                  : isPast ? '' : isAdmin ? '' : "hover:bg-gray-100"
                 }`}
-              onClick={() => date && !isPast && onDateSelect(DateUtils.customFormatDate(date))}
+              onClick={() => date && !isPast && !isAdmin && onDateSelect(DateUtils.customFormatDate(date))}
             >
               {date && (
                 <>

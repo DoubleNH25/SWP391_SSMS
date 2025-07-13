@@ -63,6 +63,7 @@ export async function FecthHealthCheckup(): Promise<
       method: "GET",
       endpoint: "/parents/get-all-student-health-checkup",
     });
+    console.log(response.data);
     return response?.data || [];
   } catch (err) {
     console.error(`Failed to get health profile: ${err}`);
@@ -101,11 +102,12 @@ export async function FecthCreateConselingSchedule(
     throw new Error("Please enter complete conseling schedule information");
   }
   try {
-    await ApiClient<ConselingSchedules>({
+    const rs = await ApiClient<ConselingSchedules>({
       method: "POST",
       endpoint: "/nurse/conseling-schedules",
       data: data,
     });
+    console.log(rs.data);
     return true;
   } catch (err) {
     console.error("Failed to create conseling schedule:", err);
