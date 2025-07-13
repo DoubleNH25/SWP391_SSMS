@@ -23,9 +23,9 @@ export async function FetchDashboardStats(): Promise<DashboardStats> {
         method: "GET",
         endpoint: "/incidents/count",
       }),
-      ApiClient<{ total: number }>({
+      ApiClient<{ count: number }>({
         method: "GET",
-        endpoint: "/medical-request/daily/today/count",
+        endpoint: "/medical/request/daily/today/count",
       }),
       ApiClient<{ count: number }>({
         method: "GET",
@@ -36,7 +36,7 @@ export async function FetchDashboardStats(): Promise<DashboardStats> {
     return {
       totalStudents: studentsResponse.data.count,
       incidents: incidentsResponse.data.count,
-      processingPrescriptions: prescriptionsResponse.data.total,
+      processingPrescriptions: prescriptionsResponse.data.count,
       totalParents: parentsResponse.data.count,
     };
   } catch (error) {

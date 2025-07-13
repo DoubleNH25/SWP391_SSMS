@@ -1,6 +1,12 @@
 import { Users, Clock, Pill, Activity } from "lucide-react";
 import { MedicalEventViewModel } from "@/types/MedicalEvent";
 import BlogSlider from "./BlogSlider";
+import { useEffect, useState } from "react";
+import { FetchAllIncidentsWithoutStudentId } from "@/services/IncidentService";
+import { FecthConselingSchedules } from "@/services/MedicalRecordService";
+import { FecthTodayMedicalRequestCount } from "@/services/MedicalRequest";
+import { Incident } from "@/types/Incident";
+import { ConselingSchedulesAND } from "@/types/ConselingSchedules";
 
 export default function AdminDashboard({
   stats,
@@ -14,10 +20,54 @@ export default function AdminDashboard({
   };
   medicalEvents: MedicalEventViewModel[];
 }) {
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [counselingSchedules, setCounselingSchedules] = useState<
+    ConselingSchedulesAND[]
+  >([]);
+  const [todayRequestCount, setTodayRequestCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch medical incidents
+    const fetchIncidents = async () => {
+      try {
+        const data = await FetchAllIncidentsWithoutStudentId();
+        setIncidents(data || []);
+      } catch (error) {
+        console.error("Failed to fetch incidents:", error);
+        setIncidents([]);
+      }
+    };
+
+    // Fetch counseling schedules
+    const fetchCounselingSchedules = async () => {
+      try {
+        const data = await FecthConselingSchedules();
+        setCounselingSchedules(data || []);
+      } catch (error) {
+        console.error("Failed to fetch counseling schedules:", error);
+        setCounselingSchedules([]);
+      }
+    };
+
+    // Fetch today's medical request count
+    const fetchTodayRequestCount = async () => {
+      const count = await FecthTodayMedicalRequestCount();
+      setTodayRequestCount(count);
+    };
+
+    fetchIncidents();
+    fetchCounselingSchedules();
+    fetchTodayRequestCount();
+  }, []);
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Bảng điều khiển</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="p-6 bg-gray-100 min-h-screen space-y-8">
+      <h1 className="text-3xl font-semibold text-gray-800">
+        Bảng điều khiển quản trị
+      </h1>
+
+      {/* --- KPI Cards --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Sự cố y tế"
           value={stats.incidents}
@@ -34,76 +84,158 @@ export default function AdminDashboard({
           icon={<Clock className="w-8 h-8 text-yellow-600" />}
         />
         <StatCard
-          title="Đơn thuốc đang xử lý"
-          value={stats.processingPrescriptions}
+          title="ĐƠN THUỐC ĐANG XỬ LÝ"
+          value={todayRequestCount}
           icon={<Pill className="w-8 h-8 text-emerald-600" />}
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      {/* --- Tables Group --- */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Sự kiện y tế chờ duyệt */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="font-semibold text-lg mb-4">Sự kiện y tế chờ duyệt</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Sự kiện</th>
-                  <th className="text-left py-3 px-4">Chi phí</th>
-                  <th className="text-left py-3 px-4">Trạng thái</th>
-                  <th className="text-left py-3 px-4">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {medicalEvents.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center px-4 py-2">
-                      Không có sự kiện nào
-                    </td>
-                  </tr>
-                ) : (
-                  medicalEvents.map((event, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-3 px-4">{event.name}</td>
-                      <td className="py-3 px-4">-</td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm ${
-                            event.status === "Approved"
-                              ? "bg-blue-100 text-blue-800"
-                              : event.status === "Pending"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {event.status === "Approved"
-                            ? "ĐÃ DUYỆT"
-                            : event.status === "Pending"
-                            ? "CHỜ DUYỆT"
-                            : "TỪ CHỐI"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <button className="text-blue-600 hover:text-blue-800">
-                          Chi tiết
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Section title="Sự kiện y tế chờ duyệt">
+          <Table
+            headers={["Sự kiện", "Chi phí", "Trạng thái"]}
+            rows={medicalEvents.map((event) => [
+              event.name || "-",
+              "-",
+              event.status === "Approved"
+                ? "Đã duyệt"
+                : event.status === "Pending"
+                ? "Chờ duyệt"
+                : event.status === "Rejected"
+                ? "Từ chối"
+                : event.status || "Không xác định",
+            ])}
+          />
+        </Section>
+
+        {/* Sự cố y tế */}
+        <Section title="Sự cố y tế">
+          <Table
+            headers={["Học sinh", "Loại sự cố", "Thời gian", "Trạng thái"]}
+            rows={incidents.map((incident) => [
+              incident.studentId || "-",
+              incident.type || "-",
+              incident.incidentDate
+                ? new Date(incident.incidentDate).toLocaleString()
+                : "-",
+              incident.status === "Approved"
+                ? "Đã duyệt"
+                : incident.status === "Pending"
+                ? "Chờ duyệt"
+                : incident.status === "Rejected"
+                ? "Từ chối"
+                : incident.status || "Không xác định",
+            ])}
+          />
+        </Section>
+
+        {/* Lịch tư vấn */}
+        <Section title="Lịch tư vấn">
+          <Table
+            headers={["Học sinh", "Ngày tư vấn", "Nội dung", "Trạng thái"]}
+            rows={counselingSchedules.map((schedule) => [
+              schedule.studentName || "-",
+              schedule.meetingDate
+                ? new Date(schedule.meetingDate).toLocaleDateString()
+                : "-",
+              schedule.note || "-",
+              schedule.status === "Approved"
+                ? "Đã duyệt"
+                : schedule.status === "Pending"
+                ? "Chờ duyệt"
+                : schedule.status === "Rejected"
+                ? "Từ chối"
+                : schedule.status || "Không xác định",
+            ])}
+          />
+        </Section>
+
         {/* Tin mới */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="font-semibold text-lg mb-4">Tin mới</h2>
+        <Section title="Tin mới">
           <BlogSlider />
-        </div>
+        </Section>
       </div>
     </div>
   );
 }
 
+/* ----- Helpers ----- */
+
+// Section wrapper with title
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-wide">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+// Generic table component
+function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <tr>
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={headers.length}
+                className="px-4 py-8 text-center text-gray-400"
+              >
+                Không có dữ liệu
+              </td>
+            </tr>
+          ) : (
+            rows.map((r, i) => (
+              <tr
+                key={i}
+                className={
+                  `transition-colors duration-150 ` +
+                  (i % 2 === 0 ? "bg-white" : "bg-gray-50") +
+                  " hover:bg-blue-50 hover:shadow"
+                }
+              >
+                {r.map((cell, j) => (
+                  <td
+                    key={j}
+                    className="px-4 py-3 text-gray-800 whitespace-nowrap max-w-xs overflow-x-auto rounded-lg"
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// KPI card with subtle gradient + hover shadow
 function StatCard({
   title,
   value,
@@ -114,13 +246,17 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-between h-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600 mb-2">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+    <div className="bg-gradient-to-br from-white via-blue-50 to-blue-100 rounded-2xl shadow-sm hover:shadow-lg transition-all p-6 flex items-center justify-between group cursor-pointer">
+      <div>
+        <div className="text-gray-500 text-xs uppercase tracking-wide mb-1 group-hover:text-blue-700 transition">
+          {title}
         </div>
-        <div>{icon}</div>
+        <div className="text-3xl font-bold text-gray-800 group-hover:text-blue-700 transition">
+          {value}
+        </div>
+      </div>
+      <div className="text-4xl opacity-80 group-hover:scale-110 group-hover:text-blue-500 transition-transform">
+        {icon}
       </div>
     </div>
   );

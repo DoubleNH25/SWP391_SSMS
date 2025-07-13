@@ -268,3 +268,16 @@ export async function FecthCreateMedicalAdministration(
     return false;
   }
 }
+
+export async function FecthTodayMedicalRequestCount(): Promise<number> {
+  try {
+    const response = await ApiClient<{ count: number }>({
+      method: "GET",
+      endpoint: "/medical/request/daily/today/count",
+    });
+    return response.data?.count ?? 0;
+  } catch (err) {
+    console.error("Failed to get today's medical request count:", err);
+    return 0;
+  }
+}
