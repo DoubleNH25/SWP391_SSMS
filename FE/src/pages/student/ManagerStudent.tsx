@@ -44,6 +44,7 @@ export default function StudentManager() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
+  const [selectedClass, setSelectedClass] = useState<string>("all");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [sortField, setSortField] = useState<"studentCode">("studentCode");
   const navigate = useNavigate();
@@ -78,7 +79,10 @@ export default function StudentManager() {
     const matchesGrade =
       selectedGrade === "all" ||
       student.studentClass.className.startsWith(selectedGrade);
-    return matchesClass && matchesSearch && matchesGrade;
+    const matchesSelectedClass =
+      selectedClass === "all" ||
+      student.studentClass.id === selectedClass;
+    return matchesClass && matchesSearch && matchesGrade && matchesSelectedClass;
   });
 
   // Sort students based on student code
@@ -216,6 +220,7 @@ export default function StudentManager() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedGrade("all");
+    setSelectedClass("all");
     setCurrentPage(1);
     // Remove classId from URL parameters
     const newSearchParams = new URLSearchParams(searchParams);
@@ -258,7 +263,7 @@ export default function StudentManager() {
             <h2 className="text-lg font-semibold text-gray-900">
               Bộ lọc tìm kiếm
             </h2>
-            {(searchTerm || selectedGrade !== "all" || classIdFilter) && (
+            {(searchTerm || selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) && (
               <button
                 onClick={handleClearFilters}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -268,8 +273,8 @@ export default function StudentManager() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="md:col-span-2">
               <Label htmlFor="search">Tìm kiếm</Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -296,7 +301,7 @@ export default function StudentManager() {
                 )}
               </div>
             </div>
-            <div className="w-1/2">
+            <div>
               <Label htmlFor="grade">Khối lớp</Label>
               <Select
                 options={[
@@ -315,8 +320,27 @@ export default function StudentManager() {
                 placeholder="Chọn khối lớp"
               />
             </div>
+            <div>
+              <Label htmlFor="class">Lớp</Label>
+              <Select
+                options={[
+                  { value: "all", label: "Tất cả" },
+                  ...classes.map((cls) => ({
+                    value: cls.id,
+                    label: cls.className,
+                  })),
+                ]}
+                defaultValue={selectedClass}
+                onChange={(value) => {
+                  setSelectedClass(value);
+                  setCurrentPage(1);
+                }}
+                className="w-full"
+                placeholder="Chọn lớp"
+              />
+            </div>
           </div>
-          {(searchTerm || selectedGrade !== "all" || classIdFilter) && (
+          {(searchTerm || selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) && (
             <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
               <svg
                 className="w-4 h-4"
@@ -337,12 +361,18 @@ export default function StudentManager() {
                   <span className="font-medium">"{searchTerm}"</span>
                 )}
                 {searchTerm &&
-                  (selectedGrade !== "all" || classIdFilter) &&
+                  (selectedGrade !== "all" || selectedClass !== "all" || classIdFilter) &&
                   " và "}
                 {selectedGrade !== "all" && (
                   <span className="font-medium">khối {selectedGrade}</span>
                 )}
-                {selectedGrade !== "all" && classIdFilter && " và "}
+                {selectedGrade !== "all" && (selectedClass !== "all" || classIdFilter) && " và "}
+                {selectedClass !== "all" && (
+                  <span className="font-medium">
+                    lớp {classes.find(cls => cls.id === selectedClass)?.className}
+                  </span>
+                )}
+                {selectedClass !== "all" && classIdFilter && " và "}
                 {classIdFilter && (
                   <span className="font-medium">
                     lớp {getFilteredClassName()}
@@ -643,8 +673,8 @@ export default function StudentManager() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === page
-                            ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                            : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                          ? "z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                          : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
                           }`}
                       >
                         {page}
