@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
 import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
+import { Student } from "@/types/Student";
+import { MedicalRequestItems } from "@/types/MedicalRequest";
 
 interface StudentOption {
   value: string;
@@ -25,6 +27,8 @@ interface AddMedicationModalProps {
   students: StudentOption[];
   medicines: MedicineOption[];
   forms: FormOption[];
+  selectedStudent?: Student | null;
+  parentId: string; // Thêm prop parentId
 }
 
 const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
@@ -34,83 +38,15 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
   students,
   medicines,
   forms,
+  selectedStudent,
+  parentId,
 }) => {
-  const [formData, setFormData] = useState({
-    studentId: "",
-    parentName: "",
-    phoneNumber: "",
-    medicationName: "",
-    form: "",
-    dosage: "",
-    route: "",
-    frequency: 1,
-    totalQuantity: 1,
-    timeToAdminister: [""],
-    startDate: "",
-    endDate: "",
-    notes: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // State chung
+  const [studentId, setStudentId] = useState("");
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.studentId) newErrors.studentId = "Chọn học sinh";
-    if (!formData.medicationName) newErrors.medicationName = "Chọn thuốc";
-    if (!formData.form) newErrors.form = "Chọn dạng thuốc";
-    if (!formData.dosage) newErrors.dosage = "Nhập liều lượng";
-    if (!formData.frequency || formData.frequency < 1)
-      newErrors.frequency = "Tần suất phải >= 1";
-    if (!formData.totalQuantity || formData.totalQuantity < 1)
-      newErrors.totalQuantity = "Tổng số lượng phải >= 1";
-    if (!formData.startDate) newErrors.startDate = "Chọn ngày bắt đầu";
-    if (!formData.endDate) newErrors.endDate = "Chọn ngày kết thúc";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value,
-    }));
-  };
-
-  const handleSelect = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTimeChange = (idx: number, value: string) => {
-    const newTimes = [...formData.timeToAdminister];
-    newTimes[idx] = value;
-    setFormData((prev) => ({ ...prev, timeToAdminister: newTimes }));
-  };
-
-  const handleAddTime = () => {
-    setFormData((prev) => ({
-      ...prev,
-      timeToAdminister: [...prev.timeToAdminister, ""],
-    }));
-  };
-
-  const handleRemoveTime = (idx: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      timeToAdminister: prev.timeToAdminister.filter((_, i) => i !== idx),
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    onSubmit(formData);
-    onClose();
-    setFormData({
-      studentId: "",
-      parentName: "",
-      phoneNumber: "",
+  // State lưu nhiều thuốc
+  const [medications, setMedications] = useState<MedicalRequestItems[]>([
+    {
       medicationName: "",
       form: "",
       dosage: "",
@@ -121,7 +57,161 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
       startDate: "",
       endDate: "",
       notes: "",
-    });
+    },
+  ]);
+
+  // Thêm thuốc mới
+  const handleAddMedication = () => {
+    setMedications((prev) => [
+      ...prev,
+      {
+        medicationName: "",
+        form: "",
+        dosage: "",
+        route: "",
+        frequency: 1,
+        totalQuantity: 1,
+        timeToAdminister: [""],
+        startDate: "",
+        endDate: "",
+        notes: "",
+      },
+    ]);
+  };
+
+  // Xóa thuốc
+  const handleRemoveMedication = (idx: number) => {
+    setMedications((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Cập nhật trường cho từng thuốc
+  const handleMedicationChange = (
+    idx: number,
+    name: string,
+    value: string | number
+  ) => {
+    setMedications((prev) =>
+      prev.map((med, i) => (i === idx ? { ...med, [name]: value } : med))
+    );
+  };
+
+  // Cập nhật timeToAdminister cho từng thuốc
+  const handleTimeChange = (medIdx: number, timeIdx: number, value: string) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIdx
+          ? {
+              ...med,
+              timeToAdminister: med.timeToAdminister.map((t, j) =>
+                j === timeIdx ? value : t
+              ),
+            }
+          : med
+      )
+    );
+  };
+
+  // Thêm mốc giờ cho từng thuốc
+  const handleAddTime = (medIdx: number) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIdx
+          ? { ...med, timeToAdminister: [...med.timeToAdminister, ""] }
+          : med
+      )
+    );
+  };
+
+  // Xóa mốc giờ cho từng thuốc
+  const handleRemoveTime = (medIdx: number, timeIdx: number) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIdx
+          ? {
+              ...med,
+              timeToAdminister: med.timeToAdminister.filter(
+                (_, j) => j !== timeIdx
+              ),
+            }
+          : med
+      )
+    );
+  };
+
+  // Khi chọn học sinh, set studentId
+  React.useEffect(() => {
+    if (selectedStudent && isOpen) {
+      setStudentId(selectedStudent.id);
+      setMedications([
+        {
+          medicationName: "",
+          form: "",
+          dosage: "",
+          route: "",
+          frequency: 1,
+          totalQuantity: 1,
+          timeToAdminister: [""],
+          startDate: "",
+          endDate: "",
+          notes: "",
+        },
+      ]);
+    }
+  }, [selectedStudent, isOpen]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!studentId) newErrors.studentId = "Vui lòng chọn học sinh";
+    if (!medications.length)
+      newErrors.medications = "Vui lòng thêm ít nhất một thuốc";
+    for (let i = 0; i < medications.length; i++) {
+      const med = medications[i];
+      if (!med.medicationName) newErrors[`medicationName-${i}`] = "Chọn thuốc";
+      if (!med.form) newErrors[`form-${i}`] = "Chọn dạng thuốc";
+      if (!med.dosage) newErrors[`dosage-${i}`] = "Nhập liều lượng";
+      if (!med.frequency || med.frequency < 1)
+        newErrors[`frequency-${i}`] = "Tần suất phải >= 1";
+      if (!med.totalQuantity || med.totalQuantity < 1)
+        newErrors[`totalQuantity-${i}`] = "Tổng số lượng phải >= 1";
+      if (!med.startDate) newErrors[`startDate-${i}`] = "Chọn ngày bắt đầu";
+      if (!med.endDate) newErrors[`endDate-${i}`] = "Chọn ngày kết thúc";
+      // Validate ngày kết thúc >= ngày bắt đầu
+      if (med.startDate && med.endDate && med.endDate < med.startDate) {
+        newErrors[`endDate-${i}`] =
+          "Ngày kết thúc không được nhỏ hơn ngày bắt đầu";
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    // Đóng gói đúng cấu trúc API
+    const payload = {
+      studentId,
+      parentId,
+      medicalRequestItems: medications,
+    };
+    onSubmit(payload);
+    onClose();
+    setMedications([
+      {
+        medicationName: "",
+        form: "",
+        dosage: "",
+        route: "",
+        frequency: 1,
+        totalQuantity: 1,
+        timeToAdminister: [""],
+        startDate: "",
+        endDate: "",
+        notes: "",
+      },
+    ]);
+    setStudentId("");
     setErrors({});
   };
 
@@ -129,7 +219,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      className="w-full max-w-lg sm:max-w-2xl mx-auto"
+      className="w-full max-w-2xl mx-auto"
     >
       <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
         <h2 className="text-xl font-semibold mb-4">Thêm đơn thuốc mới</h2>
@@ -139,184 +229,233 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
             <Select
               options={students}
               placeholder="Chọn học sinh"
-              onChange={(v) => handleSelect("studentId", v)}
-              defaultValue={formData.studentId}
+              onChange={(v) => setStudentId(v)}
+              defaultValue={studentId}
             />
             {errors.studentId && (
               <div className="text-red-500 text-xs">{errors.studentId}</div>
             )}
           </div>
-          <div>
-            <Label>Phụ huynh</Label>
-            <Input
-              name="parentName"
-              value={formData.parentName}
-              onChange={handleChange}
-            />
-          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label>Số điện thoại</Label>
-            <Input
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label>Tên thuốc</Label>
-            <Select
-              options={medicines}
-              placeholder="Chọn thuốc"
-              onChange={(v) => handleSelect("medicationName", v)}
-              defaultValue={formData.medicationName}
-            />
-            {errors.medicationName && (
-              <div className="text-red-500 text-xs">
-                {errors.medicationName}
+        <div className="space-y-8">
+          {medications.map((med, idx) => (
+            <div key={idx} className="border rounded-lg p-4 mb-2 relative">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold text-blue-700">
+                  Thuốc {idx + 1}
+                </span>
+                {medications.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleRemoveMedication(idx)}
+                  >
+                    Xóa
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label>Dạng thuốc</Label>
-            <Select
-              options={forms}
-              placeholder="Chọn dạng thuốc"
-              onChange={(v) => handleSelect("form", v)}
-              defaultValue={formData.form}
-            />
-            {errors.form && (
-              <div className="text-red-500 text-xs">{errors.form}</div>
-            )}
-          </div>
-          <div>
-            <Label>Liều lượng</Label>
-            <Input
-              name="dosage"
-              value={formData.dosage}
-              onChange={handleChange}
-            />
-            {errors.dosage && (
-              <div className="text-red-500 text-xs">{errors.dosage}</div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label>Cách dùng</Label>
-            <Input
-              name="route"
-              value={formData.route}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label>Tần suất (lần/ngày)</Label>
-            <Input
-              name="frequency"
-              type="number"
-              min={"1"}
-              value={String(formData.frequency)}
-              onChange={handleChange}
-            />
-            {errors.frequency && (
-              <div className="text-red-500 text-xs">{errors.frequency}</div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label>Tổng số lượng</Label>
-            <Input
-              name="totalQuantity"
-              type="number"
-              min={"1"}
-              value={String(formData.totalQuantity)}
-              onChange={handleChange}
-            />
-            {errors.totalQuantity && (
-              <div className="text-red-500 text-xs">{errors.totalQuantity}</div>
-            )}
-          </div>
-          <div>
-            <Label>Thời gian cho thuốc</Label>
-            <div className="space-y-2">
-              {formData.timeToAdminister.map((time, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <Input
-                    type="time"
-                    value={time}
-                    onChange={(e) => handleTimeChange(idx, e.target.value)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Tên thuốc</Label>
+                  <Select
+                    options={medicines}
+                    placeholder="Chọn thuốc"
+                    onChange={(v) =>
+                      handleMedicationChange(idx, "medicationName", v)
+                    }
+                    defaultValue={med.medicationName}
                   />
-                  {formData.timeToAdminister.length > 1 && (
-                    <Button
-                      type="button"
-                      onClick={() => handleRemoveTime(idx)}
-                      variant="outline"
-                      className="px-2 py-1"
-                    >
-                      X
-                    </Button>
+                  {errors[`medicationName-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`medicationName-${idx}`]}
+                    </div>
                   )}
                 </div>
-              ))}
-              <Button
-                type="button"
-                onClick={handleAddTime}
-                variant="outline"
-                className="px-2 py-1 mt-1"
-              >
-                + Thêm mốc giờ
-              </Button>
+                <div>
+                  <Label>Dạng thuốc</Label>
+                  <Select
+                    options={forms}
+                    placeholder="Chọn dạng thuốc"
+                    onChange={(v) => handleMedicationChange(idx, "form", v)}
+                    defaultValue={med.form}
+                  />
+                  {errors[`form-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`form-${idx}`]}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <Label>Liều lượng</Label>
+                  <Input
+                    name="dosage"
+                    value={med.dosage}
+                    onChange={(e) =>
+                      handleMedicationChange(idx, "dosage", e.target.value)
+                    }
+                  />
+                  {errors[`dosage-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`dosage-${idx}`]}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label>Cách dùng</Label>
+                  <Input
+                    name="route"
+                    value={med.route}
+                    onChange={(e) =>
+                      handleMedicationChange(idx, "route", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <Label>Tần suất (lần/ngày)</Label>
+                  <Input
+                    name="frequency"
+                    type="number"
+                    min={"1"}
+                    value={String(med.frequency)}
+                    onChange={(e) =>
+                      handleMedicationChange(
+                        idx,
+                        "frequency",
+                        Number(e.target.value)
+                      )
+                    }
+                  />
+                  {errors[`frequency-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`frequency-${idx}`]}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label>Tổng số lượng</Label>
+                  <Input
+                    name="totalQuantity"
+                    type="number"
+                    min={"1"}
+                    value={String(med.totalQuantity)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      handleMedicationChange(
+                        idx,
+                        "totalQuantity",
+                        val < 1 ? "" : val
+                      );
+                    }}
+                  />
+                  {errors[`totalQuantity-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`totalQuantity-${idx}`]}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2">
+                <Label>Thời gian cho thuốc</Label>
+                <div className="space-y-2">
+                  {med.timeToAdminister.map((time, tIdx) => (
+                    <div key={tIdx} className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={time}
+                        onChange={(e) =>
+                          handleTimeChange(idx, tIdx, e.target.value)
+                        }
+                      />
+                      {med.timeToAdminister.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => handleRemoveTime(idx, tIdx)}
+                          variant="outline"
+                          className="px-2 py-1"
+                        >
+                          X
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={() => handleAddTime(idx)}
+                    variant="outline"
+                    className="px-2 py-1 mt-1"
+                  >
+                    + Thêm mốc giờ
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <Label>Ngày bắt đầu</Label>
+                  <Input
+                    name="startDate"
+                    type="date"
+                    value={med.startDate}
+                    onChange={(e) =>
+                      handleMedicationChange(idx, "startDate", e.target.value)
+                    }
+                  />
+                  {errors[`startDate-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`startDate-${idx}`]}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label>Ngày kết thúc</Label>
+                  <Input
+                    name="endDate"
+                    type="date"
+                    value={med.endDate}
+                    onChange={(e) =>
+                      handleMedicationChange(idx, "endDate", e.target.value)
+                    }
+                    min={med.startDate || undefined}
+                  />
+                  {errors[`endDate-${idx}`] && (
+                    <div className="text-red-500 text-xs">
+                      {errors[`endDate-${idx}`]}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2">
+                <Label>Ghi chú</Label>
+                <textarea
+                  name="notes"
+                  value={med.notes}
+                  onChange={(e) =>
+                    handleMedicationChange(idx, "notes", e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={2}
+                />
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label>Ngày bắt đầu</Label>
-            <Input
-              name="startDate"
-              type="date"
-              value={formData.startDate}
-              onChange={handleChange}
-            />
-            {errors.startDate && (
-              <div className="text-red-500 text-xs">{errors.startDate}</div>
-            )}
-          </div>
-          <div>
-            <Label>Ngày kết thúc</Label>
-            <Input
-              name="endDate"
-              type="date"
-              value={formData.endDate}
-              onChange={handleChange}
-              min={formData.startDate || undefined}
-            />
-            {errors.endDate && (
-              <div className="text-red-500 text-xs">{errors.endDate}</div>
-            )}
-          </div>
-        </div>
-        <div>
-          <Label>Ghi chú</Label>
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            rows={3}
-          />
-        </div>
+        <Button
+          type="button"
+          onClick={handleAddMedication}
+          variant="outline"
+          className="w-full mt-2"
+        >
+          + Thêm thuốc
+        </Button>
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose} type="button">
             Hủy
           </Button>
           <Button type="submit" className="bg-blue-600 text-white">
-            Thêm đơn thuốc
+            Lưu đơn thuốc
           </Button>
         </div>
       </form>

@@ -63,6 +63,9 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
   const [imageUrl, setImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
+  // Thêm state errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Add useEffect to log IDs when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -156,19 +159,48 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
 
   const handleSubmit = async () => {
     // Validate medications
-    const validMedications = medications.filter(
-      (med) =>
-        med.medicationName.trim() !== "" &&
-        med.dosage.trim() !== "" &&
-        med.totalQuantity.trim() !== "" &&
-        med.startDate !== "" &&
-        med.endDate !== ""
-    );
-
-    if (validMedications.length === 0) {
-      showToast.error(
-        "Vui lòng điền đầy đủ thông tin cho ít nhất một loại thuốc"
-      );
+    const newErrors: Record<string, string> = {};
+    const validMedications = medications.filter((med) => {
+      let valid = true;
+      if (!med.medicationName.trim()) {
+        newErrors[`medicationName-${med.id}`] = "Vui lòng nhập tên thuốc";
+        valid = false;
+      }
+      if (!med.dosage.trim()) {
+        newErrors[`dosage-${med.id}`] = "Vui lòng nhập liều lượng";
+        valid = false;
+      }
+      if (
+        !med.totalQuantity.trim() ||
+        isNaN(Number(med.totalQuantity)) ||
+        Number(med.totalQuantity) < 1
+      ) {
+        newErrors[`totalQuantity-${med.id}`] =
+          "Vui lòng nhập tổng số lượng lớn hơn 0.";
+        valid = false;
+      }
+      if (!med.startDate) {
+        newErrors[`startDate-${med.id}`] = "Vui lòng chọn ngày bắt đầu";
+        valid = false;
+      }
+      if (!med.endDate) {
+        newErrors[`endDate-${med.id}`] = "Vui lòng chọn ngày kết thúc";
+        valid = false;
+      }
+      if (med.startDate && med.endDate && med.endDate < med.startDate) {
+        newErrors[`endDate-${med.id}`] =
+          "Ngày kết thúc không được nhỏ hơn ngày bắt đầu";
+        valid = false;
+      }
+      if (!med.frequency || med.frequency < 1) {
+        newErrors[`frequency-${med.id}`] = "Vui lòng nhập tần suất lớn hơn 0.";
+        valid = false;
+      }
+      return valid;
+    });
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      showToast.error("Vui lòng kiểm tra lại thông tin đơn thuốc!");
       return;
     }
 
@@ -372,6 +404,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         placeholder="Nhập tên thuốc"
                         className="h-11"
                       />
+                      {errors[`medicationName-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`medicationName-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
 
                     <div className="">
@@ -417,6 +454,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         placeholder="VD: 2 viên/lần, 5ml/lần"
                         className="h-11"
                       />
+                      {errors[`dosage-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`dosage-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -444,16 +486,31 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         id={`totalQuantity-${medication.id}`}
                         type="number"
                         value={medication.totalQuantity}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "totalQuantity",
-                            e.target.value
-                          )
-                        }
+                        min="1"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || Number(val) < 1) {
+                            updateMedication(
+                              medication.id,
+                              "totalQuantity",
+                              ""
+                            );
+                          } else {
+                            updateMedication(
+                              medication.id,
+                              "totalQuantity",
+                              val
+                            );
+                          }
+                        }}
                         placeholder="Số lượng"
                         className="h-11"
                       />
+                      {errors[`totalQuantity-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`totalQuantity-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -472,17 +529,22 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         id={`frequency-${medication.id}`}
                         type="number"
                         value={medication.frequency}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "frequency",
-                            parseInt(e.target.value)
-                          )
-                        }
                         min="1"
-                        max="6"
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (isNaN(val) || val < 1) {
+                            updateMedication(medication.id, "frequency", 1);
+                          } else {
+                            updateMedication(medication.id, "frequency", val);
+                          }
+                        }}
                         className="mt-1"
                       />
+                      {errors[`frequency-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`frequency-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -557,12 +619,20 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         }}
                         defaultDate={medication.startDate}
                       />
+                      {errors[`startDate-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`startDate-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <DatePicker
                         id={`endDate-${medication.id}`}
                         label="Ngày kết thúc *"
-                        minDate={DateUtils.customFormatDateOnly(new Date())}
+                        minDate={
+                          medication.startDate ||
+                          DateUtils.customFormatDateOnly(new Date())
+                        }
                         maxDate={"9999-12-31"}
                         placeholder="Chọn ngày kết thúc"
                         onChange={(selectedDates) => {
@@ -576,6 +646,11 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         }}
                         defaultDate={medication.endDate}
                       />
+                      {errors[`endDate-${medication.id}`] && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`endDate-${medication.id}`]}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -17,6 +17,9 @@ import {
 import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 import { MedicationHistoryRecord } from "@/components/medicalrequest/MedicationHistoryTab";
 import AddMedicationModal from "@/components/medicalrequest/AddMedicationModal";
+import { Student } from "@/types/Student";
+import { DecodeJWT } from "@/utils/DecodeJWT";
+import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
 
 const ManagerMedicalRequest = () => {
   const [loading, setLoading] = useState(false);
@@ -67,13 +70,25 @@ const ManagerMedicalRequest = () => {
     MedicationHistoryRecord[]
   >([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<{ value: string; label: string }[]>(
     []
   );
-  const [medicines, setMedicines] = useState<
-    { value: string; label: string }[]
-  >([]);
-  const [forms, setForms] = useState<{ value: string; label: string }[]>([]);
+  // Xoá khai báo và setMedicines, setForms nếu không dùng ở đâu nữa
+
+  // Đảm bảo chỉ có 1 lần khai báo:
+  const user = DecodeJWT() as {
+    sub?: string;
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+    [key: string]: string | undefined;
+  } | null;
+  console.log("JWT user:", user);
+  const isParent =
+    user &&
+    user["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
+      "Parent";
+  const parentId = isParent ? user?.sub : selectedStudent?.parentId || "";
+  console.log("parentId:", parentId);
 
   useEffect(() => {
     setLoading(true);
@@ -84,6 +99,7 @@ const ManagerMedicalRequest = () => {
         Promise.all(
           data.map(async (req) => {
             const detail = await FecthMedicalRequestById(req.id);
+            if (!detail) return [];
             return detail.administrations.map((adm, idx) => ({
               id: typeof adm.id === "number" ? adm.id : idx,
               studentName: detail.studentName,
@@ -106,24 +122,39 @@ const ManagerMedicalRequest = () => {
       });
   }, []);
 
-  // Lấy danh sách học sinh, thuốc, dạng thuốc (giả lập nếu chưa có API)
+  // Lấy danh sách học sinh, thuốc, dạng thuốc
   useEffect(() => {
-    // Giả lập lấy danh sách học sinh từ requests
-    setStudents(requests.map((r) => ({ value: r.id, label: r.studentName })));
-    // Giả lập lấy danh sách thuốc từ requests
-    setMedicines(
-      Array.from(new Set(requests.map((r) => r.medicationName))).map(
-        (name) => ({ value: name, label: name })
-      )
-    );
-    // Giả lập lấy danh sách dạng thuốc từ requests
-    setForms(
-      Array.from(new Set(requests.map((r) => r.form))).map((form) => ({
-        value: form,
-        label: form,
-      }))
-    );
-  }, [requests]);
+    if (isParent) {
+      fetch("/api/parents/students", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => {
+          if (!res.ok) {
+            console.error(
+              "API /api/parents/students lỗi:",
+              res.status,
+              res.statusText
+            );
+            throw new Error("API error");
+          }
+          return res.json();
+        })
+        .then((data: Student[]) => {
+          console.log("API /api/parents/students trả về:", data);
+          setStudents(data.map((s) => ({ value: s.id, label: s.fullName })));
+        })
+        .catch((err) => {
+          console.error("Lỗi khi gọi API /api/parents/students:", err);
+        });
+    } else {
+      setStudents(requests.map((r) => ({ value: r.id, label: r.studentName })));
+      // Nếu là nurse, lấy parentId từ selectedStudent khi mở modal
+      if (selectedStudent && selectedStudent.parentId) {
+        // setParentId(selectedStudent.parentId); // This line is removed
+      }
+    }
+    // eslint-disable-next-line
+  }, [isParent, requests, selectedStudent]);
 
   const medicationForms = [
     "Viên nén",
@@ -302,6 +333,32 @@ const ManagerMedicalRequest = () => {
     setScheduleSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
+  const handleOpenAddModal = (student?: Student) => {
+    if (student) {
+      setSelectedStudent(student);
+    }
+    setShowAddModal(true);
+  };
+
+  const handleAddMedication = async (
+    data: import("@/types/MedicalRequest").MedicalRequestCreateUpdateViewModel
+  ) => {
+    setLoading(true);
+    try {
+      await FecthCreateMedicalRequest(data);
+      showToast.success("Tạo đơn thuốc thành công!");
+      await FecthMedicalRequest().then(setRequests);
+      setShowAddModal(false);
+    } catch {
+      showToast.error("Tạo đơn thuốc thất bại!");
+    }
+    setLoading(false);
+  };
+
+  // Trước khi render AddMedicationModal, tạo biến medicines/forms là [] nếu là parent
+  const medicines: { value: string; label: string }[] = [];
+  const forms: { value: string; label: string }[] = [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {loading && (
@@ -332,7 +389,7 @@ const ManagerMedicalRequest = () => {
             </Button>
 
             <Button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => handleOpenAddModal()}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
             >
               <Plus className="w-4 h-4" />
@@ -388,18 +445,32 @@ const ManagerMedicalRequest = () => {
           {activeTab === "requests" && (
             <MedicationRequestsTab
               requests={requests}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              filterStartDate={filterStartDate}
-              setFilterStartDate={setFilterStartDate}
-              filterEndDate={filterEndDate}
-              setFilterEndDate={setFilterEndDate}
+              {...(!isParent
+                ? {
+                    searchTerm: searchTerm || "",
+                    setSearchTerm,
+                    filterStatus: filterStatus || "",
+                    setFilterStatus,
+                    filterStartDate: filterStartDate || "",
+                    setFilterStartDate,
+                    filterEndDate: filterEndDate || "",
+                    setFilterEndDate,
+                    onClearFilters: handleRequestsClearFilters,
+                  }
+                : {
+                    searchTerm: "",
+                    setSearchTerm: () => {},
+                    filterStatus: "",
+                    setFilterStatus: () => {},
+                    filterStartDate: "",
+                    setFilterStartDate: () => {},
+                    filterEndDate: "",
+                    setFilterEndDate: () => {},
+                    onClearFilters: () => {},
+                  })}
               onOpenConfirmModal={handleOpenConfirmModal}
               onOpenUpdateModal={handleOpenUpdateModal}
               onOpenDeleteModal={handleOpenDeleteModal}
-              onClearFilters={handleRequestsClearFilters}
             />
           )}
 
@@ -476,15 +547,20 @@ const ManagerMedicalRequest = () => {
 
       <AddMedicationModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSubmit={async () => {
-          setLoading(true);
-          await FecthMedicalRequest().then((data) => setRequests(data));
-          setLoading(false);
+        onClose={() => {
+          setShowAddModal(false);
+          setSelectedStudent(null);
         }}
+        onSubmit={(data: Record<string, unknown>) =>
+          handleAddMedication(
+            data as unknown as import("@/types/MedicalRequest").MedicalRequestCreateUpdateViewModel
+          )
+        }
         students={students}
         medicines={medicines}
         forms={forms}
+        selectedStudent={selectedStudent}
+        parentId={parentId || ""}
       />
 
       {/* <MultiMedicationModal
