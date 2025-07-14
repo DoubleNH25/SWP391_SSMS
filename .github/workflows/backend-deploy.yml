@@ -2,14 +2,14 @@ name: 🚀 Deploy .NET 8 SMMS.API to IIS on VPS
 
 on:
   push:
-    branches: [ "main" ]  # Trigger khi push vào nhánh main
+    branches: [ "main" ]  # Trigger khi có push vào nhánh main
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, windows]  # VPS có self-hosted runner
+    runs-on: [self-hosted, windows]  # VPS có self-hosted GitHub runner
 
     env:
-      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\SMMS_API_Publish"  # Thư mục publish IIS
+      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\PublishSMMS"  # ✅ Cập nhật đường dẫn thư mục publish
 
     steps:
       - name: 📥 Checkout source code
@@ -51,7 +51,7 @@ jobs:
             Write-Host "Created new publish folder."
           }
 
-      - name: 🛠️ Build and Publish to IIS path
+      - name: 🛠️ Build and Publish SMMS.API to IIS
         run: dotnet publish ./BE/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
 
       - name: 🔁 Restart IIS AppPool for SMMSAPI
@@ -70,5 +70,5 @@ jobs:
       - name: ✅ Verify publish result
         shell: powershell
         run: |
-          Write-Host "Files published to: $env:PUBLISH_PATH"
+          Write-Host "✅ Files published to: $env:PUBLISH_PATH"
           Get-ChildItem "$env:PUBLISH_PATH" -Recurse
