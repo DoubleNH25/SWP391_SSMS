@@ -78,13 +78,36 @@ export default function NurseDashboard() {
         {/* Sự cố y tế cần xử lý */}
         <Section title="Sự cố y tế cần xử lý">
           <Table
-            headers={["Học sinh", "Lớp", "Loại sự cố", "Thời gian", "Status"]}
+            headers={[
+              "Học sinh",
+              "Lớp",
+              "Loại sự cố",
+              "Thời gian",
+              "Trạng thái",
+            ]}
             rows={incidents.map((i) => [
               i.studentId || "-",
               "-",
               i.type || "-",
               i.incidentDate ? new Date(i.incidentDate).toLocaleString() : "-",
-              i.status || "-",
+              <span
+                className={`
+                inline-block px-2 py-1 rounded-full text-xs font-semibold
+                ${
+                  i.status === "Resolved"
+                    ? "bg-green-100 text-green-800"
+                    : i.status === "Pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }
+              `}
+              >
+                {i.status === "Resolved"
+                  ? "Đã xử lý"
+                  : i.status === "Pending"
+                  ? "Chờ xử lý"
+                  : "Bất thường"}
+              </span>,
             ])}
           />
         </Section>
@@ -92,13 +115,36 @@ export default function NurseDashboard() {
         {/* Yêu cầu thuốc/y tế cần duyệt */}
         <Section title="Yêu cầu thuốc/y tế cần duyệt">
           <Table
-            headers={["Học sinh", "Lớp", "Loại thuốc", "Thời gian", "Status"]}
+            headers={[
+              "Học sinh",
+              "Lớp",
+              "Loại thuốc",
+              "Thời gian",
+              "Trạng thái",
+            ]}
             rows={medicalRequests.map((r) => [
               r.studentName || "-",
               r.studentClass || "-",
               r.medicationName || "-",
               r.createdTime ? new Date(r.createdTime).toLocaleString() : "-",
-              r.status || "-",
+              <span
+                className={`
+                inline-block px-2 py-1 rounded-full text-xs font-semibold
+                ${
+                  r.status === "Approved"
+                    ? "bg-green-100 text-green-800"
+                    : r.status === "Pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }
+              `}
+              >
+                {r.status === "Approved"
+                  ? "Đã duyệt"
+                  : r.status === "Pending"
+                  ? "Chờ duyệt"
+                  : "Từ chối"}
+              </span>,
             ])}
           />
         </Section>
@@ -153,7 +199,13 @@ function Section({
 }
 
 // Generic table component
-function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
+function Table({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: React.ReactNode[][];
+}) {
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
       <table className="min-w-full divide-y divide-gray-200 text-sm">

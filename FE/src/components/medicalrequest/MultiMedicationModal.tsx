@@ -66,6 +66,32 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
   // Thêm state errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Add useEffect to automatically sync timeToAdminister with frequency
+  useEffect(() => {
+    setMedications((prevMedications) =>
+      prevMedications.map((med) => {
+        const currentLength = med.timeToAdminister.length;
+        const targetLength = med.frequency;
+
+        if (targetLength > currentLength) {
+          // Thêm slots mới với giá trị rỗng
+          const newTimeSlots = Array(targetLength - currentLength).fill("");
+          return {
+            ...med,
+            timeToAdminister: [...med.timeToAdminister, ...newTimeSlots],
+          };
+        } else if (targetLength < currentLength) {
+          // Cắt bớt nếu giảm frequency
+          return {
+            ...med,
+            timeToAdminister: med.timeToAdminister.slice(0, targetLength),
+          };
+        }
+        return med;
+      })
+    );
+  }, [medications.map((med) => `${med.id}-${med.frequency}`).join(",")]); // More stable dependency
+
   // Add useEffect to log IDs when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -109,16 +135,6 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     setMedications(
       medications.map((med) =>
         med.id === id ? { ...med, [field]: value } : med
-      )
-    );
-  };
-
-  const addTimeSlot = (medicationId: string) => {
-    setMedications(
-      medications.map((med) =>
-        med.id === medicationId
-          ? { ...med, timeToAdminister: [...med.timeToAdminister, ""] }
-          : med
       )
     );
   };
@@ -584,14 +600,6 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         </div>
                       ))}
                     </div>
-                    <Button
-                      type="button"
-                      onClick={() => addTimeSlot(medication.id)}
-                      className="text-sm px-5 py-2.5 border border-gray-300 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Thêm giờ
-                    </Button>
                   </div>
                 </div>
 
