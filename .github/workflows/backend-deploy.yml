@@ -15,59 +15,32 @@ jobs:
       - name: 📥 Checkout source code
         uses: actions/checkout@v3
 
-      - name: Check .csproj files
-        shell: powershell
-        run: |
-          Write-Host "Checking for .csproj files in current directory..."
-          Get-ChildItem -Path . -Filter *.csproj -Recurse -File
-
-
       - name: 📦 Restore NuGet packages
         run: dotnet restore ./BE/SMMS.API/SMMS.API/SMMS.API.csproj
 
-      - name: 🛑 Stop IIS AppPool before cleaning
-        shell: powershell
+      - name: 🛑 Stop IIS AppPool before cleaning (via appcmd)
+        shell: cmd
         run: |
-          Import-Module WebAdministration
-          $appPoolPath = "IIS:\AppPools\SMMSAPI"
-          if (Test-Path $appPoolPath) {
-            $appPool = Get-Item $appPoolPath
-            if ($appPool.State -ne "Stopped") {
-              $appPool.Stop()
-              Write-Host "AppPool 'SMMSAPI' has been stopped."
-            } else {
-              Write-Host "AppPool 'SMMSAPI' was already stopped."
-            }
-          } else {
-            Write-Host "AppPool 'SMMSAPI' does not exist."
-          }
+          "%windir%\system32\inetsrv\appcmd.exe" stop apppool /apppool.name:SMMSAPI || echo AppPool may already be stopped.
 
       - name: 🧹 Clean old publish directory
         shell: powershell
         run: |
           if (Test-Path "$env:PUBLISH_PATH") {
             Remove-Item -Recurse -Force "$env:PUBLISH_PATH\*" -ErrorAction SilentlyContinue
-            Write-Host "Old files deleted from publish folder."
+            Write-Host "🧹 Old files deleted from publish folder."
           } else {
             New-Item -Path "$env:PUBLISH_PATH" -ItemType Directory | Out-Null
-            Write-Host "Created new publish folder."
+            Write-Host "📁 Created publish folder."
           }
 
       - name: 🛠️ Build and Publish SMMS.API to IIS
         run: dotnet publish ./BE/SMMS.API/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
 
-      - name: 🔁 Restart IIS AppPool for SMMSAPI
-        shell: powershell
+      - name: 🔁 Restart IIS AppPool for SMMSAPI (via appcmd)
+        shell: cmd
         run: |
-          Import-Module WebAdministration
-          $appPoolPath = "IIS:\AppPools\SMMSAPI"
-          if (Test-Path $appPoolPath) {
-            $appPool = Get-Item $appPoolPath
-            $appPool.Start()
-            Write-Host "AppPool 'SMMSAPI' restarted."
-          } else {
-            Write-Host "AppPool 'SMMSAPI' does not exist."
-          }
+          "%windir%\system32\inetsrv\appcmd.exe" start apppool /apppool.name:SMMSAPI
 
       - name: ✅ Verify publish result
         shell: powershell
