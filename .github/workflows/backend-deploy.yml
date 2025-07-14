@@ -2,23 +2,27 @@ name: 🚀 Deploy .NET 8 SMMS.API to IIS on VPS
 
 on:
   push:
-    branches: [ "main" ]  # Trigger khi có push vào nhánh main
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, windows]  # VPS có self-hosted GitHub runner
+    runs-on: [self-hosted, windows]
 
     env:
-      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\PublishSMMS"  # ✅ Cập nhật đường dẫn thư mục publish
+      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\PublishSMMS"
 
     steps:
       - name: 📥 Checkout source code
         uses: actions/checkout@v3
 
-      - name: ⚙️ Setup .NET 8 SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      # ❌ BỎ phần setup-dotnet vì bạn đã cài sẵn
+      # - name: ⚙️ Setup .NET 8 SDK
+      #   uses: actions/setup-dotnet@v4
+      #   with:
+      #     dotnet-version: '8.0.x'
+
+      - name: 🧪 Check .NET SDK version (đảm bảo đang dùng net8)
+        run: dotnet --version
 
       - name: 📦 Restore NuGet packages
         run: dotnet restore ./BE/SMMS.API/SMMS.API.csproj
