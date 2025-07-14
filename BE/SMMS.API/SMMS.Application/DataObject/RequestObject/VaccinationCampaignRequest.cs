@@ -10,6 +10,7 @@ namespace SMMS.Application.DataObject.RequestObject
 		public DateTime MFG { get; set; }
 		public string? VaccineType { get; set; }
 		public DateTime StartDate { get; set; }
+		public DateTime EndDate { get; set; }
 		public required List<string?> ClassIds { get; set; }
 	}
 }

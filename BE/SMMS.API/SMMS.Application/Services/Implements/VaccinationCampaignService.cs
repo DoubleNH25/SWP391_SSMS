@@ -23,6 +23,33 @@ namespace SMMS.Application.Services.Implements
 
 		public async Task<VaccinationCampaignResponse> CreateVaccinationCampaignAsync(VaccinationCampaignRequest request, string nurseId)
 		{
+			// Validate dates
+			if (request.StartDate >= request.EndDate)
+			{
+				throw new Exception("Ngày bắt đầu phải trước ngày kết thúc.");
+			}
+
+			if (request.MFG >= request.EXP)
+			{
+				throw new Exception("Ngày sản xuất phải trước ngày hết hạn.");
+			}
+
+			var currentDate = DateTime.Now.Date;
+			if (request.MFG.Date > currentDate)
+			{
+				throw new Exception("Ngày sản xuất không thể trong tương lai.");
+			}
+
+			if (request.EXP.Date <= currentDate)
+			{
+				throw new Exception("Ngày hết hạn phải trong tương lai.");
+			}
+
+			if (request.StartDate.Date < currentDate)
+			{
+				throw new Exception("Ngày bắt đầu không thể trong quá khứ.");
+			}
+
 			var existingClassIds = _repositoryManager.ClassRepository
 			.FindByCondition(c => request.ClassIds.Contains(c.Id) && c.DeletedTime == null, false)
 			.Select(c => c.Id)
@@ -40,6 +67,7 @@ namespace SMMS.Application.Services.Implements
 				MFG = request.MFG,
 				VaccineType = request.VaccineType ?? string.Empty,
 				StartDate = request.StartDate,
+				EndDate = request.EndDate,
 				Status = ApprovalStatus.Pending,
 				CreatedBy = nurseId,
 				CreatedTime = DateTimeOffset.UtcNow,
@@ -81,6 +109,7 @@ namespace SMMS.Application.Services.Implements
 				MFG = campaign.MFG,
 				VaccineType = campaign.VaccineType,
 				StartDate = campaign.StartDate,
+				EndDate = campaign.EndDate,
 				Status = campaign.Status,
 				ClassIds = campaign.VaccinationCampaignClasses.Select(vcc => vcc.SchoolClassId).ToList()
 			};
@@ -181,6 +210,7 @@ namespace SMMS.Application.Services.Implements
 					MFG = vc.MFG,
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
+					EndDate = vc.EndDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
@@ -203,6 +233,7 @@ namespace SMMS.Application.Services.Implements
 					MFG = vc.MFG,
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
+					EndDate = vc.EndDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
@@ -225,6 +256,7 @@ namespace SMMS.Application.Services.Implements
 					MFG = vc.MFG,
 					VaccineType = vc.VaccineType,
 					StartDate = vc.StartDate,
+					EndDate = vc.EndDate,
 					Status = vc.Status,
 					ClassIds = vc.VaccinationCampaignClasses.Where(vcc => vcc.DeletedTime == null).Select(vcc => vcc.SchoolClassId).ToList()
 				}).ToList());
@@ -247,6 +279,33 @@ namespace SMMS.Application.Services.Implements
 				return false;
 			}
 
+			// Validate dates
+			if (request.StartDate >= request.EndDate)
+			{
+				throw new Exception("Ngày bắt đầu phải trước ngày kết thúc.");
+			}
+
+			if (request.MFG >= request.EXP)
+			{
+				throw new Exception("Ngày sản xuất phải trước ngày hết hạn.");
+			}
+
+			var currentDate = DateTime.Now.Date;
+			if (request.MFG.Date > currentDate)
+			{
+				throw new Exception("Ngày sản xuất không thể trong tương lai.");
+			}
+
+			if (request.EXP.Date <= currentDate)
+			{
+				throw new Exception("Ngày hết hạn phải trong tương lai.");
+			}
+
+			if (request.StartDate.Date < currentDate)
+			{
+				throw new Exception("Ngày bắt đầu không thể trong quá khứ.");
+			}
+
 			// Validate that all requested class IDs exist
 			var existingClassIds = _repositoryManager.ClassRepository
 				.FindByCondition(c => request.ClassIds.Contains(c.Id) && c.DeletedTime == null, false)
@@ -264,6 +323,7 @@ namespace SMMS.Application.Services.Implements
 			campaign.MFG = request.MFG;
 			campaign.VaccineType = request.VaccineType ?? string.Empty;
 			campaign.StartDate = request.StartDate;
+			campaign.EndDate = request.EndDate;
 			campaign.LastUpdatedBy = userId;
 			campaign.LastUpdatedTime = DateTimeOffset.UtcNow;
 

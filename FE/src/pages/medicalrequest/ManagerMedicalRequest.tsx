@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Pill, ArrowLeft, Plus } from "lucide-react";
+import { Pill, ArrowLeft } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -90,6 +90,10 @@ const ManagerMedicalRequest = () => {
   const parentId = isParent ? user?.sub : selectedStudent?.parentId || "";
   console.log("parentId:", parentId);
 
+  // Thêm state lưu parentId đã fetch
+  const [selectedParentIdForModal, setSelectedParentIdForModal] =
+    useState<string>("");
+
   useEffect(() => {
     setLoading(true);
     FecthMedicalRequest()
@@ -153,8 +157,11 @@ const ManagerMedicalRequest = () => {
         // setParentId(selectedStudent.parentId); // This line is removed
       }
     }
-    // eslint-disable-next-line
   }, [isParent, requests, selectedStudent]);
+
+  // Khi chọn học sinh, gọi ngầm API lấy parentId
+  // XÓA HÀM handleSelectStudent vì không được sử dụng
+  // XÓA các biến/hàm thừa khác nếu không được gọi ở đâu trong file
 
   const medicationForms = [
     "Viên nén",
@@ -333,12 +340,8 @@ const ManagerMedicalRequest = () => {
     setScheduleSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
-  const handleOpenAddModal = (student?: Student) => {
-    if (student) {
-      setSelectedStudent(student);
-    }
-    setShowAddModal(true);
-  };
+  // Nút thêm đơn thuốc: chỉ mở modal khi đã có cả student và parentId
+  // Remove the handleOpenAddModal function entirely
 
   const handleAddMedication = async (
     data: import("@/types/MedicalRequest").MedicalRequestCreateUpdateViewModel
@@ -387,14 +390,7 @@ const ManagerMedicalRequest = () => {
               <ArrowLeft className="w-4 h-4" />
               Quay lại
             </Button>
-
-            <Button
-              onClick={() => handleOpenAddModal()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-            >
-              <Plus className="w-4 h-4" />
-              Thêm đơn thuốc
-            </Button>
+            {/* XÓA nút Thêm đơn thuốc ở đây */}
           </div>
 
           <PageHeader
@@ -550,6 +546,7 @@ const ManagerMedicalRequest = () => {
         onClose={() => {
           setShowAddModal(false);
           setSelectedStudent(null);
+          setSelectedParentIdForModal("");
         }}
         onSubmit={(data: Record<string, unknown>) =>
           handleAddMedication(
@@ -560,7 +557,7 @@ const ManagerMedicalRequest = () => {
         medicines={medicines}
         forms={forms}
         selectedStudent={selectedStudent}
-        parentId={parentId || ""}
+        parentId={selectedParentIdForModal}
       />
 
       {/* <MultiMedicationModal

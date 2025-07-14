@@ -27,7 +27,7 @@ namespace SMMS.Application.Services.Implements
 					Id = c.Id,
 					ClassName = c.ClassName,
 					ClassRoom = c.ClassRoom,
-					Quantity = c.Quantity,
+					Quantity = c.Students.Count(s => s.DeletedTime == null),
 					Students = c.Students
 								.Where(s => s.DeletedTime == null)
 								.Select(s => new StudentResponse
@@ -54,7 +54,7 @@ namespace SMMS.Application.Services.Implements
 					Id = c.Id,
 					ClassName = c.ClassName,
 					ClassRoom = c.ClassRoom,
-					Quantity = c.Quantity,
+					Quantity = c.Students.Count(s => s.DeletedTime == null),
 					Students = c.Students
 								.Where(s => s.DeletedTime == null)
 								.Select(s => new StudentResponse

@@ -31,6 +31,7 @@ namespace SMMS.Application.Services.Implements
 				EventId = eventId ?? string.Empty
 			};
 			_repositoryManager.NotificationRepository.Create(notification);
+			await _repositoryManager.SaveAsync();
 			await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", new NotificationResponse
 			{
 				Id = notification.Id,
