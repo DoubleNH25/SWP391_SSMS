@@ -18,10 +18,11 @@ jobs:
       - name: 📦 Restore NuGet packages
         run: dotnet restore ./BE/SMMS.API/SMMS.API/SMMS.API.csproj
 
-      - name: 🛑 Stop IIS AppPool before cleaning (via appcmd)
-        shell: cmd
+      - name: 🛑 Stop IIS AppPool before cleaning (requires admin)
+        shell: powershell
         run: |
-          "%windir%\system32\inetsrv\appcmd.exe" stop apppool /apppool.name:SMMSAPI || echo AppPool may already be stopped.
+          Write-Host "Stopping IIS AppPool 'SMMSAPI'..."
+          & "$env:WINDIR\system32\inetsrv\appcmd.exe" stop apppool /apppool.name:SMMSAPI
 
       - name: 🧹 Clean old publish directory
         shell: powershell
@@ -37,10 +38,11 @@ jobs:
       - name: 🛠️ Build and Publish SMMS.API to IIS
         run: dotnet publish ./BE/SMMS.API/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
 
-      - name: 🔁 Restart IIS AppPool for SMMSAPI (via appcmd)
-        shell: cmd
+      - name: 🔁 Restart IIS AppPool for SMMSAPI
+        shell: powershell
         run: |
-          "%windir%\system32\inetsrv\appcmd.exe" start apppool /apppool.name:SMMSAPI
+          Write-Host "Starting IIS AppPool 'SMMSAPI'..."
+          & "$env:WINDIR\system32\inetsrv\appcmd.exe" start apppool /apppool.name:SMMSAPI
 
       - name: ✅ Verify publish result
         shell: powershell
