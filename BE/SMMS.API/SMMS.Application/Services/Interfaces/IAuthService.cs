@@ -10,7 +10,7 @@ namespace SMMS.Application.Services.Interfaces
 		Task<AuthResponse> LoginAsync(string email, string password);
         Task<string> VerifyPhoneNumberAsync(VerifyPhoneRequest request);
         Task<string> CreateAccountOtpAsync(CreateAccountModelView model);
-
+        Task<AuthResponse> ValidateGoogleTokenAsync(string email);
         Task<string> ForgetPasswordAsync(ForgetPasswordModel model);
         Task<string> VerifyOtpAsync(VerifyOtpRequest request);
         Task<string> ResetPasswordAsync(ResetPasswordRequest request);

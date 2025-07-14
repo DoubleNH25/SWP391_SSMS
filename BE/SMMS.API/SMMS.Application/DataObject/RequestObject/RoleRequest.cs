@@ -6,4 +6,9 @@ namespace SMMS.Application.DataObject.RequestObject
 	{
 		public string? RoleName { get; set; }
 	}
+
+    public class TokenRequest
+    {
+        public string? email { get; set; }
+    }
 }
