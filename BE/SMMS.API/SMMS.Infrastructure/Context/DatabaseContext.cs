@@ -439,6 +439,7 @@ namespace SMMS.Infrastructure.Context
 					MFG = new DateTime(2024, 1, 1),
 					VaccineType = "Flu",
 					StartDate = new DateTime(2024, 11, 15),
+					EndDate = new DateTime(2024, 12, 15),
 					Status = ApprovalStatus.Pending,
 					CreatedBy = nurseId,
 					CreatedTime = DateTimeOffset.UtcNow
