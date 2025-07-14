@@ -37,9 +37,9 @@ namespace SMMS.Application.Helpers.Implements
 				var studentDateOfBirth = row.Cell(6).GetDateTime();
 				var className = row.Cell(7).GetString();
 
-				// Tìm hoặc tạo SchoolClass
+				// Tìm hoặc tạo SchoolClass - cải thiện logic tìm kiếm
 				var schoolClass = _repositoryManager.ClassRepository
-					.FindByCondition(c => c.ClassName == className, true)
+					.FindByCondition(c => c.ClassName == className && c.DeletedBy == null, true)
 					.FirstOrDefault();
 				if (schoolClass == null)
 				{
@@ -54,20 +54,22 @@ namespace SMMS.Application.Helpers.Implements
 					_repositoryManager.ClassRepository.Create(schoolClass);
 				}
 
+				// Cải thiện logic tìm kiếm Parent - tìm theo email hoặc phone
 				var parentUser = _repositoryManager.UserRepository
-					.FindByCondition(u => u.FullName == parentFullName && u.Email == parentEmail, true)
+					.FindByCondition(u => (u.Email == parentEmail || u.Phone == parentPhone) && u.DeletedBy == null, true)
 					.FirstOrDefault();
 
+				// Cải thiện logic tìm kiếm Student - tìm theo tên và ngày sinh
 				var student = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.FullName == studentFullName, true)
-				.FirstOrDefault();
+					.FindByCondition(s => s.FullName == studentFullName && s.DateOfBirth == studentDateOfBirth && s.DeletedBy == null, true)
+					.FirstOrDefault();
 
 				User? oldParent = null;
 
 				if (student != null)
 				{
 					oldParent = _repositoryManager.UserRepository
-						.FindByCondition(u => u.Id == student.ParentId, true)
+						.FindByCondition(u => u.Id == student.ParentId && u.DeletedBy == null, true)
 						.FirstOrDefault();
 				}
 
@@ -87,6 +89,7 @@ namespace SMMS.Application.Helpers.Implements
 
 					parentUser = new User
 					{
+						Id = Guid.NewGuid().ToString(),
 						Email = parentEmail,
 						Phone = parentPhone,
 						FullName = parentFullName,
@@ -107,6 +110,7 @@ namespace SMMS.Application.Helpers.Implements
 					parentUser.DeletedBy = null;
 					parentUser.Phone = parentPhone;
 					parentUser.Email = parentEmail;
+					parentUser.FullName = parentFullName;
 					parentUser.LastUpdatedBy = "System";
 					parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
 					_repositoryManager.UserRepository.Update(parentUser);
@@ -116,6 +120,7 @@ namespace SMMS.Application.Helpers.Implements
 					// Case: Parent exists, not soft-deleted, but phone or full name differs
 					parentUser.Phone = parentPhone;
 					parentUser.Email = parentEmail;
+					parentUser.FullName = parentFullName;
 					parentUser.LastUpdatedBy = "System";
 					parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
 					_repositoryManager.UserRepository.Update(parentUser);
@@ -126,6 +131,7 @@ namespace SMMS.Application.Helpers.Implements
 					// Case: Student is new
 					student = new Student
 					{
+						Id = Guid.NewGuid().ToString(),
 						ParentId = parentUser.Id,
 						ClassId = schoolClass.Id,
 						FullName = studentFullName,
@@ -152,14 +158,14 @@ namespace SMMS.Application.Helpers.Implements
 						student.ParentId = parentUser.Id;
 						student.LastUpdatedBy = "System";
 						student.LastUpdatedTime = DateTimeOffset.UtcNow;
-						//_repositoryManager.StudentRepository.Update(student);
+						_repositoryManager.StudentRepository.Update(student);
 					}
 					// Handle old parent soft-deletion if parent has changed and old parent exists
 					if (hasChanges && oldParent != null && oldParent.Id != parentUser.Id)
 					{
 						// Check if old parent is still associated with other students
 						var otherStudents = _repositoryManager.StudentRepository
-							.FindByCondition(s => s.ParentId == oldParent.Id && s.Id != student.Id, false)
+							.FindByCondition(s => s.ParentId == oldParent.Id && s.Id != student.Id && s.DeletedBy == null, false)
 							.Any();
 						if (!otherStudents)
 						{
