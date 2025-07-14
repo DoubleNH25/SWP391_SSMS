@@ -41,16 +41,16 @@ export async function FecthVerifyOTP(verifyOTPRequest: VerifyOTPRequest): Promis
     throw new Error("Vui lòng nhập đầy đủ thông tin");
   }
   try {
-    const response = await ApiClient<string>({
+    const response = await ApiClient<LoginResponse>({
       method: "POST",
       endpoint: "/auth/verify-phonenumber",
       data: verifyOTPRequest,
       requiresToken: false,
     });
-    if (!response || !response.data) {
+    if (!response || !response.data || !response.data.token) {
       throw new Error("Lỗi khi xác thực OTP");
     }
-    localStorage.setItem("token", response.data);
+    localStorage.setItem("token", response.data.token);
     return true;
   } catch (err) {
     console.error("Verify OTP API call failed:", err);
