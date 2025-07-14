@@ -16,7 +16,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: 🧪 Kiểm tra file dự án .csproj
-        run: dir /s /b *.csproj
+        shell: powershell
+        run: |
+          Write-Host "📁 Tìm file .csproj dưới thư mục hiện tại"
+          Get-ChildItem -Path . -Filter *.csproj -Recurse -File
 
       - name: 📦 Restore NuGet packages
         run: dotnet restore ./BE/SMMS.API/SMMS.API/SMMS.API.csproj
