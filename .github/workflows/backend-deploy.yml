@@ -49,8 +49,10 @@ jobs:
       - name: 🔁 Start AppPool 'SMMS'
         shell: powershell
         run: |
-          Write-Host "🔁 Starting AppPool 'SMMS'..."
-          & "$env:WINDIR\system32\inetsrv\appcmd.exe" start apppool /apppool.name:'SMMS'
+          Import-Module WebAdministration
+          Start-WebAppPool -Name "SMMS"
+          Write-Host "✅ AppPool 'SMMS' started."
+
 
 
       - name: ✅ Verify publish result
