@@ -1,40 +1,74 @@
-name: Deploy Backend (.NET) to VPS
+name: 🚀 Deploy .NET 8 SMMS.API to IIS on VPS
 
 on:
   push:
-    paths:
-      - 'BE/SMMS.API/**'
-    branches:
-      - main
+    branches: [ "main" ]  # Trigger khi push vào nhánh main
 
 jobs:
-  deploy-backend:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: [self-hosted, windows]  # VPS có self-hosted runner
+
+    env:
+      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\SMMS_API_Publish"  # Thư mục publish IIS
 
     steps:
-      - name: Checkout source
+      - name: 📥 Checkout source code
         uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - name: ⚙️ Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Build & Publish
-        run: |
-          cd BE/SMMS.API
-          dotnet restore
-          dotnet publish -c Release -o publish
+      - name: 📦 Restore NuGet packages
+        run: dotnet restore ./BE/SMMS.API/SMMS.API.csproj
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Copy files to VPS
+      - name: 🛑 Stop IIS AppPool before cleaning
+        shell: powershell
         run: |
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" BE/SMMS.API/publish/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_TARGET_DIR }}/BE/SMMS.API/
+          Import-Module WebAdministration
+          $appPoolPath = "IIS:\AppPools\SMMSAPI"
+          if (Test-Path $appPoolPath) {
+            $appPool = Get-Item $appPoolPath
+            if ($appPool.State -ne "Stopped") {
+              $appPool.Stop()
+              Write-Host "AppPool 'SMMSAPI' has been stopped."
+            } else {
+              Write-Host "AppPool 'SMMSAPI' was already stopped."
+            }
+          } else {
+            Write-Host "AppPool 'SMMSAPI' does not exist."
+          }
 
-      - name: Restart backend service
+      - name: 🧹 Clean old publish directory
+        shell: powershell
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "sudo systemctl restart sms-api"
+          if (Test-Path "$env:PUBLISH_PATH") {
+            Remove-Item -Recurse -Force "$env:PUBLISH_PATH\*" -ErrorAction SilentlyContinue
+            Write-Host "Old files deleted from publish folder."
+          } else {
+            New-Item -Path "$env:PUBLISH_PATH" -ItemType Directory | Out-Null
+            Write-Host "Created new publish folder."
+          }
+
+      - name: 🛠️ Build and Publish to IIS path
+        run: dotnet publish ./BE/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
+
+      - name: 🔁 Restart IIS AppPool for SMMSAPI
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+          $appPoolPath = "IIS:\AppPools\SMMSAPI"
+          if (Test-Path $appPoolPath) {
+            $appPool = Get-Item $appPoolPath
+            $appPool.Start()
+            Write-Host "AppPool 'SMMSAPI' restarted."
+          } else {
+            Write-Host "AppPool 'SMMSAPI' does not exist."
+          }
+
+      - name: ✅ Verify publish result
+        shell: powershell
+        run: |
+          Write-Host "Files published to: $env:PUBLISH_PATH"
+          Get-ChildItem "$env:PUBLISH_PATH" -Recurse
