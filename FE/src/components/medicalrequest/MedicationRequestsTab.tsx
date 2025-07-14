@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Clock,
   User,
@@ -6,8 +6,9 @@ import {
   Search,
   Edit,
   Trash2,
-  CheckCircle,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
@@ -24,7 +25,6 @@ interface MedicationRequestsTabProps {
   setFilterStartDate: (date: string) => void;
   filterEndDate: string;
   setFilterEndDate: (date: string) => void;
-  onOpenConfirmModal: (request: ListMedicalRequestViewModel) => void;
   onOpenUpdateModal: (request: ListMedicalRequestViewModel) => void;
   onOpenDeleteModal: (request: ListMedicalRequestViewModel) => void;
   onClearFilters: () => void;
@@ -52,11 +52,14 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
   setFilterStartDate,
   filterEndDate,
   setFilterEndDate,
-  onOpenConfirmModal,
   onOpenUpdateModal,
   onOpenDeleteModal,
   onClearFilters,
 }) => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
       request.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,6 +96,21 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
 
     return matchesSearch && matchesFilter && matchesDateFilter;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRequests = filteredRequests.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterStartDate, filterEndDate]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="space-y-4">
@@ -199,7 +217,7 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
-          {filteredRequests.map((request) => {
+          {currentRequests.map((request) => {
             const statusKey = (request.status || "").toLowerCase();
             return (
               <div
@@ -299,16 +317,6 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
                     </div>
                     <div className="flex space-x-2">
                       <Button
-                        onClick={() => onOpenConfirmModal(request)}
-                        variant="default"
-                        size="sm"
-                        disabled={request.remainingQuantity <= 0}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Đã cho thuốc</span>
-                      </Button>
-                      <Button
                         onClick={() => onOpenUpdateModal(request)}
                         variant="default"
                         size="sm"
@@ -333,6 +341,31 @@ const MedicationRequestsTab: React.FC<MedicationRequestsTabProps> = ({
             );
           })}
         </div>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="mr-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm text-gray-700">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="ml-2"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -327,15 +327,18 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                         <span className="text-gray-600">Thời gian</span>
                       </div>
                       <span className="font-medium text-gray-900 text-right">
-                        {DateUtils.toLocalDate(
-                          record.administeredTime
-                        ).toLocaleString("vi-VN", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {(() => {
+                          const date = DateUtils.toLocalDate(
+                            record.administeredTime
+                          );
+                          if (isNaN(date.getTime())) return "N/A";
+                          const dateStr = date.toLocaleDateString("vi-VN");
+                          const timeStr = date.toLocaleTimeString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          });
+                          return `${dateStr} ${timeStr}`;
+                        })()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

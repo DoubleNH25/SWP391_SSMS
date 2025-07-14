@@ -20,6 +20,7 @@ import AddMedicationModal from "@/components/medicalrequest/AddMedicationModal";
 import { Student } from "@/types/Student";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
+import ApiClient from "@/utils/ApiBase";
 
 const ManagerMedicalRequest = () => {
   const [loading, setLoading] = useState(false);
@@ -93,6 +94,46 @@ const ManagerMedicalRequest = () => {
   // Thêm state lưu parentId đã fetch
   const [selectedParentIdForModal, setSelectedParentIdForModal] =
     useState<string>("");
+
+  // Thêm hàm fetchMedicationHistory mới
+  const fetchMedicationHistory = async (date?: string) => {
+    setLoading(true);
+    try {
+      let url = "/api/medical/request/history/completed";
+      if (date) {
+        url += `/${date}`;
+      } else {
+        url += "/today";
+      }
+      const res = await ApiClient<MedicationHistoryRecord[]>({
+        method: "GET",
+        endpoint: url,
+      });
+      setMedicationHistory(res?.data || []);
+    } catch (err: unknown) {
+      setError((err as Error)?.message || "Lỗi khi lấy lịch sử uống thuốc");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Gọi fetchMedicationHistory khi vào tab 'history' hoặc filter ngày thay đổi
+  useEffect(() => {
+    if (activeTab === "history") {
+      if (
+        historyStartDate &&
+        historyEndDate &&
+        historyStartDate === historyEndDate
+      ) {
+        fetchMedicationHistory(historyStartDate);
+      } else if (historyStartDate) {
+        fetchMedicationHistory(historyStartDate); // Ưu tiên ngày bắt đầu
+      } else {
+        fetchMedicationHistory(); // Lấy hôm nay
+      }
+    }
+    // eslint-disable-next-line
+  }, [activeTab, historyStartDate, historyEndDate]);
 
   useEffect(() => {
     setLoading(true);
@@ -464,7 +505,6 @@ const ManagerMedicalRequest = () => {
                     setFilterEndDate: () => {},
                     onClearFilters: () => {},
                   })}
-              onOpenConfirmModal={handleOpenConfirmModal}
               onOpenUpdateModal={handleOpenUpdateModal}
               onOpenDeleteModal={handleOpenDeleteModal}
             />

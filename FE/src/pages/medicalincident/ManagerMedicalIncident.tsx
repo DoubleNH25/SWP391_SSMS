@@ -8,17 +8,27 @@ import {
 } from "@/services/UserService";
 import { FecthCreateIncident } from "@/services/IncidentService";
 import { showToast } from "@/components/ui/Toast";
-import { ParentViewModel } from "@/types/User";
 import { Student } from "@/types/Student";
 import { useState, useEffect, useCallback } from "react";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
 import {
-  FetchAllIncidentsWithoutStudentId,
-  FecthAllIncidents as FetchIncidentsByStudent,
+  FetchIncidents,
+  fetchIncidentDetail,
 } from "@/services/IncidentService";
 import { Incident } from "@/types/Incident";
 import { Modal } from "@/components/ui/modal";
 import { DecodeJWT } from "@/utils/DecodeJWT";
+import ApiClient from "@/utils/ApiBase";
+import { ParentViewModel } from "@/types/User";
+
+// Định nghĩa type cho medicalUsages nếu chưa có
+
+// Định nghĩa type cho object gửi backend (nếu chỉ cần 3 trường)
+interface MedicalUsageCreate {
+  medicalStockId: string;
+  dosage: string;
+  quantity: number;
+}
 
 export default function ManagerMedicalIncident() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,9 +48,7 @@ export default function ManagerMedicalIncident() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [incidentsLoading, setIncidentsLoading] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
-    null
-  );
+  // Xoá selectedIncident nếu không dùng
 
   // State cho modal tạo sự cố y tế
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -49,6 +57,7 @@ export default function ManagerMedicalIncident() {
     description: "",
     status: 0,
     incidentDate: "",
+    incidentTime: "", // thêm trường này
   });
   const [requireMedicine, setRequireMedicine] = useState(false);
   // 1. Thay đổi state medicines để chứa đầy đủ trường
@@ -67,6 +76,15 @@ export default function ManagerMedicalIncident() {
     },
   ]);
 
+  // Thêm state chứa danh sách thuốc
+  const [medicineOptions, setMedicineOptions] = useState<
+    { value: string; label: string; stock: number }[]
+  >([]);
+
+  // State cho modal chi tiết
+  const [detailIncident, setDetailIncident] = useState<Incident | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   // Lấy role từ JWT
   const user = DecodeJWT() as {
     sub?: string;
@@ -75,7 +93,21 @@ export default function ManagerMedicalIncident() {
   const isParent =
     user?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
     "Parent";
-  const parentId = user?.sub;
+  const parentId = user?.sub || "";
+
+  // Hàm fetch chi tiết
+  const handleViewClick = useCallback(async (id: string) => {
+    setLoadingDetail(true);
+    try {
+      const data = await fetchIncidentDetail(id);
+      setDetailIncident(data);
+      setShowDetailModal(true);
+    } catch {
+      showToast.error("Không tải được chi tiết sự cố");
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, []);
 
   // Fetch parents
   const fetchParent = useCallback(async () => {
@@ -131,21 +163,14 @@ export default function ManagerMedicalIncident() {
   const fetchIncidents = useCallback(async () => {
     setIncidentsLoading(true);
     try {
-      let data: Incident[] = [];
-      if (isParent) {
-        data = await FetchIncidentsByStudent(selectedStudentId);
-      } else if (selectedStudentId) {
-        data = await FetchIncidentsByStudent(selectedStudentId);
-      } else {
-        data = await FetchAllIncidentsWithoutStudentId();
-      }
-      setIncidents(data || []);
+      const data = await FetchIncidents(selectedStudentId || undefined);
+      setIncidents(data);
     } catch {
       setIncidents([]);
     } finally {
       setIncidentsLoading(false);
     }
-  }, [isParent, selectedStudentId]);
+  }, [selectedStudentId]);
 
   // Filter parents
   const filterParents = useCallback(() => {
@@ -168,32 +193,60 @@ export default function ManagerMedicalIncident() {
     setSelectedStudentId("");
   };
 
+  // Hàm fetch thuốc từ API
+  const fetchMedicineStock = useCallback(async () => {
+    try {
+      const data = await ApiClient<
+        {
+          id: string;
+          name: string;
+          quantity: number;
+        }[]
+      >({
+        method: "GET",
+        endpoint: "/medical/stock",
+      });
+      setMedicineOptions(
+        data.data.map((m) => ({
+          value: m.id,
+          label: `${m.name} (còn: ${m.quantity})`,
+          stock: m.quantity,
+        }))
+      );
+    } catch {
+      showToast.error("Không tải được danh sách thuốc");
+    }
+  }, []);
+
   // Thêm logic tạo sự cố y tế
   const handleCreateIncident = async () => {
     if (
       !selectedStudentId ||
       !incidentForm.type ||
       !incidentForm.description ||
-      !incidentForm.incidentDate
+      !incidentForm.incidentDate ||
+      !incidentForm.incidentTime // kiểm tra thêm trường này
     ) {
       showToast.warning("Vui lòng nhập đầy đủ các trường bắt buộc!");
       return;
     }
     // Lọc và map thuốc hợp lệ
-    const validMeds = medicines
-      .filter((m) => m.medicationName.trim() !== "")
-      .map((m) => ({
-        medicalStockId: m.medicationName,
-        dosage: m.dosage,
-        quantity: m.totalQuantity,
-      }));
+    const validMeds: MedicalUsageCreate[] = requireMedicine
+      ? medicines
+          .filter((m) => m.medicationName)
+          .map((m) => ({
+            medicalStockId: m.medicationName,
+            dosage: m.dosage,
+            quantity: m.totalQuantity,
+          }))
+      : [];
     try {
       await FecthCreateIncident({
         studentId: selectedStudentId,
         type: incidentForm.type,
         description: incidentForm.description,
-        incidentDate: incidentForm.incidentDate,
-        medicalUsageDetails: requireMedicine ? validMeds : [],
+        incidentDate: `${incidentForm.incidentDate}T${incidentForm.incidentTime}`,
+        medicalUsageDetails: validMeds, // dùng type mới
       });
       setShowCreateModal(false);
       setIncidentForm({
@@ -201,6 +254,7 @@ export default function ManagerMedicalIncident() {
         description: "",
         status: 0,
         incidentDate: "",
+        incidentTime: "", // thêm trường này khi reset
       });
       setRequireMedicine(false);
       setMedicines([
@@ -258,6 +312,13 @@ export default function ManagerMedicalIncident() {
     }
   }, [isParent, parentId]);
 
+  // Trigger fetch khi tích Yêu cầu thuốc
+  useEffect(() => {
+    if (requireMedicine && medicineOptions.length === 0) {
+      fetchMedicineStock();
+    }
+  }, [requireMedicine, medicineOptions.length, fetchMedicineStock]);
+
   // UI
   return (
     <div className="p-6">
@@ -266,7 +327,7 @@ export default function ManagerMedicalIncident() {
         icon={<AlertTriangleIcon className="w-10 h-10" />}
         description="Quản lý sự cố y tế của học sinh"
       />
-      {/* Ẩn UI lọc khi là parent */}
+      {/* chỉ hiện filter khi NOT parent */}
       {!isParent && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
           <div className="flex flex-col gap-5">
@@ -496,7 +557,9 @@ export default function ManagerMedicalIncident() {
       )}
       {/* Danh sách sự cố y tế */}
       <div className="mt-10">
-        <h2 className="text-lg font-semibold mb-4">Danh sách sự cố y tế</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          {isParent ? "Sự cố y tế của con bạn" : "Danh sách sự cố y tế"}
+        </h2>
         {incidentsLoading ? (
           <div>Đang tải...</div>
         ) : incidents.length === 0 ? (
@@ -511,7 +574,7 @@ export default function ManagerMedicalIncident() {
                   <th className="px-4 py-2 border-b">Loại sự cố</th>
                   <th className="px-4 py-2 border-b">Mô tả</th>
                   <th className="px-4 py-2 border-b">Trạng thái</th>
-                  <th className="px-4 py-2 border-b">Ngày tạo</th>
+                  <th className="px-4 py-2 border-b">Ngày & giờ tạo</th>
                   <th className="px-4 py-2 border-b">Hành động</th>
                 </tr>
               </thead>
@@ -522,18 +585,53 @@ export default function ManagerMedicalIncident() {
                       key={incident.id}
                       className="border-b hover:bg-gray-50 cursor-pointer"
                     >
+                      <td className="px-4 py-2 text-center">
+                        <button
+                          className="text-blue-600 hover:underline"
+                          onClick={() => handleViewClick(incident.id)}
+                        >
+                          Xem
+                        </button>
+                      </td>
                       <td className="px-4 py-2">
                         {incident.studentName || "-"}
                       </td>
                       <td className="px-4 py-2">{incident.class || "-"}</td>
                       <td className="px-4 py-2">{incident.type}</td>
                       <td className="px-4 py-2">
-                        {incident.description ||
-                          incident.note ||
-                          incident.details ||
-                          "Không có mô tả"}
+                        {(() => {
+                          // Mapping trạng thái sang tiếng Việt và badge màu
+                          let label = "";
+                          let color = "";
+                          switch (incident.status?.toLowerCase()) {
+                            case "pending":
+                            case "chưa xử lý":
+                              label = "Chờ xử lý";
+                              color = "bg-yellow-100 text-yellow-800";
+                              break;
+                            case "resolved":
+                            case "đã xử lý":
+                              label = "Đã xử lý";
+                              color = "bg-green-100 text-green-800";
+                              break;
+                            case "rejected":
+                            case "từ chối":
+                              label = "Từ chối";
+                              color = "bg-red-100 text-red-800";
+                              break;
+                            default:
+                              label = incident.status || "-";
+                              color = "bg-gray-100 text-gray-800";
+                          }
+                          return (
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}
+                            >
+                              {label}
+                            </span>
+                          );
+                        })()}
                       </td>
-                      <td className="px-4 py-2">{incident.status}</td>
                       <td className="px-4 py-2">
                         {(() => {
                           const dateStr: string =
@@ -542,15 +640,19 @@ export default function ManagerMedicalIncident() {
                               : "";
                           if (!dateStr) return "-";
                           const d = new Date(dateStr);
-                          return isNaN(d.getTime())
-                            ? "-"
-                            : d.toLocaleDateString("vi-VN");
+                          if (isNaN(d.getTime())) return "-";
+                          const date = d.toLocaleDateString("vi-VN");
+                          const time = d.toLocaleTimeString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          });
+                          return `${date} ${time}`;
                         })()}
                       </td>
                       <td className="px-4 py-2">
                         <button
                           onClick={() => {
-                            setSelectedIncident(incident);
+                            setDetailIncident(incident);
                             setShowDetailModal(true);
                           }}
                           className="text-blue-600 hover:underline"
@@ -566,56 +668,6 @@ export default function ManagerMedicalIncident() {
           </div>
         )}
       </div>
-      {/* Modal xem chi tiết sự cố y tế */}
-      <Modal
-        isOpen={showDetailModal}
-        onClose={() => {
-          setShowDetailModal(false);
-          setSelectedIncident(null);
-        }}
-        className="
-          mx-auto 
-          my-12 
-          w-full 
-          max-w-lg
-          bg-white
-          rounded-xl
-          shadow-2xl
-          ring-2
-          ring-blue-400
-          overflow-hidden
-        "
-      >
-        <div className="p-6">
-          <h3 className="text-xl font-semibold mb-4">Chi tiết sự cố y tế</h3>
-          {!selectedIncident ? (
-            <div>Không tìm thấy thông tin sự cố.</div>
-          ) : (
-            <div className="space-y-2 text-gray-800">
-              <div>
-                <b>Học sinh:</b> {selectedIncident.studentName}
-              </div>
-              <div>
-                <b>Loại sự cố:</b> {selectedIncident.type}
-              </div>
-              <div>
-                <b>Mô tả:</b> {selectedIncident.description || "Không có mô tả"}
-              </div>
-              <div>
-                <b>Trạng thái:</b> {selectedIncident.status}
-              </div>
-              <div>
-                <b>Ngày tạo:</b>{" "}
-                {selectedIncident.createdTime
-                  ? new Date(selectedIncident.createdTime).toLocaleDateString(
-                      "vi-VN"
-                    )
-                  : "-"}
-              </div>
-            </div>
-          )}
-        </div>
-      </Modal>
       {/* Modal tạo sự cố y tế */}
       <Modal
         isOpen={showCreateModal}
@@ -666,58 +718,54 @@ export default function ManagerMedicalIncident() {
                       </button>
                     )}
                   </div>
-                  {/* Tên thuốc */}
-                  <div className="mb-2">
-                    <label className="block text-sm font-medium mb-1">
-                      Tên thuốc *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nhập tên thuốc"
-                      value={med.medicationName}
-                      onChange={(e) => {
-                        const arr = [...medicines];
-                        arr[idx].medicationName = e.target.value;
-                        setMedicines(arr);
-                      }}
-                      className="w-full border rounded px-2 py-1"
-                    />
-                  </div>
+                  {/* Chọn thuốc */}
+                  <Label>Chọn thuốc *</Label>
+                  <SearchableSelect
+                    options={medicineOptions}
+                    value={med.medicationName}
+                    onChange={(val) => {
+                      const next = [...medicines];
+                      next[idx].medicationName = val;
+                      setMedicines(next);
+                    }}
+                  />
                   {/* Liều lượng */}
-                  <div className="mb-2">
-                    <label className="block text-sm font-medium mb-1">
-                      Liều lượng *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="VD: 2 viên/lần"
-                      value={med.dosage}
-                      onChange={(e) => {
-                        const arr = [...medicines];
-                        arr[idx].dosage = e.target.value;
-                        setMedicines(arr);
-                      }}
-                      className="w-full border rounded px-2 py-1"
-                    />
-                  </div>
+                  <Label className="mt-3">Liều dùng *</Label>
+                  <input
+                    type="text"
+                    placeholder="VD: 2 viên/lần"
+                    value={med.dosage}
+                    onChange={(e) => {
+                      const next = [...medicines];
+                      next[idx].dosage = e.target.value;
+                      setMedicines(next);
+                    }}
+                    className="w-full border rounded px-2 py-1"
+                  />
                   {/* Tổng số lượng */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Tổng số lượng *
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      placeholder="Số lượng"
-                      value={med.totalQuantity}
-                      onChange={(e) => {
-                        const arr = [...medicines];
-                        arr[idx].totalQuantity = Number(e.target.value);
-                        setMedicines(arr);
-                      }}
-                      className="w-full border rounded px-2 py-1"
-                    />
-                  </div>
+                  <Label className="mt-3">Tổng số lượng *</Label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={
+                      medicineOptions.find(
+                        (m) => m.value === med.medicationName
+                      )?.stock ?? 999
+                    }
+                    value={med.totalQuantity}
+                    onChange={(e) => {
+                      const next = [...medicines];
+                      next[idx].totalQuantity = Number(e.target.value);
+                      setMedicines(next);
+                    }}
+                    className="w-full border rounded px-2 py-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Còn trong kho:{" "}
+                    {medicineOptions.find((m) => m.value === med.medicationName)
+                      ?.stock ?? 0}{" "}
+                    viên
+                  </p>
                 </div>
               ))}
               {/* Thêm thuốc */}
@@ -810,6 +858,22 @@ export default function ManagerMedicalIncident() {
               }
             />
           </div>
+          <div className="flex flex-col gap-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Giờ xảy ra sự cố <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              value={incidentForm.incidentTime}
+              onChange={(e) =>
+                setIncidentForm((f) => ({
+                  ...f,
+                  incidentTime: e.target.value,
+                }))
+              }
+            />
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
@@ -827,6 +891,62 @@ export default function ManagerMedicalIncident() {
             </button>
           </div>
         </form>
+      </Modal>
+      {/* Modal chi tiết sự cố y tế */}
+      <Modal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setDetailIncident(null);
+        }}
+        className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow"
+      >
+        {loadingDetail ? (
+          <p>Đang tải...</p>
+        ) : detailIncident ? (
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Chi tiết sự cố</h3>
+            <p>
+              <strong>Học sinh:</strong> {detailIncident.studentName}
+            </p>
+            <p>
+              <strong>Loại:</strong> {detailIncident.type}
+            </p>
+            <p>
+              <strong>Mô tả:</strong> {detailIncident.description}
+            </p>
+            <p>
+              <strong>Ngày giờ:</strong>{" "}
+              {detailIncident && detailIncident.incidentDate
+                ? new Date(detailIncident.incidentDate).toLocaleString("vi-VN")
+                : "-"}
+            </p>
+            {detailIncident &&
+              Array.isArray(detailIncident.medicalUsageDetails) &&
+              detailIncident.medicalUsageDetails.length > 0 && (
+                <>
+                  <h4 className="font-medium">Thuốc đã dùng:</h4>
+                  <ul className="list-disc list-inside">
+                    {detailIncident.medicalUsageDetails.map((m) => (
+                      <li key={m.id}>
+                        {m.medicalName} – {m.dosage} – SL: {m.quantity}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            <div className="text-right mt-4">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p>Không tìm thấy chi tiết.</p>
+        )}
       </Modal>
     </div>
   );
