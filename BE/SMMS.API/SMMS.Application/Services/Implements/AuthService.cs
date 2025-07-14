@@ -1,5 +1,7 @@
 ﻿
+using DocumentFormat.OpenXml.Spreadsheet;
 using FirebaseAdmin.Auth;
+using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using SMMS.Application.DataObject.RequestObject;
 using SMMS.Application.DataObject.ResponseObject;
@@ -244,6 +246,27 @@ namespace SMMS.Application.Services.Implements
 			}
 		}
 
+        public async Task<AuthResponse> ValidateGoogleTokenAsync(string email)
+        {
+            try
+            {
+                var user = _repositoryManager.UserRepository
+                    .FindByCondition(x => x.Email == email, false)
+					.Include(u => u.Role)
+					.FirstOrDefault();
+                if (user == null)
+                {
+                    throw new Exception("Invalid credentials");
+                }
+                var token = _jwtTokenGenerator.GenerateToken(user);
+                return new AuthResponse { Token = token, UserId = user.Id };
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
-	}
+
+    }
 }

@@ -87,6 +87,7 @@ export default function AddBlog() {
         imageFile: formData.titleImage ?? undefined,
         // category đã bị loại bỏ
       };
+      console.log(blogRequest);
 
       const newBlog = await CreateBlog(blogRequest);
       setBlogs((prev) => [newBlog, ...prev]);

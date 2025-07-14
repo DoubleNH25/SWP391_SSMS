@@ -72,5 +72,13 @@ namespace SMMS.API.Controllers
             return Ok(checker);
         }
 
+        [HttpPost("login-google")]
+        public async Task<IActionResult> LoginGoogle([FromBody]TokenRequest email)
+        {
+            var checker = await _authService.ValidateGoogleTokenAsync(email.email);
+
+            return Ok(checker);
+        }
+
     }
 }

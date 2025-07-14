@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FecthLogin } from "@/services/AuthService";
-import { LoginRequest } from "@/types/User";
+import { FecthLogin, FecthLoginGoogle } from "@/services/AuthService";
+import { EmailRequest, LoginRequest } from "@/types/User";
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
-import { initReCAPTCHA, sendOTP } from "@/services/PhoneAuthService";
+import { initReCAPTCHA } from "@/services/PhoneAuthService";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/utils/firebase";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +34,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    
+
     setError("");
     setLoginError("");
     setIsLoading(true);
@@ -54,6 +56,30 @@ export default function Login() {
   const toggleForgotPassword = () => {
     navigate("/forgot-password");
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      // Prefer id_token for backend authentication
+      const idToken = tokenResponse.access_token;
+      const userInfo = await axios
+        .get("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        })
+        .then((res) => res.data);
+      const data = userInfo as EmailRequest;
+      if (idToken) {
+        const response = await FecthLoginGoogle(data);
+        if (response) {
+          navigate("/");
+        }
+      } else {
+        setLoginError("Không nhận được id_token từ Google");
+      }
+    },
+    onError: () => {
+      setLoginError("Đăng nhập Google thất bại");
+    },
+  });
 
   useEffect(() => {
     if (auth) {
@@ -124,10 +150,7 @@ export default function Login() {
             }}
           >
             <div>
-              <form
-                className="space-y-6"
-                onSubmit={handleSubmit}
-              >
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="mb-12">
                   <h3 className="text-slate-900 text-3xl text-center font-semibold">
                     Đăng nhập
@@ -193,7 +216,7 @@ export default function Login() {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center"/>
+                  <div className="flex items-center" />
                   <button
                     type="button"
                     onClick={toggleForgotPassword}
@@ -278,6 +301,48 @@ export default function Login() {
                 </svg>
               </div>
               <span className="ml-4">Đăng nhập bằng SĐT</span>
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => googleLogin()}
+              variants={{
+                hover: {
+                  scale: 1.05,
+                  boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                },
+              }}
+              whileHover="hover"
+              whileTap={{ scale: 0.95 }}
+              className="w-full mt-3 font-bold shadow-sm rounded-lg py-3 text-gray-800 flex border-2 items-center justify-center transition-all duration-300 ease-in-out focus:outline-none"
+            >
+              <div className="bg-white rounded-full">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                  className="w-5 h-5"
+                >
+                  <g>
+                    <path
+                      fill="#4285F4"
+                      d="M24 9.5c3.54 0 6.71 1.22 9.2 3.23l6.9-6.9C35.64 2.13 30.13 0 24 0 14.82 0 6.71 5.82 2.69 14.29l8.06 6.26C12.41 13.97 17.74 9.5 24 9.5z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M46.1 24.55c0-1.64-.15-3.22-.43-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.65 7.01l7.19 5.6C43.98 37.13 46.1 31.33 46.1 24.55z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M10.75 28.04A14.5 14.5 0 0 1 9.5 24c0-1.4.23-2.76.65-4.04l-8.06-6.26A23.97 23.97 0 0 0 0 24c0 3.82.92 7.44 2.54 10.62l8.21-6.58z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M24 48c6.13 0 11.28-2.03 15.04-5.53l-7.19-5.6c-2.01 1.35-4.59 2.16-7.85 2.16-6.26 0-11.59-4.47-13.25-10.38l-8.21 6.58C6.71 42.18 14.82 48 24 48z"
+                    />
+                    <path fill="none" d="M0 0h48v48H0z" />
+                  </g>
+                </svg>
+              </div>
+              <span className="ml-4">Đăng nhập bằng Google</span>
             </motion.button>
           </motion.div>
 

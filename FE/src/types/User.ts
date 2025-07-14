@@ -85,3 +85,7 @@ export interface ResetPasswordRequest {
   newPassword: string; 
   verifyPassword: string;
 }
+
+export interface EmailRequest {
+  email: string; 
+}
