@@ -15,17 +15,11 @@ jobs:
       - name: 📥 Checkout source code
         uses: actions/checkout@v3
 
-      # ❌ BỎ phần setup-dotnet vì bạn đã cài sẵn
-      # - name: ⚙️ Setup .NET 8 SDK
-      #   uses: actions/setup-dotnet@v4
-      #   with:
-      #     dotnet-version: '8.0.x'
-
-      - name: 🧪 Check .NET SDK version (đảm bảo đang dùng net8)
-        run: dotnet --version
+      - name: 🧪 Kiểm tra file dự án .csproj
+        run: dir /s /b *.csproj
 
       - name: 📦 Restore NuGet packages
-        run: dotnet restore ./BE/SMMS.API/SMMS.API.csproj
+        run: dotnet restore ./BE/SMMS.API/SMMS.API/SMMS.API.csproj
 
       - name: 🛑 Stop IIS AppPool before cleaning
         shell: powershell
@@ -56,7 +50,7 @@ jobs:
           }
 
       - name: 🛠️ Build and Publish SMMS.API to IIS
-        run: dotnet publish ./BE/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
+        run: dotnet publish ./BE/SMMS.API/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
 
       - name: 🔁 Restart IIS AppPool for SMMSAPI
         shell: powershell
