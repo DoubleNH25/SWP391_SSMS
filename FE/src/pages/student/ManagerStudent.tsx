@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileIcon, PencilIcon, TrashBinIcon } from "@/components/icons";
+import { PencilIcon, TrashBinIcon } from "@/components/icons";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Modal } from "@/components/ui/modal";
 import {
@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import {
   FecthDeleteStudents,
-  FecthImportUserByExcel,
   FecthStudents,
 } from "@/services/UserService";
 import { FecthClass } from "@/services/SchoolClassService";
@@ -24,7 +23,6 @@ import { showToast } from "@/components/ui/Toast";
 import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
-import { ImportFileModal } from "@/components/ui/FileUploadModal";
 
 type SortDirection = "asc" | "desc" | null;
 
@@ -37,10 +35,8 @@ export default function StudentManager() {
     null
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(8);
   const [currentPage, setCurrentPage] = useState(1);
-  const [importLoading, setImportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
@@ -181,41 +177,7 @@ export default function StudentManager() {
     setCurrentPage(1);
   };
 
-  const handleImport = async (file: File) => {
-    if (!file) {
-      showToast.error("Vui lòng chọn file Excel!");
-      return;
-    }
-    setImportLoading(true);
-    try {
-      const success = await FecthImportUserByExcel(file);
-      if (success) {
-        const fetchedStudents = await FecthStudents();
-        setStudents(fetchedStudents);
-        showToast.success("Import học sinh thành công!");
-        setIsImportModalOpen(false);
-      } else {
-        throw new Error("Import thất bại");
-      }
-    } catch (error) {
-      showToast.error(
-        `Lỗi khi import file: ${error instanceof Error ? error.message : "Lỗi không xác định"
-        }`
-      );
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const handleOpenImportModal = () => {
-    setIsImportModalOpen(true);
-  };
-
-  const handleCloseImportModal = () => {
-    if (!importLoading) {
-      setIsImportModalOpen(false);
-    }
-  };
+  
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -437,15 +399,7 @@ export default function StudentManager() {
               </div>
             </div>
           </Modal>
-          <ImportFileModal
-            isOpen={isImportModalOpen}
-            onClose={handleCloseImportModal}
-            onUpload={handleImport}
-            loading={importLoading}
-            title="Import học sinh từ Excel"
-            acceptedFileTypes={[".xlsx", ".xls"]}
-            maxFileSize={10}
-          />
+          
           <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[140px]">
             <div className="flex items-center gap-2">
               <button
@@ -455,13 +409,7 @@ export default function StudentManager() {
                 <PlusIcon className="w-4 h-4" />
                 Thêm học sinh mới
               </button>
-              <button
-                onClick={handleOpenImportModal}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
-              >
-                <FileIcon className="w-4 h-4" />
-                Import từ Excel
-              </button>
+              
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">

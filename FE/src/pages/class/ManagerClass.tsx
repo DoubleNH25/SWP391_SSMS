@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PencilIcon, TrashBinIcon } from "@/components/icons"
+import { FileIcon, PencilIcon, TrashBinIcon } from "@/components/icons"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/modal";
 import { PlusIcon, GraduationCap, Search, Users } from "lucide-react";
@@ -9,6 +9,9 @@ import PageHeader from "@/components/ui/PageHeader";
 import Label from "@/components/ui/form/Label";
 import Select from "@/components/ui/form/Select";
 import { showToast } from "@/components/ui/Toast";
+import { FecthImportUserByExcel, FecthStudents } from "@/services/UserService";
+import { ImportFileModal } from "@/components/ui/FileUploadModal";
+import { Student } from "@/types/Student";
 
 export default function CLassSchoolManager() {
   const [schoolClass, setSchoolClass] = useState<SchoolClass[]>([]);
@@ -21,6 +24,10 @@ export default function CLassSchoolManager() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
+  const [, setStudents] = useState<Student[]>([]);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  
   const navigate = useNavigate();
 
   const getGradeOptions = (classes: SchoolClass[]) => {
@@ -41,6 +48,44 @@ export default function CLassSchoolManager() {
         label: `Khối ${grade}`
       }))
     ];
+  };
+
+  const handleImport = async (file: File) => {
+    if (!file) {
+      showToast.error("Vui lòng chọn file Excel!");
+      return;
+    }
+    setImportLoading(true);
+    try {
+      const success = await FecthImportUserByExcel(file);
+      if (success) {
+        const fetchedStudents = await FecthStudents();
+        setStudents(fetchedStudents);
+        showToast.success("Import học sinh thành công!");
+        setIsImportModalOpen(false);
+      } else {
+        throw new Error("Import thất bại");
+      }
+    } catch (error) {
+      showToast.error(
+        `Lỗi khi import file: ${error instanceof Error ? error.message : "Lỗi không xác định"
+        }`
+      );
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  
+
+  const handleOpenImportModal = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleCloseImportModal = () => {
+    if (!importLoading) {
+      setIsImportModalOpen(false);
+    }
   };
 
   const filteredClasses = schoolClass.filter((cls) => {
@@ -193,6 +238,16 @@ export default function CLassSchoolManager() {
             </div>
           </Modal>
 
+          <ImportFileModal
+            isOpen={isImportModalOpen}
+            onClose={handleCloseImportModal}
+            onUpload={handleImport}
+            loading={importLoading}
+            title="Import học sinh từ Excel"
+            acceptedFileTypes={[".xlsx", ".xls"]}
+            maxFileSize={10}
+          />
+
           {/* Search and Filter Controls */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
             <div className="flex flex-col gap-5">
@@ -270,6 +325,13 @@ export default function CLassSchoolManager() {
               <PlusIcon className="w-4 h-4" />
               Thêm lớp mới
             </button>
+            <button
+                onClick={handleOpenImportModal}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+              >
+                <FileIcon className="w-4 h-4" />
+                Import từ Excel
+              </button>
           </div>
 
           {/* Class Grid */}
