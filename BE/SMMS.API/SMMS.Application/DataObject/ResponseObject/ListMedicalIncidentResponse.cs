@@ -10,5 +10,7 @@ namespace SMMS.Application.DataObject.ResponseObject
         public string Type { get; set; }
         public MedicalIncidentStatus Status { get; set; }
         public DateTime IncidentDate { get; set; }
+        public string Description { get; set; }
+
     }
 }

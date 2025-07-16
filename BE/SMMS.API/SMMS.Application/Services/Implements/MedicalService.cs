@@ -364,6 +364,7 @@ namespace SMMS.Application.Services.Implements
                         Type = u.Type,
                         Status = u.Status,
                         IncidentDate = u.IncidentDate,
+                        Description = u.Description,
                     }).ToList();
 
                 return medicalIncidents;
