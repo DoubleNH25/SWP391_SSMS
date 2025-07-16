@@ -43,11 +43,10 @@ export default function LoginPhone() {
     try {
       await sendOTP(sendPhone);
       navigate("/confirm-otp", { state: { phone: sendPhone } });
-    } catch (err) {
+    } catch (err: any) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Đã xảy ra lỗi, vui lòng thử lại."
+        err?.response?.data?.message ||
+        (err instanceof Error ? err.message : "Đã xảy ra lỗi, vui lòng thử lại.")
       );
     } finally {
       setIsSendingOtp(false);
