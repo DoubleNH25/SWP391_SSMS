@@ -58,11 +58,19 @@ const CalendarGrid = ({
     return days;
   };
 
+  // Helper: check if a date is within an event's range
+  const isDateInEventRange = (date: Date, event: CalendarEvent) => {
+    const start = new Date(event.start);
+    const end = new Date(event.end);
+    // Normalize time for all-day events
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return date >= start && date <= end;
+  };
+
+  // Modified: get all events that span this date
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.start);
-      return eventDate.toDateString() === date.toDateString();
-    });
+    return events.filter(event => isDateInEventRange(date, event));
   };
 
   return (
@@ -159,6 +167,8 @@ const CalendarGrid = ({
                               <p>
                                 <strong>Time:</strong>{' '}
                                 {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {' - '}
+                                {new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </p>
                               {event.extendedProps.eventType === "medical" ? (
                                 <>
@@ -228,7 +238,8 @@ const CalendarGrid = ({
                               </div>
                               <div className="font-medium truncate text-sm mb-1">{event.title}</div>
                               <div className="text-xs truncate opacity-75">
-                                {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -{' '}
+                                {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {' | '}
                                 {event.extendedProps.eventType === "medical"
                                   ? event.extendedProps.description || "Không có mô tả"
                                   : event.extendedProps.vaccineName || "Không có tên vaccine"}

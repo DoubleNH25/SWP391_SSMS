@@ -59,21 +59,28 @@ export default function Login() {
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      // Prefer id_token for backend authentication
-      const idToken = tokenResponse.access_token;
-      const userInfo = await axios
-        .get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        })
-        .then((res) => res.data);
-      const data = userInfo as EmailRequest;
-      if (idToken) {
-        const response = await FecthLoginGoogle(data);
-        if (response) {
-          navigate("/");
+      try {
+        const idToken = tokenResponse.access_token;
+        const userInfo = await axios
+          .get("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          })
+          .then((res) => res.data);
+        const data = userInfo as EmailRequest;
+        if (idToken) {
+          const response = await FecthLoginGoogle(data);
+          if (response) {
+            navigate("/");
+          }
+        } else {
+          setLoginError("Không nhận được id_token từ Google");
         }
-      } else {
-        setLoginError("Không nhận được id_token từ Google");
+      } catch (err: any) {
+        setLoginError(
+          err?.response?.data?.message ||
+          err?.message ||
+          "Đăng nhập Google thất bại"
+        );
       }
     },
     onError: () => {

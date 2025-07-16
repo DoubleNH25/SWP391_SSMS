@@ -5,6 +5,7 @@ export interface VaccinationCampaignsUpdateCreateViewModel{
     mfg: string;
     vaccineType: string;
     startDate: string;
+    endDate: string;
     classIds: [string]
 }
 
@@ -16,6 +17,7 @@ export interface VaccinationCampaignsViewModel{
     mfg: Date;
     vaccineType: string;
     startDate: Date;
+    endDate: Date;
     status:  "Pending" | "Approved" | "Rejected";
     classIds: [string]
 }
