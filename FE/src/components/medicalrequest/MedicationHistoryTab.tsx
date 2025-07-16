@@ -101,7 +101,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
 
         // If still invalid, skip this record
         if (isNaN(recordDate.getTime())) return true;
-      } catch (error) {
+      } catch {
         return true; // Skip invalid dates
       }
 
@@ -131,7 +131,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
       const dateA = DateUtils.toLocalDate(a.administeredTime).getTime();
       const dateB = DateUtils.toLocalDate(b.administeredTime).getTime();
       return historySortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    } catch (error) {
+    } catch {
       // Fallback to string comparison if date parsing fails
       return historySortOrder === "asc"
         ? a.administeredTime.localeCompare(b.administeredTime)
@@ -327,7 +327,15 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                         <span className="text-gray-600">Thời gian</span>
                       </div>
                       <span className="font-medium text-gray-900 text-right">
-                        {record.administeredTime}
+                        {DateUtils.toLocalDate(
+                          record.administeredTime
+                        ).toLocaleString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -339,7 +347,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                         {record.administeredBy}
                       </span>
                     </div>
-                    {record.note && record.note !== "Không có ghi chú" && (
+                    {record.note && record.note.trim() !== "" && (
                       <div className="border-t border-gray-200 pt-3">
                         <div className="flex items-start space-x-2">
                           <FileText className="w-4 h-4 text-gray-500 mt-0.5" />
