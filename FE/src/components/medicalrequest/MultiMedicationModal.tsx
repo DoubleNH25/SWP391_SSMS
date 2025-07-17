@@ -199,22 +199,23 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     ],
   };
 
-  // Mapping đơn vị theo "Cách dùng"
-  const unitByRoute: Record<string, string> = {
-    Uống: "viên",
-    Ngậm: "viên",
-    "Nhỏ mắt": "giọt",
-    "Nhỏ tai": "giọt",
-    "Nhỏ mũi": "giọt",
-    "Bôi ngoài da": "gói",
-    Tiêm: "ống",
-    Hít: "ống",
-    Đặt: "viên",
+  // Mapping đơn vị theo "Cách dùng" và dạng thuốc
+  const unitByRoute: Record<string, (form?: string) => string> = {
+    Uống: (form) => (form === "Siro" ? "ml" : "viên"),
+    Ngậm: () => "viên",
+    "Nhỏ mắt": () => "giọt",
+    "Nhỏ tai": () => "giọt",
+    "Nhỏ mũi": () => "giọt",
+    "Bôi ngoài da": () => "gói",
+    Tiêm: () => "ống",
+    Hít: () => "ống",
+    Đặt: () => "viên",
   };
 
-  // Helper function to get unit based on route
-  const getUnitByRoute = (route: string): string => {
-    return unitByRoute[route] || "đơn vị";
+  // Helper function to get unit based on route and form
+  const getUnitByRoute = (route: string, form?: string): string => {
+    const fn = unitByRoute[route];
+    return typeof fn === "function" ? fn(form) : "đơn vị";
   };
 
   // Helper function to get available routes for a form
@@ -588,7 +589,8 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                           className="h-11 flex-1"
                         />
                         <span className="ml-2 text-sm text-gray-600 font-medium">
-                          {getUnitByRoute(medication.route)}/lần
+                          {getUnitByRoute(medication.route, medication.form)}
+                          /lần
                         </span>
                       </div>
                       {errors[`dosage-${medication.id}`] && (
@@ -652,7 +654,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                           className="h-11 flex-1"
                         />
                         <span className="ml-2 text-sm text-gray-600 font-medium">
-                          {getUnitByRoute(medication.route)}
+                          {getUnitByRoute(medication.route, medication.form)}
                         </span>
                       </div>
                       {errors[`totalQuantity-${medication.id}`] && (
@@ -797,7 +799,10 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                               medication.leftoverUnits > 0 && (
                                 <span className="text-xs text-yellow-700 ml-2">
                                   ⚠️ Phần dư: {medication.leftoverUnits}{" "}
-                                  {getUnitByRoute(medication.route)}
+                                  {getUnitByRoute(
+                                    medication.route,
+                                    medication.form
+                                  )}
                                 </span>
                               )}
                           </div>
