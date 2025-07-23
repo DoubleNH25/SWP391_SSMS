@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
-import { FecthForgetPassword } from "@/services/AuthService";
+import { FecthForgetPassword, FecthLoginGoogle } from "@/services/AuthService";
 import React from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { EmailRequest } from "@/types/User";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
   const isValidEmail = (email: string) => {
@@ -20,7 +23,7 @@ export default function ForgotPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    
+
     setIsLoading(true);
     setError("");
     setSuccess("");
@@ -47,14 +50,43 @@ export default function ForgotPassword() {
       }
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Đã xảy ra lỗi, vui lòng thử lại."
+        err instanceof Error ? err.message : "Đã xảy ra lỗi, vui lòng thử lại."
       );
     } finally {
       setIsLoading(false);
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const idToken = tokenResponse.access_token;
+        const userInfo = await axios
+          .get("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          })
+          .then((res) => res.data);
+        const data = userInfo as EmailRequest;
+        if (idToken) {
+          const response = await FecthLoginGoogle(data);
+          if (response) {
+            navigate("/");
+          }
+        } else {
+          setLoginError("Không nhận được id_token từ Google");
+        }
+      } catch (err: any) {
+        setLoginError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Đăng nhập Google thất bại"
+        );
+      }
+    },
+    onError: () => {
+      setLoginError("Đăng nhập Google thất bại");
+    },
+  });
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-6 px-4 bg-gray-50">
@@ -185,6 +217,11 @@ export default function ForgotPassword() {
                 "Gửi OTP"
               )}
             </motion.button>
+            {loginError && (
+              <div className="text-red-600 text-sm text-center mt-3 font-medium">
+                {loginError}
+              </div>
+            )}
 
             <div className="flex items-center w-full my-4">
               <div className="flex-grow h-px bg-gray-300" />
@@ -196,6 +233,7 @@ export default function ForgotPassword() {
 
             <motion.button
               type="button"
+              onClick={() => googleLogin()}
               variants={{
                 hover: {
                   scale: 1.05,
@@ -204,29 +242,36 @@ export default function ForgotPassword() {
               }}
               whileHover="hover"
               whileTap={{ scale: 0.95 }}
-              className="w-full font-bold shadow-sm rounded-lg py-3 text-gray-800 flex border-2 items-center justify-center transition-all duration-300 ease-in-out focus:outline-none"
+              className="w-full mt-3 font-bold shadow-sm rounded-lg py-3 text-gray-800 flex border-2 items-center justify-center transition-all duration-300 ease-in-out focus:outline-none"
             >
               <div className="bg-white rounded-full">
-                <svg className="w-4" viewBox="0 0 533.5 544.3">
-                  <path
-                    d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z"
-                    fill="#4285f4"
-                  />
-                  <path
-                    d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z"
-                    fill="#34a853"
-                  />
-                  <path
-                    d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z"
-                    fill="#fbbc04"
-                  />
-                  <path
-                    d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z"
-                    fill="#ea4335"
-                  />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                  className="w-5 h-5"
+                >
+                  <g>
+                    <path
+                      fill="#4285F4"
+                      d="M24 9.5c3.54 0 6.71 1.22 9.2 3.23l6.9-6.9C35.64 2.13 30.13 0 24 0 14.82 0 6.71 5.82 2.69 14.29l8.06 6.26C12.41 13.97 17.74 9.5 24 9.5z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M46.1 24.55c0-1.64-.15-3.22-.43-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.65 7.01l7.19 5.6C43.98 37.13 46.1 31.33 46.1 24.55z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M10.75 28.04A14.5 14.5 0 0 1 9.5 24c0-1.4.23-2.76.65-4.04l-8.06-6.26A23.97 23.97 0 0 0 0 24c0 3.82.92 7.44 2.54 10.62l8.21-6.58z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M24 48c6.13 0 11.28-2.03 15.04-5.53l-7.19-5.6c-2.01 1.35-4.59 2.16-7.85 2.16-6.26 0-11.59-4.47-13.25-10.38l-8.21 6.58C6.71 42.18 14.82 48 24 48z"
+                    />
+                    <path fill="none" d="M0 0h48v48H0z" />
+                  </g>
                 </svg>
               </div>
-              <span className="ml-4">Đăng nhập với Google</span>
+              <span className="ml-4">Đăng nhập bằng Google</span>
             </motion.button>
 
             <motion.button
@@ -258,4 +303,4 @@ export default function ForgotPassword() {
       </AnimatePresence>
     </div>
   );
-} 
+}
