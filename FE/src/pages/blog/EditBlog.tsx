@@ -6,7 +6,7 @@ import {
   UpdateBlog,
   UploadBlogImage,
 } from "@/services/BlogService";
-import { BlogRequest, BlogResponse } from "@/types/Blog";
+import { BlogRequest } from "@/types/Blog";
 import { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import { useNavigate, useParams } from "react-router-dom";
@@ -61,9 +61,34 @@ export default function EditBlog() {
 
   const handleExcerptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    if (value.length <= 200) {
+    // Allow paste even if it exceeds 500 characters, then truncate
+    if (value.length > 500) {
+      setFormData({ ...formData, excerpt: value.slice(0, 500) });
+    } else {
       setFormData({ ...formData, excerpt: value });
     }
+  };
+
+  const handleExcerptPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const pastedText = e.clipboardData.getData("text");
+    const currentValue = formData.excerpt;
+    const textarea = e.target as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Create new value with pasted text
+    const newValue =
+      currentValue.slice(0, start) + pastedText + currentValue.slice(end);
+
+    // Truncate if necessary
+    const finalValue =
+      newValue.length > 500 ? newValue.slice(0, 500) : newValue;
+
+    // Prevent default paste behavior
+    e.preventDefault();
+
+    // Update state
+    setFormData({ ...formData, excerpt: finalValue });
   };
 
   const quillModules = {
@@ -111,7 +136,9 @@ export default function EditBlog() {
       const blogRequest: BlogRequest = {
         title: formData.title,
         content: formData.content,
-        excerpt: formData.excerpt || formData.content.replace(/<[^>]+>/g, "").slice(0, 200),
+        excerpt:
+          formData.excerpt ||
+          formData.content.replace(/<[^>]+>/g, "").slice(0, 500),
         imageUrl: imageUrl,
         imageFile: formData.titleImage ?? undefined,
         // category đã bị loại bỏ
@@ -183,14 +210,9 @@ export default function EditBlog() {
                 </Label>
                 <textarea
                   value={formData.title}
-                  onChange={(e) => {
-                    handleTitleChange(e); // Call the original change handler
-                    e.target.style.height = "auto"; // Reset height to auto
-                    e.target.style.height = `${e.target.scrollHeight}px`; // Set height based on content
-                  }}
+                  onChange={handleTitleChange}
                   placeholder="Nhập tiêu đề hấp dẫn cho bài viết của bạn..."
-                  className="w-full px-4 rounded-xl border-2 transition-all duration-200 text-lg resize-none"
-                  style={{ minHeight: "48px" }} // Default height (equivalent to h-12)
+                  className="w-full h-12 p-2 rounded-md border-2 transition-all duration-200 "
                 />
                 {formData.title && (
                   <p className="text-sm text-gray-500 mt-2">
@@ -198,7 +220,6 @@ export default function EditBlog() {
                   </p>
                 )}
               </div>
-
             </div>
 
             {/* Excerpt Field */}
@@ -220,16 +241,16 @@ export default function EditBlog() {
                 Tóm tắt bài viết
               </Label>
               <textarea
-                value={formData.excerpt}
+                value={formData.title ?? ""}
                 onChange={handleExcerptChange}
-                placeholder="Nhập tóm tắt ngắn gọn cho bài viết (tối đa 200 ký tự)..."
-                className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 resize-none"
-                style={{ minHeight: "80px" }}
+                onPaste={handleExcerptPaste}
+                placeholder="Nhập tóm tắt ngắn gọn cho bài viết (tối đa 500 ký tự)..."
+                className="w-full p-2 rounded-md border-2 duration-200"
                 rows={3}
               />
               {formData.excerpt && (
                 <p className="text-sm text-gray-500 mt-2">
-                  {formData.excerpt.length}/200 ký tự
+                  {formData.excerpt.length}/500 ký tự
                 </p>
               )}
             </div>
@@ -245,10 +266,10 @@ export default function EditBlog() {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    image: e.target.files?.[0] || null,
+                    titleImage: e.target.files?.[0] || null,
                   }))
                 }
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-4 py-2 border rounded-md"
               />
             </div>
 
@@ -270,16 +291,16 @@ export default function EditBlog() {
                 </svg>
                 Nội dung bài viết
               </Label>
-              <div className="rounded-lg bg-white transition-all duration-200">
+              <div className="rounded-md bg-white transition-all duration-200">
                 <ReactQuill
                   value={formData.content}
                   onChange={handleContentChange}
                   placeholder="Bắt đầu viết nội dung bài viết của bạn... Hãy chia sẻ những kiến thức bổ ích!"
                   theme="snow"
                   modules={quillModules}
-                  className="rounded-lg text-gray-800"
+                  className="rounded-md text-gray-800 w-full"
                   style={{
-                    padding: "12px",
+                    borderRadius: "1px",
                     fontFamily: "Inter, system-ui, sans-serif",
                     backgroundColor: "white",
                   }}
