@@ -7,10 +7,13 @@ import {
   UpdateActivityConsentStatus,
 } from "@/services/ActiviceMedicalEvent";
 import { FecthStudentById, FecthUserById } from "@/services/UserService";
+import { FecthVaccinationCampaign } from "@/services/VaccinationCampaignService";
 import {
   ActivityMedicalEventDetailViewModel,
   ActivityMedicalEventViewModel,
 } from "@/types/ActivityMedicalEvent";
+import { DateUtils } from "@/utils/DateUtils";
+import { DecodeJWT } from "@/utils/DecodeJWT";
 import {
   Check,
   CheckCircle2,
@@ -27,6 +30,10 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Pill,
+  ListOrdered,
+  CalendarCheck2,
+  CalendarClock,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -125,25 +132,36 @@ export default function ManagerActivityMedical() {
     try {
       const data = await FecthActivityMedicalEvent();
       setActivityMedicalEvent(data);
+      const eventData = await FecthVaccinationCampaign();
 
       const eventDetail = data.find((event) => event.id === eventId);
+      const eventDetailData = eventData.find(
+        (event) => event.id === eventDetail?.activityId
+      );
       if (eventDetail) {
         const student = await fetchStudentByActivityId(eventDetail.studentId);
         const user = await fetchUserByActivityId(eventDetail.responsibleUserId);
+
         if (student) {
           setActivityMedicalEventDetail({
             ...eventDetail,
             student: student,
             responsibleUser: user || null,
+            vaccineName: eventDetailData?.vaccineName || "",
+            exp: DateUtils.customFormatDateOnly(eventDetailData?.exp ?? ""),
+            mfg: DateUtils.customFormatDateOnly(eventDetailData?.mfg ?? ""),
+            vaccineType: eventDetailData?.vaccineType || "",
           });
         } else {
           setError("Không tìm thấy học sinh");
         }
+      } else {
+        setError("Không tìm thấy sự kiện y tế");
       }
-      setLoading(false);
     } catch (error) {
       console.error("Failed to fetch activity medical event:", error);
       setError("Không thể tải chi tiết sự kiện y tế");
+    } finally {
       setLoading(false);
     }
   }, [eventId, fetchStudentByActivityId, fetchUserByActivityId]);
@@ -157,6 +175,19 @@ export default function ManagerActivityMedical() {
   }, [fetchData, fetchActivityMedicalEvent, eventId]);
 
   const handleDecision = (approve: boolean) => {
+    // Kiểm tra xem sự kiện có trong quá khứ không
+    if (activityMedicalEventDetail) {
+      const eventDate = new Date(activityMedicalEventDetail.scheduleTime);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      eventDate.setHours(0, 0, 0, 0);
+
+      if (eventDate < currentDate) {
+        showToast.error("Không thể phê duyệt sự kiện trong quá khứ");
+        return;
+      }
+    }
+
     setDecision(approve);
     setShowConfirmation(true);
   };
@@ -209,7 +240,7 @@ export default function ManagerActivityMedical() {
     const matchesDate =
       !dateFilter ||
       new Date(event.scheduleTime).toDateString() ===
-      new Date(dateFilter).toDateString();
+        new Date(dateFilter).toDateString();
 
     const matchesType =
       typeFilter === "all" ||
@@ -217,6 +248,10 @@ export default function ManagerActivityMedical() {
 
     return matchesSearch && matchesStatus && matchesDate && matchesType;
   });
+
+  const payload = DecodeJWT();
+  const useName =
+    payload?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
 
   // Pagination calculations
   const totalItems = filteredEvents.length;
@@ -282,18 +317,72 @@ export default function ManagerActivityMedical() {
                         <p className="text-gray-600">
                           {activityMedicalEventDetail.description}
                         </p>
+                        <div>
+                          {activityMedicalEventDetail.activityType ===
+                            "VaccinationCampaign" && (
+                            <div className="space-y-4 mt-3">
+                              <div className="flex items-start gap-3">
+                                <Pill className="w-5 h-5 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Vaccine
+                                  </p>
+                                  <p className="text-gray-600">
+                                    {activityMedicalEventDetail.vaccineName}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3">
+                                <ListOrdered className="w-5 h-5 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Loại vaccine
+                                  </p>
+                                  <p className="text-gray-600">
+                                    {activityMedicalEventDetail.vaccineType}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3">
+                                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Ngày sản xuất
+                                  </p>
+                                  <p className="text-gray-600">
+                                    {activityMedicalEventDetail.mfg}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3">
+                                <CalendarClock className="w-5 h-5 text-gray-400 mt-0.5" />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Hết hạn
+                                  </p>
+                                  <p className="text-gray-600">
+                                    {activityMedicalEventDetail.exp}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex items-start gap-3">
-                          <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                          <CalendarCheck2 className="w-5 h-5 text-gray-400 mt-0.5" />
                           <div>
                             <p className="font-medium text-gray-900">
                               Loại sự kiện
                             </p>
                             <p className="text-gray-600">
                               {activityMedicalEventDetail.activityType ===
-                                "HealthActivity"
+                              "HealthActivity"
                                 ? "Khám sức khỏe"
                                 : "Tiêm chủng"}
                             </p>
@@ -321,7 +410,8 @@ export default function ManagerActivityMedical() {
                               Người phụ trách
                             </p>
                             <p className="text-gray-600">
-                              {activityMedicalEventDetail.responsibleUserName}
+                              {activityMedicalEventDetail.responsibleUserName ??
+                                useName}
                             </p>
                           </div>
                         </div>
@@ -352,8 +442,8 @@ export default function ManagerActivityMedical() {
                             <span className="font-medium text-blue-900">
                               {activityMedicalEventDetail.student?.dateOfBirth
                                 ? new Date(
-                                  activityMedicalEventDetail.student.dateOfBirth
-                                ).toLocaleDateString("vi-VN")
+                                    activityMedicalEventDetail.student.dateOfBirth
+                                  ).toLocaleDateString("vi-VN")
                                 : "Chưa có thông tin"}
                             </span>
                           </div>
@@ -361,15 +451,15 @@ export default function ManagerActivityMedical() {
                             <span className="text-blue-700">Giới tính:</span>
                             <span className="font-medium text-blue-900">
                               {activityMedicalEventDetail.student?.gender ===
-                                "Male"
+                              "Male"
                                 ? "Nam"
                                 : activityMedicalEventDetail.student?.gender ===
                                   "Female"
-                                  ? "Nữ"
-                                  : activityMedicalEventDetail.student?.gender ===
-                                    "Other"
-                                    ? "Khác"
-                                    : "Chưa có thông tin"}
+                                ? "Nữ"
+                                : activityMedicalEventDetail.student?.gender ===
+                                  "Other"
+                                ? "Khác"
+                                : "Chưa có thông tin"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -416,22 +506,43 @@ export default function ManagerActivityMedical() {
                 {/* Action Buttons */}
                 <div className="px-6 py-4 border-t bg-gray-50">
                   {activityMedicalEventDetail.status === "Pending" ? (
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <button
-                        onClick={() => handleDecision(false)}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-200 text-red-700 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors font-medium"
-                      >
-                        <X className="w-5 h-5" />
-                        Không chấp nhận
-                      </button>
-                      <button
-                        onClick={() => handleDecision(true)}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                      >
-                        <Check className="w-5 h-5" />
-                        Chấp nhận tham gia
-                      </button>
-                    </div>
+                    (() => {
+                      const eventDate = new Date(
+                        activityMedicalEventDetail.scheduleTime
+                      );
+                      const currentDate = new Date();
+                      currentDate.setHours(0, 0, 0, 0);
+                      eventDate.setHours(0, 0, 0, 0);
+                      const isPastEvent = eventDate < currentDate;
+
+                      return isPastEvent ? (
+                        <div className="text-center py-4">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg border border-amber-200">
+                            <AlertCircle className="w-5 h-5" />
+                            <span>
+                              Không thể phê duyệt sự kiện trong quá khứ
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <button
+                            onClick={() => handleDecision(false)}
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-200 text-red-700 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors font-medium"
+                          >
+                            <X className="w-5 h-5" />
+                            Không chấp nhận
+                          </button>
+                          <button
+                            onClick={() => handleDecision(true)}
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                          >
+                            <Check className="w-5 h-5" />
+                            Chấp nhận tham gia
+                          </button>
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="text-center py-4">
                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg">
@@ -472,19 +583,19 @@ export default function ManagerActivityMedical() {
                     statusFilter !== "all" ||
                     dateFilter ||
                     typeFilter !== "all") && (
-                      <button
-                        onClick={() => {
-                          setSearchTerm("");
-                          setStatusFilter("all");
-                          setDateFilter("");
-                          setTypeFilter("all");
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                        Xóa bộ lọc
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setStatusFilter("all");
+                        setDateFilter("");
+                        setTypeFilter("all");
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      Xóa bộ lọc
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   <div className="md:col-span-2">
@@ -543,53 +654,53 @@ export default function ManagerActivityMedical() {
                   statusFilter !== "all" ||
                   dateFilter ||
                   typeFilter !== "all") && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>
-                        Hiển thị {totalItems} kết quả
-                        {searchTerm && (
-                          <span>
-                            {" "}
-                            cho "<span className="font-medium">{searchTerm}</span>
-                            "
+                  <div className="flex items-center gap-2 text-sm text-gray-600 pt-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>
+                      Hiển thị {totalItems} kết quả
+                      {searchTerm && (
+                        <span>
+                          {" "}
+                          cho "<span className="font-medium">{searchTerm}</span>
+                          "
+                        </span>
+                      )}
+                      {statusFilter !== "all" && (
+                        <span>
+                          {" "}
+                          - <span className="font-medium">{statusFilter}</span>
+                        </span>
+                      )}
+                      {dateFilter && (
+                        <span>
+                          {" "}
+                          -{" "}
+                          <span className="font-medium">
+                            {new Date(dateFilter).toLocaleDateString("vi-VN")}
                           </span>
-                        )}
-                        {statusFilter !== "all" && (
-                          <span>
-                            {" "}
-                            - <span className="font-medium">{statusFilter}</span>
-                          </span>
-                        )}
-                        {dateFilter && (
-                          <span>
-                            {" "}
-                            -{" "}
-                            <span className="font-medium">
-                              {new Date(dateFilter).toLocaleDateString("vi-VN")}
-                            </span>
-                          </span>
-                        )}
-                        {typeFilter !== "all" && (
-                          <span>
-                            {" "}
-                            - <span className="font-medium">{typeFilter}</span>
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  )}
+                        </span>
+                      )}
+                      {typeFilter !== "all" && (
+                        <span>
+                          {" "}
+                          - <span className="font-medium">{typeFilter}</span>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -658,8 +769,8 @@ export default function ManagerActivityMedical() {
                               {event.status === "Pending"
                                 ? "Chờ duyệt"
                                 : event.status === "Approved"
-                                  ? "Đã duyệt"
-                                  : "Từ chối"}
+                                ? "Đã duyệt"
+                                : "Từ chối"}
                             </div>
                             <span className="text-xs text-gray-500 truncate max-w-[80px]">
                               #{event.id}
@@ -727,10 +838,11 @@ export default function ManagerActivityMedical() {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-white border border-gray-200 hover:bg-gray-50"
-                              }`}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              currentPage === page
+                                ? "bg-blue-600 text-white"
+                                : "bg-white border border-gray-200 hover:bg-gray-50"
+                            }`}
                           >
                             {page}
                           </button>
@@ -765,8 +877,9 @@ export default function ManagerActivityMedical() {
       >
         <div className="text-center">
           <div
-            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${decision ? "bg-green-100" : "bg-red-100"
-              }`}
+            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              decision ? "bg-green-100" : "bg-red-100"
+            }`}
           >
             {decision ? (
               <Check className="w-8 h-8 text-green-600" />
@@ -791,10 +904,11 @@ export default function ManagerActivityMedical() {
             </button>
             <button
               onClick={confirmDecision}
-              className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${decision
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-600 hover:bg-red-700"
-                }`}
+              className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+                decision
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
             >
               Xác nhận
             </button>

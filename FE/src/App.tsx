@@ -44,6 +44,8 @@ import BlogDetails from "@/pages/blog/BlogDetails";
 import EditBlog from "@/pages/blog/EditBlog";
 import HomeLayout from "@/components/layout/HomeLayout";
 import LoginPhone from "@/pages/auth/LoginPhone";
+import CalendarDay from "./pages/conselingshedules/CalenderDay";
+import ManageEventParticipant from "./pages/medicalevents/ManageEventParticipant";
 
 function App() {
   return (
@@ -132,6 +134,14 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="manage-event-participant"
+              element={
+                <PrivateRoute allowedRoles={["Admin"]}>
+                  <ManageEventParticipant />
+                </PrivateRoute>
+              }
+            />
             {/**Class*/}
             <Route
               path="class"
@@ -188,6 +198,15 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
                   <Calendar />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="calendar-day"
+              element={
+                <PrivateRoute allowedRoles={["Admin", "Manager", "Nurse"]}>
+                  <CalendarDay />
                 </PrivateRoute>
               }
             />

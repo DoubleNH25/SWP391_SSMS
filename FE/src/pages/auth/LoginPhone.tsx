@@ -2,24 +2,29 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { initReCAPTCHA, sendOTP } from "@/services/PhoneAuthService";
-import { ArrowLeft } from "lucide-react";
 import { auth } from "@/utils/firebase";
+import { FecthCheckPhoneNumber } from "@/services/AuthService";
 
 export default function LoginPhone() {
   const [phone, setPhone] = useState<string>("");
   const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [countryCode, setCountryCode] = useState<string>("+84");
+  const [countryCode] = useState<string>("+84");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSendingOtp) return;
-    
+    var checkPhoneNumber = await FecthCheckPhoneNumber(phone);
+    console.log(checkPhoneNumber);
+    if (!checkPhoneNumber) {
+      setError("Số điện thoại không tồn tại");
+      return;
+    }
     setError("");
     setIsSendingOtp(true);
-    
+
     let sendPhone = phone;
     const code = countryCode;
     if (!sendPhone) {
@@ -46,7 +51,9 @@ export default function LoginPhone() {
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
-        (err instanceof Error ? err.message : "Đã xảy ra lỗi, vui lòng thử lại.")
+          (err instanceof Error
+            ? err.message
+            : "Đã xảy ra lỗi, vui lòng thử lại.")
       );
     } finally {
       setIsSendingOtp(false);
@@ -209,4 +216,4 @@ export default function LoginPhone() {
       </AnimatePresence>
     </div>
   );
-} 
+}

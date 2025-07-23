@@ -267,6 +267,20 @@ namespace SMMS.Application.Services.Implements
             }
         }
 
-
+        public async Task<bool> ChechPhoneNumberAsync(string phoneNumber)
+        {
+			try
+			{
+				var user = _repositoryManager.UserRepository.FindByCondition(x => x.Phone == phoneNumber, false).FirstOrDefault();
+                if (user == null)
+                {
+					return false;
+                }return true;
+            }
+            catch(Exception ex)
+			{
+				throw new Exception(ex.Message);
+			}
+        }
     }
 }

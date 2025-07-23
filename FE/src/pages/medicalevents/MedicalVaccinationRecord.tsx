@@ -12,10 +12,18 @@ import type {
   VaccinationRecord,
 } from "@/types/MedicalRecord";
 import { Student } from "@/types/Student";
-import { Search, User, CheckCircle, Clock, Heart, ArrowLeft } from "lucide-react";
+import {
+  Search,
+  User,
+  CheckCircle,
+  Clock,
+  Heart,
+  ArrowLeft,
+} from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { showToast } from "@/components/ui/Toast";
+import { FecthVaccinationCampaign } from "@/services/VaccinationCampaignService";
 
 export default function MedicalVaccinationRecord() {
   const [medicalRecord, setMedicalRecord] = useState<
@@ -41,7 +49,17 @@ export default function MedicalVaccinationRecord() {
       return;
     }
     const data = await FecthMedicalVaccinationRecord(id, eventDate);
-    setMedicalRecord(data);
+    const eventData = await FecthVaccinationCampaign();
+    const eventDetailData = eventData.find((event) => event.id === id);
+    setMedicalRecord(
+      data.map((record) => ({
+        ...record,
+        vaccineName: eventDetailData?.vaccineName || "",
+        vaccineType: eventDetailData?.vaccineType || "",
+        exp: DateUtils.customFormatDateOnly(eventDetailData?.exp || ""),
+        mfg: DateUtils.customFormatDateOnly(eventDetailData?.mfg || ""),
+      }))
+    );
     setLoading(false);
   }, [eventDate, id]);
 
@@ -323,6 +341,36 @@ export default function MedicalVaccinationRecord() {
                         {medicalRecord.find(
                           (r) => r.studentId === selectedStudent.id
                         )?.vaccineName || "N/A"}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <div className="text-sm text-gray-600 mb-1">
+                        Hạn vaccine
+                      </div>
+                      <div className="font-semibold text-gray-900">
+                        {medicalRecord.find(
+                          (r) => r.studentId === selectedStudent.id
+                        )?.exp || "N/A"}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <div className="text-sm text-gray-600 mb-1">
+                        Loại vaccine
+                      </div>
+                      <div className="font-semibold text-gray-900">
+                        {medicalRecord.find(
+                          (r) => r.studentId === selectedStudent.id
+                        )?.vaccineType || "N/A"}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <div className="text-sm text-gray-600 mb-1">
+                        Ngày sản xuất
+                      </div>
+                      <div className="font-semibold text-gray-900">
+                        {medicalRecord.find(
+                          (r) => r.studentId === selectedStudent.id
+                        )?.mfg || "N/A"}
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-2 shadow-sm">

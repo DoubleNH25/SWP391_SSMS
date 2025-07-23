@@ -15,3 +15,23 @@ export interface MedicalEventViewModel{
     classIds: [string];
 }
 
+export interface MedicalEventParticipantViewModel{
+    id: string;
+    studentId: string;
+    studentCode: string;
+    studentName: string;
+    parentName: string;
+    parentPhone: string;
+    parentEmail: string;
+    classId: string;
+    className: string;
+    activityId: string;
+    activityName: string;
+    status: "Pending" | "Approved" | "Rejected";
+    scheduleTime: string;
+    responsibleUserId: string;
+    responsibleUserName: string;
+    description: string;
+}
+
+
