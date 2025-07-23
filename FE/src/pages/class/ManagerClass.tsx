@@ -318,7 +318,7 @@ export default function CLassSchoolManager() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end mb-6 absolute right-[2rem] top-[115px]">
+          <div className="flex items-center gap-3Quản lý sự kiện chờ duyệt justify-end mb-6 absolute right-[2rem] top-[115px]">
             <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
               onClick={handleAddClass}
             >
@@ -327,7 +327,7 @@ export default function CLassSchoolManager() {
             </button>
             <button
                 onClick={handleOpenImportModal}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+                className="bg-blue-500 text-white px-4 py-2  rounded hover:bg-blue-600 flex items-center gap-2"
               >
                 <FileIcon className="w-4 h-4" />
                 Import từ Excel

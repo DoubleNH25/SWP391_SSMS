@@ -92,7 +92,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("vaccination-campaigns/all")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetAllVaccineCampaign()
 		{
 			var activities = await _vaccinationCampaignService.GetAllVaccineCampaignAsync();

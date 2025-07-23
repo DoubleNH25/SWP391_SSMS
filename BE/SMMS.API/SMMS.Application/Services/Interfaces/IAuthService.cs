@@ -14,5 +14,6 @@ namespace SMMS.Application.Services.Interfaces
         Task<string> ForgetPasswordAsync(ForgetPasswordModel model);
         Task<string> VerifyOtpAsync(VerifyOtpRequest request);
         Task<string> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<bool> ChechPhoneNumberAsync(string phoneNumber);
     }
 }

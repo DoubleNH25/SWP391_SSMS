@@ -24,7 +24,8 @@ namespace SMMS.Application.Helpers.Implements
 			{
 				new Claim(JwtRegisteredClaimNames.Sub, user.Id),
 				new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-				new Claim(ClaimTypes.Role, user.Role.RoleName)
+				new Claim(ClaimTypes.Role, user.Role.RoleName),
+				new Claim(ClaimTypes.Name, user.FullName),
 			};
 			Console.WriteLine(user.Role.RoleName);
 

@@ -53,28 +53,23 @@ export default function PendingEventManager() {
     vaccinationCampaigns.filter((campaign) => campaign.status === "Pending")
       .length;
 
-  const [itemsPerPage] = useState(7);
+  const [itemsPerPage] = useState(8); // Increased to show more items per page
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsVaccinationCampaignsPerPage] = useState(7);
-  const [currentVaccinationCampaignsPage] = useState(1);
 
-  const totalMedicalEventPages =
-    Math.ceil(medicalEvents.length / itemsPerPage) || 1;
-  const medicalEventStartIndex = (currentPage - 1) * itemsPerPage;
-  const medicalEventEndIndex = medicalEventStartIndex + itemsPerPage;
-  const paginatedMedicalEvents = medicalEvents.slice(
-    medicalEventStartIndex,
-    medicalEventEndIndex
-  );
+  // Combine both types of events for unified pagination
+  const allEvents = [
+    ...medicalEvents.map(event => ({ ...event, type: 'medicalEvent' as const })),
+    ...vaccinationCampaigns.map(event => ({ ...event, type: 'vaccinationCampaign' as const }))
+  ];
 
-  const vaccinationCampaignStartIndex =
-    (currentVaccinationCampaignsPage - 1) * itemsVaccinationCampaignsPerPage;
-  const vaccinationCampaignEndIndex =
-    vaccinationCampaignStartIndex + itemsVaccinationCampaignsPerPage;
-  const paginatedVaccinationCampaigns = vaccinationCampaigns.slice(
-    vaccinationCampaignStartIndex,
-    vaccinationCampaignEndIndex
-  );
+  const totalPages = Math.ceil(allEvents.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedEvents = allEvents.slice(startIndex, endIndex);
+
+  // Separate paginated events by type
+  const paginatedMedicalEvents = paginatedEvents.filter(event => event.type === 'medicalEvent');
+  const paginatedVaccinationCampaigns = paginatedEvents.filter(event => event.type === 'vaccinationCampaign');
 
   useEffect(() => {
     fetchMedicalEventsData();
@@ -146,6 +141,7 @@ export default function PendingEventManager() {
           setMedicalEvents(
             medicalEvents.filter((event) => event.id !== selectedEvent.id)
           );
+          resetPaginationIfNeeded();
           showToast.success("Sự kiện y tế đã được phê duyệt thành công");
         } else {
           throw new Error("Phê duyệt thất bại");
@@ -248,8 +244,16 @@ export default function PendingEventManager() {
   };
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalMedicalEventPages) {
+    if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+    }
+  };
+
+  // Reset pagination if current page becomes invalid after removing items
+  const resetPaginationIfNeeded = () => {
+    const newTotalPages = Math.ceil((allEvents.length - 1) / itemsPerPage) || 1;
+    if (currentPage > newTotalPages) {
+      setCurrentPage(newTotalPages);
     }
   };
   const normalizeDate = (date: Date | string) => {
@@ -1061,19 +1065,18 @@ export default function PendingEventManager() {
                 </div>
 
                 {/* Pagination */}
-                {(medicalEvents.length > 0 ||
-                  vaccinationCampaigns.length > 0) && (
+                {allEvents.length > 0 && (
                   <div className="flex items-center justify-between p-6">
                     <div>
                       <p className="text-sm text-gray-700">
-                        Hiển thị từ {medicalEventStartIndex + 1} đến{" "}
-                        {Math.min(
-                          medicalEventEndIndex,
-                          medicalEvents.length + vaccinationCampaigns.length
-                        )}{" "}
-                        trong tổng số{" "}
-                        {medicalEvents.length + vaccinationCampaigns.length} kết
-                        quả
+                        Hiển thị từ {startIndex + 1} đến{" "}
+                        {Math.min(endIndex, allEvents.length)}{" "}
+                        trong tổng số {allEvents.length} kết quả
+                        {medicalEvents.length > 0 && vaccinationCampaigns.length > 0 && (
+                          <span className="text-gray-500 ml-2">
+                            ({medicalEvents.length} sự kiện y tế, {vaccinationCampaigns.length} chiến dịch tiêm chủng)
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="flex gap-4">
@@ -1082,7 +1085,7 @@ export default function PendingEventManager() {
                         aria-label="Pagination"
                       >
                         <button
-                          className="px-2 py-1 text-gray-400 border rounded-r hover:bg-gray-50 disabled:opacity-50"
+                          className="px-2 py-1 text-gray-400 border rounded-l hover:bg-gray-50 disabled:opacity-50"
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={currentPage === 1}
                           aria-label="Trang trước"
@@ -1100,15 +1103,15 @@ export default function PendingEventManager() {
                           </svg>
                         </button>
                         {Array.from(
-                          { length: totalMedicalEventPages },
+                          { length: totalPages },
                           (_, i) => i + 1
                         ).map((page) => (
                           <button
                             key={page}
                             className={`px-4 py-1 text-sm font-semibold border ${
                               page === currentPage
-                                ? "bg-indigo-600 text-white"
-                                : "text-gray-900 hover:bg-gray-50"
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "text-gray-900 hover:bg-gray-50 border-gray-300"
                             }`}
                             onClick={() => handlePageChange(page)}
                             aria-current={
@@ -1121,7 +1124,7 @@ export default function PendingEventManager() {
                         <button
                           className="px-2 py-1 text-gray-400 border rounded-r hover:bg-gray-50 disabled:opacity-50"
                           onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalMedicalEventPages}
+                          disabled={currentPage === totalPages}
                           aria-label="Trang sau"
                         >
                           <svg

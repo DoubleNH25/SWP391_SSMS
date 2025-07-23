@@ -80,5 +80,13 @@ namespace SMMS.API.Controllers
             return Ok(checker);
         }
 
+        [HttpPost("check-phone")]
+        public async Task<IActionResult> CheckPhoneNumber(string phone)
+        {
+            var checker = await _authService.ChechPhoneNumberAsync(phone);
+
+            return Ok(checker);
+        }
+
     }
 }

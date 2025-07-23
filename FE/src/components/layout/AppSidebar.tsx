@@ -51,6 +51,12 @@ const navItems: NavItem[] = [
         allowedRoles: ["Admin"],
       },
       {
+        name: "Người tham gia sự kiện",
+        path: "/dashboard/manage-event-participant",
+        pro: false,
+        allowedRoles: ["Admin"],
+      },
+      {
         name: "Lớp học",
         path: "/dashboard/class",
         pro: false,
@@ -78,7 +84,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <CalenderIcon className="w-5 h-5 mx-auto" />,
-    name: "Lịch",
+    name: "Lịch sự kiện",
     path: "/dashboard/calendar",
     allowedRoles: ["Admin", "Manager", "Nurse"],
   },
@@ -108,23 +114,10 @@ const navItems: NavItem[] = [
     allowedRoles: ["Parent"],
   },
   {
-    icon: <TimeIcon className="w-5 h-5 mx-auto" />,
+    icon: <TimeIcon className="w-5 h-5 mx-auto scale-[0.9]" />,
     name: "Lịch tư vấn",
-    allowedRoles: ["Admin", "Manager", "Nurse"],
-    subItems: [
-      {
-        name: "Quản lý lịch tư vấn",
-        path: "/dashboard/conseling-schedules",
-        pro: false,
-        allowedRoles: ["Admin", "Manager", "Nurse"],
-      },
-      {
-        name: "Học sinh bất thường",
-        path: "/dashboard/conseling-schedules/abnormal",
-        pro: false,
-        allowedRoles: ["Admin", "Manager", "Nurse"],
-      },
-    ],
+    path: "/dashboard/calendar-day",
+    allowedRoles: ["Nurse"],
   },
   {
     icon: <RequestIcon className="w-5 h-5 mx-auto" />,

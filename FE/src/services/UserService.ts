@@ -1,3 +1,4 @@
+import { Phone } from 'lucide-react';
 import { Student, StudentCreate, StudentUpdate } from "@/types/Student";
 import {
   ParentViewModel,
@@ -266,6 +267,32 @@ export async function FecthStudentByCode(
     return null;
   }
 }
+
+export async function FecthParentBystudentId(
+  studentId: string
+): Promise<{ fullName: string, phone: string, email: string } | null> {
+  if (!studentId) {
+    console.error("Student ID is required to get student.");
+    return null;
+  }
+  try {
+    const response = await ApiClient<{ fullName: string, phone: string, email: string }>({
+      method: "GET",
+      endpoint: `/users/students/${studentId}/parent`,
+    });
+
+    const data = {
+      fullName: response?.data?.fullName,
+      phone: response?.data?.phone,
+      email: response?.data?.email,
+    }
+    return data || null;
+  } catch (err: unknown) {
+    console.error("Failed to get student by ID:", err);
+    return null;
+  }
+}
+
 
 //========================================API PROFILE===========================================/
 

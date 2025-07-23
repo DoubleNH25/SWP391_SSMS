@@ -244,6 +244,11 @@ const Calendar: React.FC = () => {
     });
   }, [isAdmin]);
 
+  // Function to handle date search - only for viewing events, not creating
+  const handleDateSearch = useCallback((date: string) => {
+    setSelectedDate(DateUtils.customFormatDateOnly(date));
+  }, []);
+
   const handleEventClick = useCallback(
     async (event: CalendarEvent) => {
       // For Admin users, only allow viewing approved events
@@ -889,6 +894,7 @@ const Calendar: React.FC = () => {
         onSetFormData={setFormData}
         classOptions={classOptions}
         isAdmin={isAdmin}
+        onDateSearch={handleDateSearch}
       />
     );
   }, [
@@ -899,6 +905,7 @@ const Calendar: React.FC = () => {
     openModal,
     classOptions,
     isAdmin,
+    handleDateSearch,
   ]);
 
   const isFormValid = useMemo(() => {
@@ -1036,6 +1043,7 @@ const Calendar: React.FC = () => {
                 setSelectedDate(DateUtils.customFormatDateOnly(new Date()));
               }}
               isAdmin={isAdmin}
+              onDateView={handleDateSearch}
             />
 
             <div className="lg:w-1/3">{DailyScheduleComponent}</div>

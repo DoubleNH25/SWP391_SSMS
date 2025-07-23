@@ -49,7 +49,6 @@ export default function ConselingScheduleAbnormal() {
   const fetchAbnormalStudents = async () => {
     try {
       const data = await FecthMedicalHealthCheckupRecordAbnormal();
-      console.log("FecthMedicalHealthCheckupRecordAbnormal", data);
       setAbnormalStudents(data);
     } catch (err) {
       setError("Lỗi khi lấy danh sách học sinh bất thường");
@@ -61,7 +60,6 @@ export default function ConselingScheduleAbnormal() {
   const AbnormalStudentsAppointmentSent = async () => {
     try {
       const data = await FecthConselingSchedules();
-      console.log("FecthConselingSchedules", data);
       setSentStudents(data);
     } catch (err) {
       setError("Lỗi khi lấy danh sách học sinh đã gửi tư vấn");
@@ -479,7 +477,7 @@ export default function ConselingScheduleAbnormal() {
                 id="note"
                 className="w-full h-32 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 name="note"
-                placeholder="Nhập mô tả về thuốc"
+                placeholder="Nhập mô tả về tư vấn..."
                 value={formData.note}
                 onChange={handleTextAreaChange}
               />

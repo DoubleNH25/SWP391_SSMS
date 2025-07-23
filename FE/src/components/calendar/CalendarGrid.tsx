@@ -14,6 +14,7 @@ interface CalendarGridProps {
   onToday: () => void;
   classOptions: { value: string; label: string }[];
   isAdmin?: boolean;
+  onDateView?: (date: string) => void;
 }
 
 const CalendarGrid = ({
@@ -27,6 +28,7 @@ const CalendarGrid = ({
   onToday,
   classOptions,
   isAdmin = false,
+  onDateView,
 }: CalendarGridProps) => {
   const monthNames = [
     "Tháng 1",
@@ -187,27 +189,35 @@ const CalendarGrid = ({
           return (
             <div
               key={index}
-              className={`min-h-[120px] border border-gray-200 p-2 ${
+              className={`min-h-[120px] border border-gray-200 p-2 cursor-pointer ${
                 isPast
-                  ? "bg-gray-100 cursor-not-allowed"
+                  ? "bg-gray-100 hover:bg-gray-200"
                   : isAdmin
-                  ? "cursor-not-allowed bg-gray-50"
-                  : "cursor-pointer"
+                  ? "bg-gray-50"
+                  : ""
               } ${
-                isSelected
+                isSelected && isPast
+                  ? "bg-gray-200"
+                  : isSelected
                   ? "bg-blue-100 hover:bg-blue-200"
                   : isPast
-                  ? ""
-                  : isAdmin
-                  ? ""
+                  ? "hover:bg-gray-200"
                   : "hover:bg-gray-100"
               }`}
-              onClick={() =>
-                date &&
-                !isPast &&
-                !isAdmin &&
-                onDateSelect(DateUtils.customFormatDate(date))
-              }
+              onClick={() => {
+                if (date) {
+                  const formattedDate = DateUtils.customFormatDate(date);
+                  // If admin or past date, only allow viewing events
+                  if (isAdmin || isPast) {
+                    if (onDateView) {
+                      onDateView(formattedDate);
+                    }
+                  } else {
+                    // For non-admin and future dates, allow creating events
+                    onDateSelect(formattedDate);
+                  }
+                }
+              }}
             >
               {date && (
                 <>
@@ -226,6 +236,7 @@ const CalendarGrid = ({
                   <div className="space-y-1">
                     {getEventsForDate(date)
                       .filter((event) => isEventStartDate(event, date))
+                      .slice(0, 2)
                       .map((event) => {
                         const category =
                           eventCategories[event.extendedProps.calendar] ||
@@ -240,7 +251,7 @@ const CalendarGrid = ({
                                   {event.title}
                                 </div>
                                 <p>
-                                  <strong>Time:</strong>{" "}
+                                  <strong>Thời gian:</strong>{" "}
                                   {new Date(event.start).toLocaleTimeString(
                                     [],
                                     { hour: "2-digit", minute: "2-digit" }
@@ -254,18 +265,18 @@ const CalendarGrid = ({
                                 {event.extendedProps.eventType === "medical" ? (
                                   <>
                                     <p>
-                                      <strong>Description:</strong>{" "}
+                                      <strong>Mô tả:</strong>{" "}
                                       {event.extendedProps.description ||
-                                        "No description"}
+                                        "Không có mô tả"}
                                     </p>
                                     <p>
-                                      <strong>Date:</strong>{" "}
+                                      <strong>Ngày:</strong>{" "}
                                       {DateUtils.customFormatDateOnly(
                                         new Date(event.start)
                                       )}
                                     </p>
                                     <p>
-                                      <strong>Classes:</strong>{" "}
+                                      <strong>Lớp:</strong>{" "}
                                       {(() => {
                                         const validClassIds =
                                           event.extendedProps.classIds?.filter(
@@ -294,7 +305,7 @@ const CalendarGrid = ({
                                           )
                                         ) : (
                                           <span className="text-gray-500">
-                                            No classes assigned
+                                            Không có lớp
                                           </span>
                                         );
                                       })()}
@@ -303,35 +314,41 @@ const CalendarGrid = ({
                                 ) : (
                                   <>
                                     <p>
-                                      <strong>Vaccine Name:</strong>{" "}
+                                      <strong>Tên Vaccine:</strong>{" "}
                                       {event.extendedProps.vaccineName ||
-                                        "No vaccine name"}
+                                        "Không có tên vaccine"}
                                     </p>
                                     <p>
-                                      <strong>Vaccine Type:</strong>{" "}
+                                      <strong>Loại Vaccine:</strong>{" "}
                                       {event.extendedProps.vaccineType ||
-                                        "No vaccine type"}
+                                        "Không có loại vaccine"}
                                     </p>
                                     <p>
-                                      <strong>EXP:</strong>{" "}
+                                      <strong>Ngày hết hạn:</strong>{" "}
                                       {DateUtils.customFormatDateOnly(
                                         new Date(event.extendedProps.exp!)
                                       )}
                                     </p>
                                     <p>
-                                      <strong>MFG:</strong>{" "}
+                                      <strong>Ngày sản xuất:</strong>{" "}
                                       {DateUtils.customFormatDateOnly(
                                         new Date(event.extendedProps.mfg!)
                                       )}
                                     </p>
                                     <p>
-                                      <strong>Date:</strong>{" "}
+                                      <strong>Ngày bắt đầu:</strong>{" "}
                                       {DateUtils.customFormatDateOnly(
                                         new Date(event.start)
                                       )}
                                     </p>
                                     <p>
-                                      <strong>Classes:</strong>{" "}
+                                      <strong>Ngày kết thúc:</strong>{" "}
+                                      {DateUtils.customFormatDateOnly(
+                                        new Date(event.end)
+                                      )}
+                                    </p>
+                                    <p>
+                                      <strong>Lớp:</strong>{" "}
                                       {(() => {
                                         const validClassIds =
                                           event.extendedProps.classIds?.filter(
@@ -377,7 +394,7 @@ const CalendarGrid = ({
                                 e.stopPropagation();
                                 onEventClick(event);
                               }}
-                              className={`flex items-start gap-2 text-xs p-2 rounded-md cursor-pointer hover:opacity-80 transition-opacity ${
+                              className={`flex items-start gap-2 text-xs p-2 rounded-md cursor-pointer opacity-80 transition-opacity ${
                                 category.lightColor
                               } ${category.textColor} border-l-4 border-${
                                 category.color.split("-")[1]
@@ -457,7 +474,7 @@ const CalendarGrid = ({
                           );
                         }}
                       >
-                        +{getEventsForDate(date).length - 2} more
+                        +{getEventsForDate(date).length - 2} thêm
                       </div>
                     )}
                   </div>
