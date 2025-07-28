@@ -29,6 +29,10 @@ export interface ActivityMedicalEventDetailViewModel {
     student: Student | null;
     responsibleUser: UserUpdate | null;
     description: string;
+    vaccineName: string;
+    exp: string;
+    mfg: string;
+    vaccineType: string;
 }
 
 

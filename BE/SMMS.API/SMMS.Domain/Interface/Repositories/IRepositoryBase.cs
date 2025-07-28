@@ -11,5 +11,5 @@ namespace SMMS.Domain.Interface.Repositories
 		void Create(T entity);
 		void Update(T entity);
 		void Delete(T entity);
-	}
+    }
 }

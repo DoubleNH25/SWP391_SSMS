@@ -1,4 +1,4 @@
-import { LoginRequest, LoginResponse, ResetPasswordRequest, VerifyOTPEmailRequest, VerifyOTPRequest } from "@/types/User";
+import { EmailRequest, LoginRequest, LoginResponse, ResetPasswordRequest, VerifyOTPEmailRequest, VerifyOTPRequest } from "@/types/User";
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthLogin(users: LoginRequest): Promise<void> {
@@ -41,16 +41,16 @@ export async function FecthVerifyOTP(verifyOTPRequest: VerifyOTPRequest): Promis
     throw new Error("Vui lòng nhập đầy đủ thông tin");
   }
   try {
-    const response = await ApiClient<string>({
+    const response = await ApiClient<LoginResponse>({
       method: "POST",
       endpoint: "/auth/verify-phonenumber",
       data: verifyOTPRequest,
       requiresToken: false,
     });
-    if (!response || !response.data) {
+    if (!response || !response.data || !response.data.token) {
       throw new Error("Lỗi khi xác thực OTP");
     }
-    localStorage.setItem("token", response.data);
+    localStorage.setItem("token", response.data.token);
     return true;
   } catch (err) {
     console.error("Verify OTP API call failed:", err);
@@ -121,4 +121,45 @@ export async function FecthResetPassword(resetPasswordRequest: ResetPasswordRequ
   }
 }
 
+export async function FecthLoginGoogle(email: EmailRequest): Promise<boolean> {
+  if (!email) {
+    throw new Error("Không nhận email từ google");
+  }
+  try {
+    const response = await ApiClient<LoginResponse>({
+      method: "POST",
+      endpoint: `/auth/login-google`,
+      data: email,
+      requiresToken: false,
+    });
+    if (!response || !response.data || !response.data.token) {
+      throw new Error("Email không có trong hệ thống");
+    }
+    localStorage.setItem("token", response.data.token);
+    return true;
+  } catch (err) {
+    console.error("Failed to login:", err);
+    throw new Error("Email không đúng");
+  }
+}
 
+
+export async function FecthCheckPhoneNumber(phoneNumber: string): Promise<boolean> {
+  if (!phoneNumber) {
+    throw new Error("Không nhận số điện thoại");
+  }
+  try {
+    const response = await ApiClient<LoginResponse>({
+      method: "POST",
+      endpoint: `/auth/login-google`,
+      data: {phoneNumber},
+      requiresToken: false,
+    });
+    if (response?.data) {
+      return true;
+    }
+    return false;
+  } catch (err) {
+    throw new Error("Số điện thoại không đúng");
+  }
+}

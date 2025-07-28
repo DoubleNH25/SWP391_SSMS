@@ -739,51 +739,27 @@ export default function ManagerRecord() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                      {/* Approve/Reject Button - Only show for abnormal records or existing schedules */}
-                      {(schedule || hasAbnormalities(healthCheckupItem)) && (
+                      {/* Approve/Reject Button - Only show when there's an existing schedule */}
+                      {schedule && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (schedule) {
-                              handleOpenConsultForm(schedule);
-                            } else if (hasAbnormalities(healthCheckupItem)) {
-                              // Create a mock schedule for abnormal records without consultation
-                              const mockSchedule: ConselingSchedulesAND = {
-                                id: `${healthCheckupItem.healthCheckUpId}`,
-                                studentId: healthCheckupItem.studentId || "",
-                                studentName: healthCheckupItem.studentName,
-                                parentName: "Phụ huynh",
-                                healthCheckupId:
-                                  healthCheckupItem.healthCheckUpId || "",
-                                meetingDate: new Date(),
-                                status: "Pending",
-                                note: "Hồ sơ sức khỏe bất thường cần xác nhận",
-                                createdTime: new Date(),
-                                createdBy: "System",
-                                updatedTime: new Date(),
-                                updatedBy: "System",
-                              };
-                              handleOpenConsultForm(mockSchedule);
-                            }
+                            handleOpenConsultForm(schedule);
                           }}
                           className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium rounded transition-colors ${
-                            schedule?.status === "Pending"
+                            schedule.status === "Pending"
                               ? "text-white bg-amber-500 hover:bg-amber-600 border border-amber-500"
-                              : schedule?.status === "Approved"
+                              : schedule.status === "Approved"
                               ? "text-white bg-green-500 hover:bg-green-600 border border-green-500"
-                              : schedule?.status === "Rejected"
-                              ? "text-white bg-red-500 hover:bg-red-600 border border-red-500"
-                              : "text-white bg-orange-500 hover:bg-orange-600 border border-orange-500"
+                              : "text-white bg-red-500 hover:bg-red-600 border border-red-500"
                           }`}
                         >
                           <CalendarIcon className="w-4 h-4" />
-                          {schedule?.status === "Pending"
+                          {schedule.status === "Pending"
                             ? "Xác nhận tư vấn"
-                            : schedule?.status === "Approved"
+                            : schedule.status === "Approved"
                             ? "Đã xác nhận"
-                            : schedule?.status === "Rejected"
-                            ? "Đã từ chối"
-                            : "Xác nhận hồ sơ bất thường"}
+                            : "Đã từ chối"}
                         </button>
                       )}
                     </div>

@@ -63,7 +63,7 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
   return (
-    <div>
+    <div className="relative">
       <button
         onClick={toggleDropdown}
         className="flex h-11 w-11 items-center text-gray-700 dropdown-toggle border-2 border-gray-200 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300"

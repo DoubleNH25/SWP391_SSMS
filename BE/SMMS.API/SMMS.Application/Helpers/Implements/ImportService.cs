@@ -27,6 +27,10 @@ namespace SMMS.Application.Helpers.Implements
 
 			var emailTasks = new List<Task>();
 
+			// Dictionary tạm để lưu các class và user vừa tạo/truy xuất trong phiên import
+			var classDict = new Dictionary<string, SchoolClass>(); // key: className
+			var userDict = new Dictionary<string, User>(); // key: parentEmail hoặc parentPhone
+
 			foreach (var row in rows)
 			{
 				var parentEmail = row.Cell(1).GetString();
@@ -37,88 +41,120 @@ namespace SMMS.Application.Helpers.Implements
 				var studentDateOfBirth = row.Cell(6).GetDateTime();
 				var className = row.Cell(7).GetString();
 
-				// Tìm hoặc tạo SchoolClass
-				var schoolClass = _repositoryManager.ClassRepository
-					.FindByCondition(c => c.ClassName == className, true)
-					.FirstOrDefault();
-				if (schoolClass == null)
+				// --- SchoolClass ---
+				SchoolClass? schoolClass = null;
+				if (classDict.ContainsKey(className))
 				{
-					schoolClass = new SchoolClass
+					schoolClass = classDict[className];
+				}
+				else
+				{
+					// Tìm trong DB (bao gồm cả soft-delete)
+					schoolClass = _repositoryManager.ClassRepository
+						.FindByCondition(c => c.ClassName == className, true)
+						.FirstOrDefault();
+					if (schoolClass == null)
 					{
-						Id = Guid.NewGuid().ToString(),
-						ClassName = className,
-						ClassRoom = className,
-						CreatedBy = "System",
-						CreatedTime = DateTimeOffset.UtcNow
-					};
-					_repositoryManager.ClassRepository.Create(schoolClass);
+						schoolClass = new SchoolClass
+						{
+							Id = Guid.NewGuid().ToString(),
+							ClassName = className,
+							ClassRoom = className,
+							CreatedBy = "System",
+							CreatedTime = DateTimeOffset.UtcNow
+						};
+						_repositoryManager.ClassRepository.Create(schoolClass);
+					}
+					else if (schoolClass.DeletedBy != null)
+					{
+						// Khôi phục nếu bị soft-delete
+						schoolClass.DeletedBy = null;
+						schoolClass.DeletedTime = null;
+						schoolClass.LastUpdatedBy = "System";
+						schoolClass.LastUpdatedTime = DateTimeOffset.UtcNow;
+						_repositoryManager.ClassRepository.Update(schoolClass);
+					}
+					classDict[className] = schoolClass;
 				}
 
-				var parentUser = _repositoryManager.UserRepository
-					.FindByCondition(u => u.FullName == parentFullName && u.Email == parentEmail, true)
+				// --- Parent User ---
+				string parentKey = !string.IsNullOrEmpty(parentEmail) ? parentEmail : parentPhone;
+				User? parentUser = null;
+				if (userDict.ContainsKey(parentKey))
+				{
+					parentUser = userDict[parentKey];
+				}
+				else
+				{
+					// Tìm trong DB (bao gồm cả soft-delete)
+					parentUser = _repositoryManager.UserRepository
+						.FindByCondition(u => (u.Email == parentEmail || u.Phone == parentPhone), true)
+						.FirstOrDefault();
+
+					if (parentUser == null)
+					{
+						// Case: Parent is completely new
+						var parentRole = _repositoryManager.RoleRepository
+							.FindByCondition(r => r.RoleName == "Parent", false)
+							.FirstOrDefault();
+						if (parentRole == null)
+						{
+							throw new Exception("Role 'Parent' not found.");
+						}
+
+						// Mật khẩu mặc định
+						var defaultPassword = GenerateRandomPassword(6);
+
+						parentUser = new User
+						{
+							Id = Guid.NewGuid().ToString(),
+							Email = parentEmail,
+							Phone = parentPhone,
+							FullName = parentFullName,
+							RoleId = parentRole.Id,
+							Password = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+							CreatedBy = "System",
+							CreatedTime = DateTimeOffset.UtcNow
+						};
+						_repositoryManager.UserRepository.Create(parentUser);
+						emailTasks.Add(SendLoginDetailsEmailAsync(parentEmail, parentFullName, defaultPassword));
+					}
+					else if (parentUser.DeletedBy != null && parentUser.DeletedTime != null)
+					{
+						// Case: Parent exists but is soft-deleted
+						parentUser.DeletedTime = null;
+						parentUser.DeletedBy = null;
+						parentUser.Phone = parentPhone;
+						parentUser.Email = parentEmail;
+						parentUser.FullName = parentFullName;
+						parentUser.LastUpdatedBy = "System";
+						parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
+						_repositoryManager.UserRepository.Update(parentUser);
+					}
+					else if (parentUser.Phone != parentPhone || parentUser.FullName != parentFullName || parentUser.Email != parentEmail)
+					{
+						// Case: Parent exists, not soft-deleted, nhưng thông tin khác
+						parentUser.Phone = parentPhone;
+						parentUser.Email = parentEmail;
+						parentUser.FullName = parentFullName;
+						parentUser.LastUpdatedBy = "System";
+						parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
+						_repositoryManager.UserRepository.Update(parentUser);
+					}
+					userDict[parentKey] = parentUser;
+				}
+
+				// --- Student ---
+				var student = _repositoryManager.StudentRepository
+					.FindByCondition(s => s.FullName == studentFullName && s.DateOfBirth == studentDateOfBirth && s.DeletedBy == null, true)
 					.FirstOrDefault();
 
-				var student = _repositoryManager.StudentRepository
-				.FindByCondition(s => s.FullName == studentFullName, true)
-				.FirstOrDefault();
-
 				User? oldParent = null;
-
 				if (student != null)
 				{
 					oldParent = _repositoryManager.UserRepository
-						.FindByCondition(u => u.Id == student.ParentId, true)
+						.FindByCondition(u => u.Id == student.ParentId && u.DeletedBy == null, true)
 						.FirstOrDefault();
-				}
-
-				if (parentUser == null)
-				{
-					// Case: Parent is completely new
-					var parentRole = _repositoryManager.RoleRepository
-						.FindByCondition(r => r.RoleName == "Parent", false)
-						.FirstOrDefault();
-					if (parentRole == null)
-					{
-						throw new Exception("Role 'Parent' not found.");
-					}
-
-					// Mật khẩu mặc định
-					var defaultPassword = GenerateRandomPassword(6);
-
-					parentUser = new User
-					{
-						Email = parentEmail,
-						Phone = parentPhone,
-						FullName = parentFullName,
-						RoleId = parentRole.Id,
-						Password = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
-						CreatedBy = "System",
-						CreatedTime = DateTimeOffset.UtcNow
-					};
-					_repositoryManager.UserRepository.Create(parentUser);
-
-					// them task gui mail
-					emailTasks.Add(SendLoginDetailsEmailAsync(parentEmail, parentFullName, defaultPassword));
-				}
-				else if (parentUser.DeletedBy != null && parentUser.DeletedTime != null)
-				{
-					// Case: Parent exists but is soft-deleted
-					parentUser.DeletedTime = null;
-					parentUser.DeletedBy = null;
-					parentUser.Phone = parentPhone;
-					parentUser.Email = parentEmail;
-					parentUser.LastUpdatedBy = "System";
-					parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
-					_repositoryManager.UserRepository.Update(parentUser);
-				}
-				else if (parentUser.Phone != parentPhone || parentUser.FullName != parentFullName || parentUser.Email != parentEmail)
-				{
-					// Case: Parent exists, not soft-deleted, but phone or full name differs
-					parentUser.Phone = parentPhone;
-					parentUser.Email = parentEmail;
-					parentUser.LastUpdatedBy = "System";
-					parentUser.LastUpdatedTime = DateTimeOffset.UtcNow;
-					_repositoryManager.UserRepository.Update(parentUser);
 				}
 
 				if (student == null)
@@ -126,6 +162,7 @@ namespace SMMS.Application.Helpers.Implements
 					// Case: Student is new
 					student = new Student
 					{
+						Id = Guid.NewGuid().ToString(),
 						ParentId = parentUser.Id,
 						ClassId = schoolClass.Id,
 						FullName = studentFullName,
@@ -152,14 +189,14 @@ namespace SMMS.Application.Helpers.Implements
 						student.ParentId = parentUser.Id;
 						student.LastUpdatedBy = "System";
 						student.LastUpdatedTime = DateTimeOffset.UtcNow;
-						//_repositoryManager.StudentRepository.Update(student);
+						_repositoryManager.StudentRepository.Update(student);
 					}
 					// Handle old parent soft-deletion if parent has changed and old parent exists
 					if (hasChanges && oldParent != null && oldParent.Id != parentUser.Id)
 					{
 						// Check if old parent is still associated with other students
 						var otherStudents = _repositoryManager.StudentRepository
-							.FindByCondition(s => s.ParentId == oldParent.Id && s.Id != student.Id, false)
+							.FindByCondition(s => s.ParentId == oldParent.Id && s.Id != student.Id && s.DeletedBy == null, false)
 							.Any();
 						if (!otherStudents)
 						{
@@ -172,7 +209,6 @@ namespace SMMS.Application.Helpers.Implements
 				}
 			}
 			await _repositoryManager.SaveAsync();
-
 			await Task.WhenAll(emailTasks);
 		}
 

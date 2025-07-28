@@ -33,7 +33,7 @@ export function HeaderHome() {
     location.pathname === path && !anchorActive;
 
   return (
-    <header className="fixed w-full py-4 top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all duration-500 shadow-sm">
+    <header className="fixed w-full py-2 top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all duration-500 shadow-sm">
       <div className="max-w-7xl mx-auto px-8 flex justify-between items-center h-16">
         {/* Logo Section */}
         <a
@@ -173,6 +173,7 @@ export function HeaderHome() {
                     e.preventDefault();
                     setAnchorActive(null);
                     navigate("/dashboard");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   className={`px-4 py-2 rounded-lg font-medium text-sm relative group transition-all duration-300 hover:bg-blue-50
                     ${

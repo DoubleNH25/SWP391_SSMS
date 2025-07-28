@@ -102,3 +102,33 @@ export async function FecthUpdateIncidentStatus(
     throw new Error("Failed to update incident status. Please try again.");
   }
 }
+
+export async function FetchIncidentsByParent(
+  parentId: string
+): Promise<Incident[]> {
+  const res = await ApiClient<Incident[]>({
+    method: "GET",
+    endpoint: `/medical/incident/parent/${parentId}`,
+  });
+  return res.data;
+}
+
+export async function FetchIncidents(studentId?: string): Promise<Incident[]> {
+  let endpoint = "/medical/incident";
+  if (studentId) {
+    endpoint += `?studentId=${encodeURIComponent(studentId)}`;
+  }
+  const res = await ApiClient<Incident[]>({
+    method: "GET",
+    endpoint,
+  });
+  return res.data;
+}
+
+export async function fetchIncidentDetail(id: string): Promise<Incident> {
+  const res = await ApiClient<Incident>({
+    method: "GET",
+    endpoint: `/medical/incident/${id}`,
+  });
+  return res.data;
+}

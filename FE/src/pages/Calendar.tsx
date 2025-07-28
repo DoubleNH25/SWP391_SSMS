@@ -92,6 +92,7 @@ const Calendar: React.FC = () => {
         id: event.id ?? "",
         title: event.name ?? "",
         start: DateUtils.customFormatDate(event.scheduledDate || new Date()),
+        end: DateUtils.customFormatDate(event.scheduledDate || new Date()), // Add end property for medical events
         allDay: false,
         extendedProps: {
           calendar: event.status,
@@ -109,6 +110,7 @@ const Calendar: React.FC = () => {
         id: event.id ?? "",
         title: event.name ?? "",
         start: DateUtils.customFormatDate(event.startDate || new Date()),
+        end: DateUtils.customFormatDate(event.endDate || new Date()),
         allDay: false,
         extendedProps: {
           calendar: event.status,
@@ -242,6 +244,11 @@ const Calendar: React.FC = () => {
     });
   }, [isAdmin]);
 
+  // Function to handle date search - only for viewing events, not creating
+  const handleDateSearch = useCallback((date: string) => {
+    setSelectedDate(DateUtils.customFormatDateOnly(date));
+  }, []);
+
   const handleEventClick = useCallback(
     async (event: CalendarEvent) => {
       // For Admin users, only allow viewing approved events
@@ -334,6 +341,7 @@ const Calendar: React.FC = () => {
                 exp: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.exp || new Date())),
                 mfg: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.mfg || new Date())),
                 startDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                endDate: DateUtils.customFormatDateForBackend(new Date(event.end)),
                 classIds:
                   eventClassIds.length > 0
                     ? (eventClassIds as [string])
@@ -372,6 +380,7 @@ const Calendar: React.FC = () => {
                 exp: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.exp || new Date())),
                 mfg: DateUtils.customFormatDateForBackend(new Date(event.extendedProps.mfg || new Date())),
                 startDate: DateUtils.customFormatDateForBackend(new Date(event.start)),
+                endDate: DateUtils.customFormatDateForBackend(new Date(event.end)),
                 classIds: [""],
               },
             }
@@ -661,6 +670,7 @@ const Calendar: React.FC = () => {
               id: response.id ?? "",
               title: response.name ?? "",
               start: DateUtils.customFormatDate(response.scheduledDate || new Date()),
+              end: DateUtils.customFormatDate(response.scheduledDate || new Date()), // Add end property for medical events
               allDay: false,
               extendedProps: {
                 calendar: response.status || "Pending",
@@ -682,6 +692,7 @@ const Calendar: React.FC = () => {
               id: response.id ?? "",
               title: response.name ?? "",
               start: DateUtils.customFormatDate(response.startDate || new Date()),
+              end: DateUtils.customFormatDate(response.endDate || new Date()),
               allDay: false,
               extendedProps: {
                 calendar: response.status || "Pending",
@@ -883,6 +894,7 @@ const Calendar: React.FC = () => {
         onSetFormData={setFormData}
         classOptions={classOptions}
         isAdmin={isAdmin}
+        onDateSearch={handleDateSearch}
       />
     );
   }, [
@@ -893,6 +905,7 @@ const Calendar: React.FC = () => {
     openModal,
     classOptions,
     isAdmin,
+    handleDateSearch,
   ]);
 
   const isFormValid = useMemo(() => {
@@ -957,6 +970,7 @@ const Calendar: React.FC = () => {
             mfg: DateUtils.customFormatDateForBackend(new Date()),
             vaccineType: "",
             startDate: DateUtils.customFormatDateForBackend(new Date()),
+            endDate: DateUtils.customFormatDateForBackend(new Date()),
             classIds: [""],
           },
         }
@@ -1029,6 +1043,7 @@ const Calendar: React.FC = () => {
                 setSelectedDate(DateUtils.customFormatDateOnly(new Date()));
               }}
               isAdmin={isAdmin}
+              onDateView={handleDateSearch}
             />
 
             <div className="lg:w-1/3">{DailyScheduleComponent}</div>

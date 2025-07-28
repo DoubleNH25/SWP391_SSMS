@@ -35,9 +35,17 @@ const ViewEventsModal = ({
 
   const eventsForDate = events
     .filter(event => {
-      const eventDate = new Date(event.start).toDateString();
-      const targetDate = new Date(viewEventsDate).toDateString();
-      return eventDate === targetDate;
+      const eventStartDate = new Date(event.start);
+      const eventEndDate = new Date(event.end);
+      const targetDate = new Date(viewEventsDate);
+
+      // Set time to 00:00:00 for date comparison only
+      eventStartDate.setHours(0, 0, 0, 0);
+      eventEndDate.setHours(0, 0, 0, 0);
+      targetDate.setHours(0, 0, 0, 0);
+
+      // Check if target date is within the event's date range (inclusive)
+      return targetDate >= eventStartDate && targetDate <= eventEndDate;
     })
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
@@ -47,7 +55,7 @@ const ViewEventsModal = ({
     currentDate.setHours(0, 0, 0, 0);
     
     if (viewDate < currentDate) {
-      showToast.error("Cannot create events in the past!");
+      showToast.error("Không thể tạo sự kiện trong quá khứ!");
       return;
     }
     
@@ -111,6 +119,8 @@ const ViewEventsModal = ({
                     <div className="mt-1">Loại vaccine: {event.extendedProps.vaccineType}</div>
                     <div className="mt-1">Ngày sản xuất: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
                     <div className="mt-1">Ngày hết hạn: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
+                    <div className="mt-1">Ngày bắt đầu: {new Date(event.start).toLocaleDateString()}</div>
+                    <div className="mt-1">Ngày kết thúc: {new Date(event.end).toLocaleDateString()}</div>
                   </div>
                 )}
                 

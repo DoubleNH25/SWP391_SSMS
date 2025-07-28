@@ -24,6 +24,8 @@ import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmat
 import { FecthDeleteMedicalRequest } from "@/services/MedicalRequest";
 import { DecodeJWT } from "@/utils/DecodeJWT";
 import { FecthHealthProfile } from "@/services/HealthProfileService";
+import { showToast } from "@/components/ui/Toast";
+import ApiClient from "@/utils/ApiBase";
 
 export default function MedicalRequest() {
   const navigate = useNavigate();
@@ -31,14 +33,12 @@ export default function MedicalRequest() {
   const [parents, setParents] = useState<ParentViewModel[]>([]);
   const [filteredParents, setFilteredParents] = useState<ParentViewModel[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedParentId, setSelectedParentId] = useState<string>("");
-  const [selectedParent, setSelectedParent] = useState<ParentViewModel | null>(
-    null
-  );
+  // State cho filter Admin - chọn phụ huynh để xem danh sách học sinh
+  const [selectedParentForFilter, setSelectedParentForFilter] =
+    useState<ParentViewModel | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
 
-  const [allStudents] = useState<Student[]>([]);
   const [studentOptions] = useState<{ value: string; label: string }[]>([]);
   const [studentsLoadingForSearch, setStudentsLoadingForSearch] =
     useState(false);
@@ -70,24 +70,51 @@ export default function MedicalRequest() {
   // Thêm state cho AddMedicationModal
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
 
-  // Thêm state để kiểm tra role
-  const [isParent, setIsParent] = useState(false);
+  // Thay đổi từ boolean sang string để lưu role
+  const [role, setRole] = useState<string>("");
+
+  // Thêm state lưu parentId đã fetch
+  const [selectedParentIdForModal, setSelectedParentIdForModal] =
+    useState<string>("");
 
   // Kiểm tra role khi component mount
   useEffect(() => {
     const decodedToken = DecodeJWT();
     if (decodedToken) {
-      const role =
+      const r =
         decodedToken[
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
-      setIsParent(role === "Parent");
+      setRole(r ?? "");
+    }
+  }, []);
+
+  // Hàm duy nhất để xử lý chọn học sinh và fetch parentId
+  const handleChooseStudent = useCallback(async (student: Student) => {
+    if (!student) return;
+
+    // 1) Chọn student
+    setSelectedStudentForModal(student);
+    setSelectedStudentId(student.id);
+
+    // 2) Fetch parentId background
+    try {
+      const response = await ApiClient<{ parentId: string }>({
+        method: "GET",
+        endpoint: `/medical-request/parent-id/${student.id}`,
+      });
+
+      setSelectedParentIdForModal(response.data.parentId);
+    } catch (error) {
+      console.error("Failed to fetch parentId:", error);
+      showToast.error("Không lấy được thông tin phụ huynh");
+      setSelectedParentIdForModal("");
     }
   }, []);
 
   const fetchParent = useCallback(async () => {
     // Nếu là Parent, không cần fetch danh sách phụ huynh
-    if (isParent) {
+    if (role === "Parent") {
       return;
     }
 
@@ -103,7 +130,7 @@ export default function MedicalRequest() {
     } finally {
       setLoading(false);
     }
-  }, [isParent]);
+  }, [role]);
 
   const fetchStudentsByParentId = useCallback(async (parentId: string) => {
     setStudentsLoading(true);
@@ -120,7 +147,7 @@ export default function MedicalRequest() {
 
   // Thêm function để fetch danh sách con của Parent đang đăng nhập
   const fetchParentChildren = useCallback(async () => {
-    if (!isParent) return;
+    if (role !== "Parent") return;
 
     setStudentsLoading(true);
     try {
@@ -133,12 +160,11 @@ export default function MedicalRequest() {
     } finally {
       setStudentsLoading(false);
     }
-  }, [isParent]);
+  }, [role]);
 
   const handleParentClick = useCallback(
     (parent: ParentViewModel) => {
-      setSelectedParentId(parent.id);
-      setSelectedParent(parent);
+      setSelectedParentForFilter(parent);
       fetchStudentsByParentId(parent.id);
     },
     [fetchStudentsByParentId]
@@ -151,24 +177,6 @@ export default function MedicalRequest() {
       );
     }
   }, [selectedStudentId, navigate]);
-
-  const handleStudentClick = useCallback(
-    (student: Student | null) => {
-      if (student) {
-        setSelectedStudentForModal(student);
-        setSelectedStudentId(student.id);
-        setSelectedParentId(student.parentId || "");
-
-        // Nếu là Parent, sử dụng AddMedicationModal
-        if (isParent) {
-          setShowAddMedicationModal(true);
-        } else {
-          setShowMedicationModal(true);
-        }
-      }
-    },
-    [isParent]
-  );
 
   const filterParents = useCallback(() => {
     if (!searchTerm || searchTerm.trim() === "") {
@@ -189,21 +197,9 @@ export default function MedicalRequest() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedStudentId("");
+    setSelectedParentIdForModal("");
+    setSelectedStudentForModal(null);
   };
-
-  const handleNavigateCreateMedicalRequest = useCallback(() => {
-    if (selectedStudentId) {
-      const student = allStudents.find((s) => s.id === selectedStudentId);
-      if (student) {
-        // If no parent is selected, try to get parent ID from student
-        if (!selectedParentId && student.parentId) {
-          setSelectedParentId(student.parentId);
-        }
-        setSelectedStudentForModal(student);
-        setShowMedicationModal(true);
-      }
-    }
-  }, [selectedStudentId, allStudents, selectedParentId]);
 
   const fetchMedicalRequests = useCallback(async () => {
     setMedicalRequestsLoading(true);
@@ -318,9 +314,19 @@ export default function MedicalRequest() {
     }
   }, []);
 
-  const handleStudentSelect = useCallback((studentId: string) => {
-    setSelectedStudentId(studentId);
-  }, []);
+  // Nút tạo đơn thuốc: chỉ mở modal khi có đủ thông tin
+  const handleOpenAddMedicationModal = () => {
+    if (!selectedStudentForModal || !selectedParentIdForModal) {
+      showToast.error("Vui lòng chọn học sinh trước!");
+      return;
+    }
+
+    if (role === "Parent") {
+      setShowAddMedicationModal(true);
+    } else {
+      setShowMedicationModal(true);
+    }
+  };
 
   useEffect(() => {
     fetchParent();
@@ -344,14 +350,14 @@ export default function MedicalRequest() {
         title="Yêu cầu y tế"
         icon={<TaskIcon className="w-10 h-10" />}
         description={
-          isParent
+          role === "Parent"
             ? "Quản lý đơn thuốc cho con của bạn"
             : "Yêu cầu dịch vụ y tế từ phụ huynh"
         }
       />
 
       {/* Chỉ hiển thị bộ lọc tìm kiếm khi không phải Parent */}
-      {!isParent && (
+      {role !== "Parent" && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between">
@@ -407,7 +413,14 @@ export default function MedicalRequest() {
                           ? "Đang tải..."
                           : "Chọn học sinh theo mã hoặc tên..."
                       }
-                      onChange={handleStudentSelect}
+                      onChange={(studentId) => {
+                        const student = students.find(
+                          (s) => s.id === studentId
+                        );
+                        if (student) {
+                          handleChooseStudent(student);
+                        }
+                      }}
                       value={selectedStudentId}
                     />
                   </div>
@@ -430,9 +443,11 @@ export default function MedicalRequest() {
                     {/* Cụm 2 nút dọc */}
                     <div className="flex flex-col gap-2 items-stretch">
                       <button
-                        onClick={handleNavigateCreateMedicalRequest}
+                        onClick={handleOpenAddMedicationModal}
                         disabled={
-                          !selectedStudentId || studentsLoadingForSearch
+                          !selectedStudentForModal ||
+                          !selectedParentIdForModal ||
+                          studentsLoadingForSearch
                         }
                         className="inline-flex items-center gap-2 px-4 py-2 h-[44px] text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                       >
@@ -485,7 +500,7 @@ export default function MedicalRequest() {
       )}
 
       {/* Parent Results Section - Chỉ hiển thị khi không phải Parent */}
-      {!isParent && (
+      {role !== "Parent" && (
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-5">
@@ -527,7 +542,7 @@ export default function MedicalRequest() {
                     key={index}
                     onClick={() => handleParentClick(parent)}
                     className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
-                      selectedParentId === parent.id
+                      selectedParentForFilter?.id === parent.id
                         ? "border-blue-500 bg-blue-50 shadow-md"
                         : "border-gray-200 hover:border-blue-300"
                     }`}
@@ -557,8 +572,8 @@ export default function MedicalRequest() {
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                {selectedParent
-                  ? `Danh sách học sinh của ${selectedParent.fullName}`
+                {selectedParentForFilter
+                  ? `Danh sách học sinh của ${selectedParentForFilter.fullName}`
                   : "Danh sách học sinh"}
                 {students.length > 0 && (
                   <span className="text-sm font-normal text-gray-500">
@@ -566,11 +581,10 @@ export default function MedicalRequest() {
                   </span>
                 )}
               </h2>
-              {selectedParent && (
+              {selectedParentForFilter && (
                 <button
                   onClick={() => {
-                    setSelectedParent(null);
-                    setSelectedParentId("");
+                    setSelectedParentForFilter(null);
                     setStudents([]);
                   }}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -588,7 +602,7 @@ export default function MedicalRequest() {
                   Đang tải danh sách học sinh...
                 </span>
               </div>
-            ) : !selectedParent ? (
+            ) : !selectedParentForFilter ? (
               <div className="text-center py-8">
                 <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">
@@ -607,8 +621,8 @@ export default function MedicalRequest() {
                 {students.map((student, index) => (
                   <div
                     key={index}
-                    onClick={() => handleStudentClick(student)}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleChooseStudent(student)}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300"
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -654,7 +668,7 @@ export default function MedicalRequest() {
       )}
 
       {/* Students Section cho Parent - Hiển thị trực tiếp danh sách con */}
-      {isParent && (
+      {role === "Parent" && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -683,60 +697,82 @@ export default function MedicalRequest() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {students.map((student, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleStudentClick(student)}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {student.fullName}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Mã học sinh: {student.studentCode}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Giới tính: {student.gender}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Ngày sinh:{" "}
-                        {new Date(student.dateOfBirth).toLocaleDateString(
-                          "vi-VN"
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {students.map((student, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleChooseStudent(student)}
+                    className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300 ${
+                      selectedStudentForModal?.id === student.id
+                        ? "ring-2 ring-blue-500"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <Users className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {student.fullName}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Mã học sinh: {student.studentCode}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Giới tính: {student.gender}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Ngày sinh:{" "}
+                          {new Date(student.dateOfBirth).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </p>
+                        {student.studentClass && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-400 mb-1">
+                              Lớp học:
+                            </p>
+                            <p className="text-sm font-medium text-gray-700">
+                              {student.studentClass.className}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Phòng: {student.studentClass.classRoom}
+                            </p>
+                          </div>
                         )}
-                      </p>
-                      {student.studentClass && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-xs text-gray-400 mb-1">Lớp học:</p>
-                          <p className="text-sm font-medium text-gray-700">
-                            {student.studentClass.className}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Phòng: {student.studentClass.classRoom}
-                          </p>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {/* Nút tạo đơn thuốc chỉ hiện khi đã chọn học sinh */}
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={handleOpenAddMedicationModal}
+                  disabled={
+                    !selectedStudentForModal || !selectedParentIdForModal
+                  }
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                >
+                  <FilePlusIcon className="w-4 h-4" />
+                  Tạo đơn thuốc
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
       {/* Multi Medication Modal */}
       <MultiMedicationModal
         isOpen={showMedicationModal}
-        parentId={selectedParent?.id || ""}
+        parentId={selectedParentIdForModal}
         studentId={selectedStudentForModal?.id || ""}
         onClose={() => {
           setShowMedicationModal(false);
           setSelectedStudentForModal(null);
+          setSelectedParentIdForModal("");
         }}
         selectedStudent={selectedStudentForModal}
         onSubmit={() => {
@@ -753,18 +789,20 @@ export default function MedicalRequest() {
           <div>Không có đơn thuốc nào.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <table className="min-w-full table-fixed border border-gray-200">
               <thead>
                 <tr>
-                  <th className="px-3 py-2 border-b">Học sinh</th>
-                  <th className="px-3 py-2 border-b">Lớp</th>
-                  <th className="px-3 py-2 border-b">Phụ huynh</th>
-                  <th className="px-3 py-2 border-b">Thuốc</th>
-                  <th className="px-3 py-2 border-b">Số lượng tổng</th>
-                  <th className="px-3 py-2 border-b">Số lượng còn lại</th>
-                  <th className="px-3 py-2 border-b">Trạng thái</th>
-                  <th className="px-3 py-2 border-b">Ngày tạo</th>
-                  <th className="px-3 py-2 border-b">Hành động</th>
+                  <th className="px-4 py-2 text-left w-40">Học sinh</th>
+                  <th className="px-4 py-2 text-left w-28">Lớp</th>
+                  <th className="px-4 py-2 text-left w-40">Phụ huynh</th>
+                  <th className="px-4 py-2 text-left w-40">Thuốc</th>
+                  <th className="px-4 py-2 text-center w-24">Số lượng tổng</th>
+                  <th className="px-4 py-2 text-center w-28">
+                    Số lượng còn lại
+                  </th>
+                  <th className="px-4 py-2 text-center w-24">Trạng thái</th>
+                  <th className="px-4 py-2 text-center w-28">Ngày tạo</th>
+                  <th className="px-4 py-2 text-center w-20">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -774,17 +812,37 @@ export default function MedicalRequest() {
                     className="border-b hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleShowDetail(req.id)}
                   >
-                    <td className="px-3 py-2">{req.studentName}</td>
-                    <td className="px-3 py-2">{req.studentClass}</td>
-                    <td className="px-3 py-2">{req.parentName}</td>
-                    <td className="px-3 py-2">{req.medicationName}</td>
-                    <td className="px-3 py-2">{req.totalQuantity}</td>
-                    <td className="px-3 py-2">{req.remainingQuantity}</td>
-                    <td className="px-3 py-2">{req.status}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-2 truncate text-left">
+                      {req.studentName}
+                    </td>
+                    <td className="px-4 py-2 truncate text-left">
+                      {req.studentClass}
+                    </td>
+                    <td className="px-4 py-2 truncate text-left">
+                      {req.parentName}
+                    </td>
+                    <td className="px-4 py-2 truncate text-left">
+                      {req.medicationName}
+                    </td>
+                    <td className="px-4 py-2 truncate text-center">
+                      {req.totalQuantity}
+                    </td>
+                    <td className="px-4 py-2 truncate text-center">
+                      {req.remainingQuantity}
+                    </td>
+                    <td className="px-4 py-2 truncate text-center">
+                      {req.status === "Active"
+                        ? "Đang hoạt động"
+                        : req.status === "Inactive"
+                        ? "Không hoạt động"
+                        : req.status === "Completed"
+                        ? "Đã hoàn thành"
+                        : req.status}
+                    </td>
+                    <td className="px-4 py-2 truncate text-center">
                       {new Date(req.createdTime).toLocaleDateString("vi-VN")}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-2 truncate text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -904,11 +962,12 @@ export default function MedicalRequest() {
       {/* MultiMedicationModal cho Parent */}
       <MultiMedicationModal
         isOpen={showAddMedicationModal}
-        parentId={selectedStudentForModal?.parentId || ""}
+        parentId={selectedParentIdForModal}
         studentId={selectedStudentForModal?.id || ""}
         onClose={() => {
           setShowAddMedicationModal(false);
           setSelectedStudentForModal(null);
+          setSelectedParentIdForModal("");
         }}
         selectedStudent={selectedStudentForModal}
         onSubmit={async (medications) => {

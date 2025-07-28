@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { showToast } from "@/components/ui/Toast";
+import { DecodeJWT } from "@/utils/DecodeJWT";
 
 export default function MedicalHealthCheckupRecords() {
   const [medicalRecord, setMedicalRecord] = useState<
@@ -59,7 +60,7 @@ export default function MedicalHealthCheckupRecords() {
     weight: "",
   });
   const [isCurrentDate, setIsCurrentDate] = useState<boolean>(false);
-
+  
   const handleGetStudent = useCallback(async () => {
     if (!medicalRecord) {
       setLoading(false);
@@ -467,6 +468,10 @@ export default function MedicalHealthCheckupRecords() {
     );
   };
 
+  const payload = DecodeJWT();
+  const useName =
+    payload?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-2">
       <div className="max-w-8xl mx-auto">
@@ -622,7 +627,7 @@ export default function MedicalHealthCheckupRecords() {
                         {medicalRecord.find(
                           (r) => r.studentId === selectedStudent.id
                         )?.nurseName === "Pending To Update"
-                          ? "Chưa phân công"
+                          ? `${useName}`
                           : medicalRecord.find(
                             (r) => r.studentId === selectedStudent.id
                           )?.nurseName || "N/A"}

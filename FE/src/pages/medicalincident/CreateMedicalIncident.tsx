@@ -50,15 +50,18 @@ export default function CreateMedicalIncident() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [incidentTime, setIncidentTime] = useState(""); // Thêm state lưu giờ
 
   // Validate only step 1 fields
   const validateStep1 = (): boolean => {
     const stepErrors: Record<string, string> = {};
-    const { studentId, type, description } = formData;
+    const { studentId, type, description, incidentDate } = formData;
 
     if (!studentId?.trim()) stepErrors.studentId = "Mã học sinh bắt buộc";
     if (!type?.trim()) stepErrors.type = "Loại sự cố bắt buộc";
     if (!description?.trim()) stepErrors.description = "Mô tả sự cố bắt buộc";
+    if (!incidentDate) stepErrors.incidentDate = "Ngày xảy ra sự cố bắt buộc";
+    if (!incidentTime) stepErrors.incidentTime = "Giờ xảy ra sự cố bắt buộc";
 
     setErrors(stepErrors);
     return Object.keys(stepErrors).length === 0;
@@ -304,7 +307,9 @@ export default function CreateMedicalIncident() {
   const handleSubmitWithoutMedicine = async () => {
     const payload: IncidentCreateViewModel = {
       ...formData,
-      incidentDate: DateUtils.customFormatDateForBackend(new Date()),
+      incidentDate: DateUtils.customFormatDateForBackend(
+        new Date(`${formData.incidentDate}T${incidentTime}`)
+      ),
       medicalUsageDetails: [], // No medicine
     };
 
@@ -355,7 +360,9 @@ export default function CreateMedicalIncident() {
 
     const payload: IncidentCreateViewModel = {
       ...formData,
-      incidentDate: DateUtils.customFormatDateForBackend(new Date()),
+      incidentDate: DateUtils.customFormatDateForBackend(
+        new Date(`${formData.incidentDate}T${incidentTime}`)
+      ),
     };
 
     setLoading(true);
@@ -505,6 +512,43 @@ export default function CreateMedicalIncident() {
                       {errors.description}
                     </p>
                   )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Chọn ngày */}
+                  <div>
+                    <Label htmlFor="incidentDate">Ngày xảy ra sự cố</Label>
+                    <Input
+                      id="incidentDate"
+                      type="date"
+                      value={formData.incidentDate}
+                      onChange={(e) =>
+                        handleChangeFirst("incidentDate", e.target.value)
+                      }
+                      className="w-full"
+                    />
+                    {errors.incidentDate && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.incidentDate}
+                      </p>
+                    )}
+                  </div>
+                  {/* Chọn giờ */}
+                  <div>
+                    <Label htmlFor="incidentTime">Giờ xảy ra sự cố</Label>
+                    <Input
+                      id="incidentTime"
+                      type="time"
+                      value={incidentTime}
+                      onChange={(e) => setIncidentTime(e.target.value)}
+                      className="w-full"
+                    />
+                    {errors.incidentTime && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.incidentTime}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -710,6 +754,10 @@ export default function CreateMedicalIncident() {
                   <h4 className="font-medium text-gray-900 mb-2">
                     Thông tin sự cố:
                   </h4>
+                  <p className="text-sm text-gray-600">
+                    <strong>Ngày giờ:</strong> {formData.incidentDate}{" "}
+                    {incidentTime}
+                  </p>
                   <p className="text-sm text-gray-600">
                     <strong>Loại:</strong> {formData.type}
                   </p>

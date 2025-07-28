@@ -4,6 +4,9 @@ export interface MedicalVaccinationRecord {
     studentName: string;
     vaccinationCampaignId: string;
     vaccineName: string;
+    vaccineType: string;
+    exp: string;
+    mfg: string;
     resultNote: string;
     time: string;
     vaccinatedAt: string;

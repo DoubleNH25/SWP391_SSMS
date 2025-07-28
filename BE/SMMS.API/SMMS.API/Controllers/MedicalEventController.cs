@@ -92,7 +92,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("vaccination-campaigns/all")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetAllVaccineCampaign()
 		{
 			var activities = await _vaccinationCampaignService.GetAllVaccineCampaignAsync();
@@ -157,7 +157,21 @@ namespace SMMS.API.Controllers
 			if (!result) return BadRequest("Cannot delete vaccination campaign.");
 			return NoContent();
 		}
-
+		[HttpGet("activity-consents/vaccination-campaigns/activity-type")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
+		public async Task<IActionResult> GetActivityConsentsByType(string type)
+		{
+			if (string.IsNullOrEmpty(type))
+			{
+				return BadRequest("Activity type is required.");
+			}
+			if (type != "HealthActivity" && type != "VaccinationCampaign")
+			{
+				return BadRequest("Invalid activity type. Must be 'HealthActivity' or 'VaccinationCampaign'.");
+			}
+			var consents = await _consentService.GetAllWithTypeAsync(type);
+			return Ok(consents);
+		}
 		[HttpGet("activity-consents/health-activities/{healthActivityId}")]
 		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetActivityConsentsForHealthActivity(string healthActivityId)

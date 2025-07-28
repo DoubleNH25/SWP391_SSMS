@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import Input from "@/components/ui/form/InputField";
@@ -43,7 +43,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
 }) => {
   // State chung
   const [studentId, setStudentId] = useState("");
-
+  const [localParentId, setLocalParentId] = useState(parentId || "");
   // State lưu nhiều thuốc
   const [medications, setMedications] = useState<MedicalRequestItems[]>([
     {
@@ -59,6 +59,34 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
       notes: "",
     },
   ]);
+  // State cho ảnh đơn thuốc (cả đơn)
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Khi chọn học sinh, gọi API lấy parentId
+  useEffect(() => {
+    if (studentId) {
+      fetch(`/api/medical-request/parent-id/${studentId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setLocalParentId(data.parentId || ""))
+        .catch(() => setLocalParentId(""));
+    }
+  }, [studentId]);
+
+  // Khi mở modal, nếu đã có selectedStudent thì gọi API lấy parentId
+  useEffect(() => {
+    if (isOpen && selectedStudent && selectedStudent.id) {
+      setStudentId(selectedStudent.id); // set luôn studentId
+      fetch(`/api/medical-request/parent-id/${selectedStudent.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setLocalParentId(data.parentId || ""))
+        .catch(() => setLocalParentId(""));
+    }
+  }, [isOpen, selectedStudent]);
 
   // Thêm thuốc mới
   const handleAddMedication = () => {
@@ -138,7 +166,27 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
     );
   };
 
-  // Khi chọn học sinh, set studentId
+  // Upload ảnh cho cả đơn thuốc
+  const handleImageChange = async (file: File | null) => {
+    if (!file) return;
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("Image", file);
+    try {
+      const res = await fetch("/api/medical-request/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      const url = data.url || data.imageUrl || data.image || "";
+      setImageUrl(url);
+    } catch {
+      // lỗi upload
+    }
+    setUploadingImage(false);
+  };
+
+  // Khi chọn học sinh, reset thuốc và ảnh
   React.useEffect(() => {
     if (selectedStudent && isOpen) {
       setStudentId(selectedStudent.id);
@@ -156,6 +204,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
           notes: "",
         },
       ]);
+      setImageUrl("");
     }
   }, [selectedStudent, isOpen]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -192,9 +241,11 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
     // Đóng gói đúng cấu trúc API
     const payload = {
       studentId,
-      parentId,
+      parentId: localParentId,
+      imageUrl,
       medicalRequestItems: medications,
     };
+    console.log(payload);
     onSubmit(payload);
     onClose();
     setMedications([
@@ -212,6 +263,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
       },
     ]);
     setStudentId("");
+    setImageUrl("");
     setErrors({});
   };
 
@@ -236,6 +288,29 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
               <div className="text-red-500 text-xs">{errors.studentId}</div>
             )}
           </div>
+        </div>
+        {/* Upload ảnh cho cả đơn thuốc */}
+        <div className="mt-2">
+          <Label>Ảnh đơn thuốc</Label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0] || null;
+              await handleImageChange(file);
+            }}
+            disabled={uploadingImage}
+          />
+          {uploadingImage && (
+            <div className="text-blue-500 text-xs">Đang tải ảnh...</div>
+          )}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt="Ảnh đơn thuốc"
+              className="mt-2 max-h-24 rounded"
+            />
+          )}
         </div>
         <div className="space-y-8">
           {medications.map((med, idx) => (

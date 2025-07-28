@@ -18,6 +18,7 @@ namespace SMMS.Domain.Entity
         public DateTime MFG { get; set; }
         public string VaccineType { get; set; }
         public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
 		public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending; // Thay IsAccepted
 
 		public virtual ICollection<VaccinationCampaignClass> VaccinationCampaignClasses { get; set; }

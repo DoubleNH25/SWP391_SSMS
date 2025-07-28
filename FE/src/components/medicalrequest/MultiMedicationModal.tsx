@@ -11,12 +11,13 @@ import { DateUtils } from "@/utils/DateUtils";
 import { showToast } from "../ui/Toast";
 import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
 import { UploadBlogImage } from "@/services/BlogService";
+import { addDays } from "date-fns";
 
 interface Medication {
   id: string;
   medicationName: string;
   form: string;
-  dosage: string;
+  dosage: number; // Changed from string to number
   route: string;
   frequency: number;
   totalQuantity: string;
@@ -24,6 +25,9 @@ interface Medication {
   startDate: string;
   endDate: string;
   note: string;
+  // Add calculation info
+  treatmentDays?: number;
+  leftoverUnits?: number;
 }
 
 interface MultiMedicationModalProps {
@@ -48,7 +52,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       id: "1",
       medicationName: "",
       form: "Viên nén",
-      dosage: "",
+      dosage: 0, // Changed from "" to 0
       route: "Uống",
       frequency: 1,
       totalQuantity: "",
@@ -65,6 +69,159 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
 
   // Thêm state errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Add useEffect to automatically sync timeToAdminister with frequency
+  useEffect(() => {
+    setMedications((prevMedications) =>
+      prevMedications.map((med) => {
+        const currentLength = med.timeToAdminister.length;
+        const targetLength = med.frequency;
+
+        if (targetLength > currentLength) {
+          // Thêm slots mới với giá trị rỗng
+          const newTimeSlots = Array(targetLength - currentLength).fill("");
+          return {
+            ...med,
+            timeToAdminister: [...med.timeToAdminister, ...newTimeSlots],
+          };
+        } else if (targetLength < currentLength) {
+          // Cắt bớt nếu giảm frequency
+          return {
+            ...med,
+            timeToAdminister: med.timeToAdminister.slice(0, targetLength),
+          };
+        }
+        return med;
+      })
+    );
+  }, [medications.map((med) => `${med.id}-${med.frequency}`).join(",")]); // More stable dependency
+
+  // Add useEffect to reset route when form changes
+  useEffect(() => {
+    setMedications((prevMedications) =>
+      prevMedications.map((med) => {
+        const availableRoutes = getRoutesByForm(med.form);
+        if (
+          availableRoutes.length > 0 &&
+          !availableRoutes.includes(med.route)
+        ) {
+          // Reset route if current route is not valid for the new form
+          return {
+            ...med,
+            route: availableRoutes[0], // Set to first available route
+          };
+        }
+        return med;
+      })
+    );
+  }, [medications.map((med) => `${med.id}-${med.form}`).join(",")]);
+
+  // Add useEffect to automatically calculate endDate
+  useEffect(() => {
+    setMedications((prevMedications) =>
+      prevMedications.map((med) => {
+        if (
+          med.startDate &&
+          med.totalQuantity &&
+          med.dosage > 0 &&
+          med.frequency > 0
+        ) {
+          const totalUnits = parseFloat(med.totalQuantity);
+          const unitsPerDose = med.dosage;
+          const dosesPerDay = med.frequency;
+
+          if (totalUnits > 0 && unitsPerDose > 0 && dosesPerDay > 0) {
+            const dailyUnits = dosesPerDay * unitsPerDose;
+            const days = Math.ceil(totalUnits / dailyUnits);
+            const excess = days * dailyUnits - totalUnits;
+            const startDate = new Date(med.startDate);
+            const calculatedEndDate = addDays(startDate, days - 1);
+
+            return {
+              ...med,
+              endDate: DateUtils.customFormatDateOnly(calculatedEndDate),
+              // Add calculation info for display
+              treatmentDays: days,
+              leftoverUnits: excess,
+            };
+          }
+        }
+        return med;
+      })
+    );
+  }, [
+    medications
+      .map(
+        (med) =>
+          `${med.id}-${med.startDate}-${med.totalQuantity}-${med.dosage}-${med.frequency}`
+      )
+      .join(","),
+  ]);
+
+  const medicationForms = [
+    "Viên nén",
+    "Siro",
+    "Thuốc nhỏ mắt",
+    "Kem bôi",
+    "Viên con nhộng",
+    "Thuốc tiêm",
+    "Thuốc mỡ",
+    "Thuốc đặt",
+    "Thuốc hít",
+    "Vắc-xin",
+    "Khác",
+  ];
+
+  // Mapping ràng buộc "Cách dùng" theo "Dạng thuốc"
+  const routesByForm: Record<string, string[]> = {
+    "Viên nén": ["Uống", "Ngậm"],
+    "Viên con nhộng": ["Uống"],
+    Siro: ["Uống"],
+    "Thuốc nhỏ mắt": ["Nhỏ mắt"],
+    "Thuốc nhỏ tai": ["Nhỏ tai"],
+    "Thuốc nhỏ mũi": ["Nhỏ mũi"],
+    "Kem bôi": ["Bôi ngoài da"],
+    "Thuốc mỡ": ["Bôi ngoài da"],
+    "Thuốc tiêm": ["Tiêm"],
+    "Thuốc hít": ["Hít"],
+    "Thuốc đặt": ["Đặt"],
+    "Vắc-xin": ["Tiêm"],
+    Khác: [
+      "Uống",
+      "Ngậm",
+      "Nhỏ mắt",
+      "Nhỏ tai",
+      "Nhỏ mũi",
+      "Bôi ngoài da",
+      "Tiêm",
+      "Hít",
+      "Đặt",
+    ],
+  };
+
+  // Mapping đơn vị theo "Cách dùng" và dạng thuốc
+  const unitByRoute: Record<string, (form?: string) => string> = {
+    Uống: (form) => (form === "Siro" ? "ml" : "viên"),
+    Ngậm: () => "viên",
+    "Nhỏ mắt": () => "giọt",
+    "Nhỏ tai": () => "giọt",
+    "Nhỏ mũi": () => "giọt",
+    "Bôi ngoài da": () => "gói",
+    Tiêm: () => "ống",
+    Hít: () => "ống",
+    Đặt: () => "viên",
+  };
+
+  // Helper function to get unit based on route and form
+  const getUnitByRoute = (route: string, form?: string): string => {
+    const fn = unitByRoute[route];
+    return typeof fn === "function" ? fn(form) : "đơn vị";
+  };
+
+  // Helper function to get available routes for a form
+  const getRoutesByForm = (form: string): string[] => {
+    return routesByForm[form] || [];
+  };
 
   // Add useEffect to log IDs when modal opens
   useEffect(() => {
@@ -83,7 +240,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
       id: Date.now().toString(),
       medicationName: "",
       form: "Viên nén",
-      dosage: "",
+      dosage: 0, // Changed from "" to 0
       route: "Uống",
       frequency: 1,
       totalQuantity: "",
@@ -109,16 +266,6 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     setMedications(
       medications.map((med) =>
         med.id === id ? { ...med, [field]: value } : med
-      )
-    );
-  };
-
-  const addTimeSlot = (medicationId: string) => {
-    setMedications(
-      medications.map((med) =>
-        med.id === medicationId
-          ? { ...med, timeToAdminister: [...med.timeToAdminister, ""] }
-          : med
       )
     );
   };
@@ -166,8 +313,8 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
         newErrors[`medicationName-${med.id}`] = "Vui lòng nhập tên thuốc";
         valid = false;
       }
-      if (!med.dosage.trim()) {
-        newErrors[`dosage-${med.id}`] = "Vui lòng nhập liều lượng";
+      if (!med.dosage || med.dosage <= 0) {
+        newErrors[`dosage-${med.id}`] = "Vui lòng nhập liều lượng lớn hơn 0";
         valid = false;
       }
       if (
@@ -208,7 +355,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     const medicalRequestItems = validMedications.map((med) => ({
       medicationName: med.medicationName,
       form: med.form,
-      dosage: med.dosage,
+      dosage: String(med.dosage), // Convert number to string for API
       route: med.route,
       frequency: med.frequency,
       totalQuantity: Number(med.totalQuantity),
@@ -249,7 +396,7 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
         id: "1",
         medicationName: "",
         form: "Viên nén",
-        dosage: "",
+        dosage: 0, // Changed from "" to 0
         route: "Uống",
         frequency: 1,
         totalQuantity: "",
@@ -261,21 +408,6 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
     ]);
     onClose();
   };
-
-  const medicationForms = [
-    "Viên nén",
-    "Siro",
-    "Thuốc nhỏ mắt",
-    "Kem bôi",
-    "Viên con nhộng",
-    "Thuốc tiêm",
-    "Thuốc mỡ",
-    "Thuốc đặt",
-    "Thuốc hít",
-    "Vắc-xin",
-    "Khác",
-  ];
-  const routes = ["Uống", "Chích", "Ngậm", "Bôi ngoài da", "Nhỏ mắt", "Khác"];
 
   return (
     <Modal
@@ -440,20 +572,27 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                       <Label htmlFor={`dosage-${medication.id}`}>
                         Liều lượng <span className="text-red-500">*</span>
                       </Label>
-                      <Input
-                        id={`dosage-${medication.id}`}
-                        type="text"
-                        value={medication.dosage}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "dosage",
-                            e.target.value
-                          )
-                        }
-                        placeholder="VD: 2 viên/lần, 5ml/lần"
-                        className="h-11"
-                      />
+                      <div className="flex items-center">
+                        <Input
+                          id={`dosage-${medication.id}`}
+                          type="number"
+                          value={medication.dosage}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (isNaN(val) || val < 0) {
+                              updateMedication(medication.id, "dosage", 0);
+                            } else {
+                              updateMedication(medication.id, "dosage", val);
+                            }
+                          }}
+                          placeholder="VD: 2"
+                          className="h-11 flex-1"
+                        />
+                        <span className="ml-2 text-sm text-gray-600 font-medium">
+                          {getUnitByRoute(medication.route, medication.form)}
+                          /lần
+                        </span>
+                      </div>
                       {errors[`dosage-${medication.id}`] && (
                         <div className="text-red-500 text-xs mt-1">
                           {errors[`dosage-${medication.id}`]}
@@ -466,15 +605,22 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         Cách dùng
                       </Label>
                       <Select
-                        options={routes.map((route) => ({
-                          value: route,
-                          label: route,
-                        }))}
-                        placeholder="Chọn cách dùng"
+                        options={getRoutesByForm(medication.form).map(
+                          (route) => ({
+                            value: route,
+                            label: route,
+                          })
+                        )}
+                        placeholder={
+                          medication.form
+                            ? "Chọn cách dùng"
+                            : "Vui lòng chọn dạng thuốc trước"
+                        }
                         onChange={(value) =>
                           updateMedication(medication.id, "route", value)
                         }
                         defaultValue={medication.route}
+                        disabled={!medication.form}
                       />
                     </div>
 
@@ -482,30 +628,35 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                       <Label htmlFor={`totalQuantity-${medication.id}`}>
                         Tổng số lượng <span className="text-red-500">*</span>
                       </Label>
-                      <Input
-                        id={`totalQuantity-${medication.id}`}
-                        type="number"
-                        value={medication.totalQuantity}
-                        min="1"
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || Number(val) < 1) {
-                            updateMedication(
-                              medication.id,
-                              "totalQuantity",
-                              ""
-                            );
-                          } else {
-                            updateMedication(
-                              medication.id,
-                              "totalQuantity",
-                              val
-                            );
-                          }
-                        }}
-                        placeholder="Số lượng"
-                        className="h-11"
-                      />
+                      <div className="flex items-center">
+                        <Input
+                          id={`totalQuantity-${medication.id}`}
+                          type="number"
+                          value={medication.totalQuantity}
+                          min="1"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || Number(val) < 1) {
+                              updateMedication(
+                                medication.id,
+                                "totalQuantity",
+                                ""
+                              );
+                            } else {
+                              updateMedication(
+                                medication.id,
+                                "totalQuantity",
+                                val
+                              );
+                            }
+                          }}
+                          placeholder="Số lượng"
+                          className="h-11 flex-1"
+                        />
+                        <span className="ml-2 text-sm text-gray-600 font-medium">
+                          {getUnitByRoute(medication.route, medication.form)}
+                        </span>
+                      </div>
                       {errors[`totalQuantity-${medication.id}`] && (
                         <div className="text-red-500 text-xs mt-1">
                           {errors[`totalQuantity-${medication.id}`]}
@@ -584,14 +735,6 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                         </div>
                       ))}
                     </div>
-                    <Button
-                      type="button"
-                      onClick={() => addTimeSlot(medication.id)}
-                      className="text-sm px-5 py-2.5 border border-gray-300 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Thêm giờ
-                    </Button>
                   </div>
                 </div>
 
@@ -628,21 +771,15 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                     <div className="space-y-2">
                       <DatePicker
                         id={`endDate-${medication.id}`}
-                        label="Ngày kết thúc *"
+                        label="Ngày kết thúc * (tự động tính)"
                         minDate={
                           medication.startDate ||
                           DateUtils.customFormatDateOnly(new Date())
                         }
                         maxDate={"9999-12-31"}
-                        placeholder="Chọn ngày kết thúc"
-                        onChange={(selectedDates) => {
-                          if (selectedDates.length > 0) {
-                            updateMedication(
-                              medication.id,
-                              "endDate",
-                              DateUtils.customFormatDateOnly(selectedDates[0])
-                            );
-                          }
+                        placeholder="Tự động tính từ ngày bắt đầu"
+                        onChange={() => {
+                          // Read-only, no action needed
                         }}
                         defaultDate={medication.endDate}
                       />
@@ -651,6 +788,25 @@ const MultiMedicationModal: React.FC<MultiMedicationModalProps> = ({
                           {errors[`endDate-${medication.id}`]}
                         </div>
                       )}
+                      {medication.treatmentDays &&
+                        medication.treatmentDays > 0 && (
+                          <div className="text-sm text-gray-600 mt-2">
+                            <span className="font-semibold text-blue-600">
+                              {medication.treatmentDays}
+                            </span>{" "}
+                            ngày điều trị
+                            {medication.leftoverUnits &&
+                              medication.leftoverUnits > 0 && (
+                                <span className="text-xs text-yellow-700 ml-2">
+                                  ⚠️ Phần dư: {medication.leftoverUnits}{" "}
+                                  {getUnitByRoute(
+                                    medication.route,
+                                    medication.form
+                                  )}
+                                </span>
+                              )}
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
