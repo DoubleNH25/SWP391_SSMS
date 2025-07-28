@@ -6,6 +6,7 @@ import Select from "@/components/ui/form/Select";
 import Label from "@/components/ui/form/Label";
 import { Student } from "@/types/Student";
 import { MedicalRequestItems } from "@/types/MedicalRequest";
+import ApiClient from "@/utils/ApiBase";
 
 interface StudentOption {
   value: string;
@@ -66,11 +67,11 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
   // Khi chọn học sinh, gọi API lấy parentId
   useEffect(() => {
     if (studentId) {
-      fetch(`/api/medical-request/parent-id/${studentId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      ApiClient<{ parentId: string }>({
+        method: "GET",
+        endpoint: `/medical-request/parent-id/${studentId}`,
       })
-        .then((res) => res.json())
-        .then((data) => setLocalParentId(data.parentId || ""))
+        .then((response) => setLocalParentId(response.data.parentId || ""))
         .catch(() => setLocalParentId(""));
     }
   }, [studentId]);
@@ -79,11 +80,11 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
   useEffect(() => {
     if (isOpen && selectedStudent && selectedStudent.id) {
       setStudentId(selectedStudent.id); // set luôn studentId
-      fetch(`/api/medical-request/parent-id/${selectedStudent.id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      ApiClient<{ parentId: string }>({
+        method: "GET",
+        endpoint: `/medical-request/parent-id/${selectedStudent.id}`,
       })
-        .then((res) => res.json())
-        .then((data) => setLocalParentId(data.parentId || ""))
+        .then((response) => setLocalParentId(response.data.parentId || ""))
         .catch(() => setLocalParentId(""));
     }
   }, [isOpen, selectedStudent]);
@@ -173,12 +174,21 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({
     const formData = new FormData();
     formData.append("Image", file);
     try {
-      const res = await fetch("/api/medical-request/upload-image", {
+      const response = await ApiClient<{
+        url?: string;
+        imageUrl?: string;
+        image?: string;
+      }>({
         method: "POST",
-        body: formData,
+        endpoint: "/medical-request/upload-image",
+        data: formData,
+        contentType: "multipart/form-data",
       });
-      const data = await res.json();
-      const url = data.url || data.imageUrl || data.image || "";
+      const url =
+        response.data.url ||
+        response.data.imageUrl ||
+        response.data.image ||
+        "";
       setImageUrl(url);
     } catch {
       // lỗi upload

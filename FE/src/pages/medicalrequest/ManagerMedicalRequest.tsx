@@ -160,22 +160,14 @@ const ManagerMedicalRequest = () => {
   // Lấy danh sách học sinh, thuốc, dạng thuốc
   useEffect(() => {
     if (isParent) {
-      fetch("/api/parents/students", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      ApiClient<Student[]>({
+        method: "GET",
+        endpoint: "/parents/students",
       })
-        .then((res) => {
-          if (!res.ok) {
-            console.error(
-              "API /api/parents/students lỗi:",
-              res.status,
-              res.statusText
-            );
-            throw new Error("API error");
-          }
-          return res.json();
-        })
-        .then((data: Student[]) => {
-          setStudents(data.map((s) => ({ value: s.id, label: s.fullName })));
+        .then((response) => {
+          setStudents(
+            response.data.map((s) => ({ value: s.id, label: s.fullName }))
+          );
         })
         .catch((err) => {
           console.error("Lỗi khi gọi API /api/parents/students:", err);
