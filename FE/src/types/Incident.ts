@@ -11,7 +11,8 @@ export interface MedicalUsageDetail {
   medicalName: string;
   dosage: string;
   quantity: number;
-  // Thêm các trường khác nếu có
+  status: string;
+  supplier: string;
 }
 
 // Thêm type cho tạo mới (không có id, medicalName)
@@ -34,4 +35,5 @@ export interface Incident {
   incidentDate?: string;
   createdTime?: string;
   medicalUsageDetails?: MedicalUsageDetail[];
+  medicalUsages?: MedicalUsageDetail[]; // Thêm trường này để khớp với API
 }

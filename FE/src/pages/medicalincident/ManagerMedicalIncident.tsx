@@ -6,15 +6,15 @@ import {
   FecthStudents,
   FecthStudentsByParentId,
 } from "@/services/UserService";
-import { FecthCreateIncident } from "@/services/IncidentService";
+import {
+  FetchIncidents,
+  fetchIncidentDetail,
+  FecthCreateIncident,
+} from "@/services/IncidentService";
 import { showToast } from "@/components/ui/Toast";
 import { Student } from "@/types/Student";
 import { useState, useEffect, useCallback } from "react";
 import SearchableSelect from "@/components/ui/form/SearchableSelect";
-import {
-  FetchIncidents,
-  fetchIncidentDetail,
-} from "@/services/IncidentService";
 import { Incident } from "@/types/Incident";
 import { Modal } from "@/components/ui/modal";
 import { DecodeJWT } from "@/utils/DecodeJWT";
@@ -585,19 +585,12 @@ export default function ManagerMedicalIncident() {
                       key={incident.id}
                       className="border-b hover:bg-gray-50 cursor-pointer"
                     >
-                      <td className="px-4 py-2 text-center">
-                        <button
-                          className="text-blue-600 hover:underline"
-                          onClick={() => handleViewClick(incident.id)}
-                        >
-                          Xem
-                        </button>
-                      </td>
                       <td className="px-4 py-2">
                         {incident.studentName || "-"}
                       </td>
                       <td className="px-4 py-2">{incident.class || "-"}</td>
                       <td className="px-4 py-2">{incident.type}</td>
+                      <td className="px-4 py-2">{incident.description}</td>
                       <td className="px-4 py-2">
                         {(() => {
                           // Mapping trạng thái sang tiếng Việt và badge màu
@@ -649,12 +642,9 @@ export default function ManagerMedicalIncident() {
                           return `${date} ${time}`;
                         })()}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-2 text-center">
                         <button
-                          onClick={() => {
-                            setDetailIncident(incident);
-                            setShowDetailModal(true);
-                          }}
+                          onClick={() => handleViewClick(incident.id)}
                           className="text-blue-600 hover:underline"
                         >
                           Xem
@@ -921,18 +911,103 @@ export default function ManagerMedicalIncident() {
                 ? new Date(detailIncident.incidentDate).toLocaleString("vi-VN")
                 : "-"}
             </p>
+            <p>
+              <strong>Trạng thái:</strong>{" "}
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  detailIncident.status === "Pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : detailIncident.status === "Resolved"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {detailIncident.status === "Pending"
+                  ? "Chờ xử lý"
+                  : detailIncident.status === "Resolved"
+                  ? "Đã xử lý"
+                  : detailIncident.status}
+              </span>
+            </p>
+            {/* Hiển thị medicalUsages từ API */}
+            {detailIncident &&
+              Array.isArray(detailIncident.medicalUsages) &&
+              detailIncident.medicalUsages.length > 0 && (
+                <>
+                  <h4 className="font-medium text-blue-700">
+                    Thuốc đã sử dụng:
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    {detailIncident.medicalUsages.map((m, index) => (
+                      <div
+                        key={m.id || index}
+                        className="border-l-4 border-blue-500 pl-3 bg-white p-2 rounded"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {m.medicalName}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Liều lượng: {m.dosage}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Số lượng: {m.quantity}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Nhà cung cấp: {m.supplier}
+                            </p>
+                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              m.status === "Is Using"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {m.status === "Is Using"
+                              ? "Đang sử dụng"
+                              : m.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            {/* Hiển thị medicalUsageDetails (backward compatibility) */}
             {detailIncident &&
               Array.isArray(detailIncident.medicalUsageDetails) &&
               detailIncident.medicalUsageDetails.length > 0 && (
                 <>
-                  <h4 className="font-medium">Thuốc đã dùng:</h4>
-                  <ul className="list-disc list-inside">
-                    {detailIncident.medicalUsageDetails.map((m) => (
-                      <li key={m.id}>
-                        {m.medicalName} – {m.dosage} – SL: {m.quantity}
-                      </li>
+                  <h4 className="font-medium text-blue-700">
+                    Thuốc đã sử dụng (chi tiết):
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    {detailIncident.medicalUsageDetails.map((m, index) => (
+                      <div
+                        key={m.id || index}
+                        className="border-l-4 border-blue-500 pl-3 bg-white p-2 rounded"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {m.medicalName}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Liều lượng: {m.dosage}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Số lượng: {m.quantity}
+                            </p>
+                          </div>
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                            Đã sử dụng
+                          </span>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </>
               )}
             <div className="text-right mt-4">

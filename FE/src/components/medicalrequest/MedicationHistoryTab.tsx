@@ -13,14 +13,24 @@ import Input from "@/components/ui/form/InputField";
 import { DateUtils } from "@/utils/DateUtils";
 
 export interface MedicationHistoryRecord {
-  id: number;
+  id: string; // Administration ID
+  medicalRequestId: string;
+  studentId: string;
   studentName: string;
+  studentClass: string;
   medicationName: string;
-  dosage: string;
-  administeredTime: string;
-  administeredBy: string;
-  note: string;
-  status: string;
+  form: string;
+  route: string;
+  plannedDosage: string; // Liều lượng dự kiến
+  actualDoseGiven: string; // Liều lượng thực tế đã cho
+  scheduledTime: string; // Thời gian dự kiến
+  completedAt: string; // Thời gian thực tế hoàn thành
+  wasTaken: boolean; // Đã uống hay không
+  notes?: string; // Ghi chú
+  administratorId: string;
+  administratorName: string;
+  status: string; // "Success" hoặc "Failed"
+  timeDifference?: string; // Chênh lệch thời gian
 }
 
 interface MedicationHistoryTabProps {
@@ -58,8 +68,13 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
   onSort,
   onItemsPerPageChange,
 }) => {
+  // Đảm bảo medicationHistory là array
+  const safeMedicationHistory = Array.isArray(medicationHistory)
+    ? medicationHistory
+    : [];
+
   // Filter and paginate medication history
-  const filteredHistory = medicationHistory.filter((record) => {
+  const filteredHistory = safeMedicationHistory.filter((record) => {
     const matchesSearch =
       record.studentName
         .toLowerCase()
@@ -67,24 +82,26 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
       record.medicationName
         .toLowerCase()
         .includes(historySearchTerm.toLowerCase()) ||
-      record.administeredBy
+      record.administratorName
         .toLowerCase()
         .includes(historySearchTerm.toLowerCase()) ||
-      record.note.toLowerCase().includes(historySearchTerm.toLowerCase());
+      record.notes?.toLowerCase().includes(historySearchTerm.toLowerCase());
 
     // Date filter logic for history - improved using DateUtils
     const matchesDateFilter = (() => {
-      if (!historyStartDate && !historyEndDate) return true;
+      if (!historyStartDate && !historyEndDate) {
+        return true;
+      }
 
       // Try to parse the administeredTime using DateUtils
       let recordDate: Date;
       try {
-        // First try to parse as ISO string or standard format
-        recordDate = DateUtils.toLocalDate(record.administeredTime);
+        // First try DateUtils
+        recordDate = DateUtils.toLocalDate(record.completedAt);
 
         // If that fails, try Vietnamese locale format parsing
         if (isNaN(recordDate.getTime())) {
-          const vietnameseFormatMatch = record.administeredTime.match(
+          const vietnameseFormatMatch = record.completedAt.match(
             /(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/
           );
           if (vietnameseFormatMatch) {
@@ -100,24 +117,23 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
         }
 
         // If still invalid, skip this record
-        if (isNaN(recordDate.getTime())) return true;
+        if (isNaN(recordDate.getTime())) {
+          return true;
+        }
       } catch {
         return true; // Skip invalid dates
       }
 
-      const filterStart = historyStartDate
-        ? new Date(historyStartDate + "T00:00:00")
-        : null;
-      const filterEnd = historyEndDate
-        ? new Date(historyEndDate + "T23:59:59.999Z")
-        : null;
-
-      if (filterStart && filterEnd) {
-        return recordDate >= filterStart && recordDate <= filterEnd;
-      } else if (filterStart) {
-        return recordDate >= filterStart;
-      } else if (filterEnd) {
-        return recordDate <= filterEnd;
+      // So sánh trực tiếp string YYYY-MM-DD local
+      const recordDateStr = recordDate.toLocaleDateString("en-CA"); // YYYY-MM-DD
+      if (historyStartDate && historyEndDate) {
+        return (
+          recordDateStr >= historyStartDate && recordDateStr <= historyEndDate
+        );
+      } else if (historyStartDate) {
+        return recordDateStr >= historyStartDate;
+      } else if (historyEndDate) {
+        return recordDateStr <= historyEndDate;
       }
       return true;
     })();
@@ -128,14 +144,14 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
   // Sort filtered history using DateUtils
   const sortedHistory = [...filteredHistory].sort((a, b) => {
     try {
-      const dateA = DateUtils.toLocalDate(a.administeredTime).getTime();
-      const dateB = DateUtils.toLocalDate(b.administeredTime).getTime();
+      const dateA = DateUtils.toLocalDate(a.completedAt).getTime();
+      const dateB = DateUtils.toLocalDate(b.completedAt).getTime();
       return historySortOrder === "asc" ? dateA - dateB : dateB - dateA;
     } catch {
       // Fallback to string comparison if date parsing fails
       return historySortOrder === "asc"
-        ? a.administeredTime.localeCompare(b.administeredTime)
-        : b.administeredTime.localeCompare(a.administeredTime);
+        ? a.completedAt.localeCompare(b.completedAt)
+        : b.completedAt.localeCompare(a.completedAt);
     }
   });
 
@@ -318,7 +334,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                         <span className="text-gray-600">Liều lượng</span>
                       </div>
                       <span className="font-medium text-gray-900">
-                        {record.dosage}
+                        {record.actualDoseGiven}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -328,16 +344,34 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                       </div>
                       <span className="font-medium text-gray-900 text-right">
                         {(() => {
-                          const date = DateUtils.toLocalDate(
-                            record.administeredTime
-                          );
-                          if (isNaN(date.getTime())) return "N/A";
-                          const dateStr = date.toLocaleDateString("vi-VN");
-                          const timeStr = date.toLocaleTimeString("vi-VN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          });
-                          return `${dateStr} ${timeStr}`;
+                          try {
+                            // Giả sử backend trả về local time (không phải UTC)
+                            // Parse trực tiếp mà không cần timezone conversion
+                            const date = new Date(record.completedAt);
+                            if (isNaN(date.getTime())) return "N/A";
+
+                            // Format theo định dạng Việt Nam
+                            const day = date
+                              .getDate()
+                              .toString()
+                              .padStart(2, "0");
+                            const month = (date.getMonth() + 1)
+                              .toString()
+                              .padStart(2, "0");
+                            const year = date.getFullYear();
+                            const hours = date
+                              .getHours()
+                              .toString()
+                              .padStart(2, "0");
+                            const minutes = date
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0");
+
+                            return `${day}/${month}/${year} ${hours}:${minutes}`;
+                          } catch {
+                            return "N/A";
+                          }
                         })()}
                       </span>
                     </div>
@@ -347,10 +381,10 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                         <span className="text-gray-600">Người thực hiện</span>
                       </div>
                       <span className="font-medium text-gray-900">
-                        {record.administeredBy}
+                        {record.administratorName}
                       </span>
                     </div>
-                    {record.note && record.note.trim() !== "" && (
+                    {record.notes && record.notes.trim() !== "" && (
                       <div className="border-t border-gray-200 pt-3">
                         <div className="flex items-start space-x-2">
                           <FileText className="w-4 h-4 text-gray-500 mt-0.5" />
@@ -358,7 +392,7 @@ const MedicationHistoryTab: React.FC<MedicationHistoryTabProps> = ({
                             <span className="text-gray-600 text-xs font-medium uppercase tracking-wide">
                               Ghi chú
                             </span>
-                            <p className="text-gray-900 mt-1">{record.note}</p>
+                            <p className="text-gray-900 mt-1">{record.notes}</p>
                           </div>
                         </div>
                       </div>
