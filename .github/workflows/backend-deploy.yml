@@ -1,0 +1,62 @@
+name: 🚀 Deploy .NET 8 SMMS.API to IIS on VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, windows]
+
+    env:
+      PUBLISH_PATH: "C:\\inetpub\\wwwroot\\build"
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v3
+
+      - name: 📦 Restore NuGet packages
+        run: dotnet restore ./BE/SMMS.API/SMMS.API/SMMS.API.csproj
+
+      - name: 🛑 Stop IIS AppPool "SMMS" (PowerShell safe)
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+          $pool = Get-WebAppPoolState "SMMS"
+          if ($pool.Value -ne "Stopped") {
+            Stop-WebAppPool "SMMS"
+            Write-Host "✅ AppPool 'SMMS' has been stopped."
+          } else {
+            Write-Host "⚠️ AppPool 'SMMS' was already stopped."
+          }
+
+
+      - name: 🧹 Clean old publish directory
+        shell: powershell
+        run: |
+          if (Test-Path "$env:PUBLISH_PATH") {
+            Remove-Item -Recurse -Force "$env:PUBLISH_PATH\*" -ErrorAction SilentlyContinue
+            Write-Host "Old files deleted from publish folder."
+          } else {
+            New-Item -Path "$env:PUBLISH_PATH" -ItemType Directory | Out-Null
+            Write-Host "Created publish folder."
+          }
+
+
+      - name: 🛠️ Build and Publish SMMS.API to IIS
+        run: dotnet publish ./BE/SMMS.API/SMMS.API/SMMS.API.csproj -c Release -o "$env:PUBLISH_PATH"
+
+      - name: 🔁 Start AppPool 'SMMS'
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+          Start-WebAppPool -Name "SMMS"
+          Write-Host "✅ AppPool 'SMMS' started."
+
+
+
+      - name: ✅ Verify publish result
+        shell: powershell
+        run: |
+          Write-Host "✅ Files published to: $env:PUBLISH_PATH"
+          Get-ChildItem "$env:PUBLISH_PATH" -Recurse
