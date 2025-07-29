@@ -125,7 +125,7 @@ namespace SMMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpPost("administration")]
+        [HttpPut("administration")]
         [Authorize(Roles = "Admin,Manager,Nurse,Parent")]
         public async Task<IActionResult> RecordMedicationAdministration([FromBody] RecordMedicationAdministrationRequest request)
         {
