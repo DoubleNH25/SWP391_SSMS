@@ -1071,9 +1071,13 @@ namespace SMMS.Application.Services.Implements
                                 Notes = administration?.Notes,
                                 AdministratorName = administration?.Administrator?.FullName
                             };
-                        }).ToList()
+                        })
+                        .Where(status => !status.WasTaken.HasValue || !status.WasTaken.Value) 
+                        .ToList()
                     };
-                }).ToList();
+                })
+                .Where(response => response.TodayAdministrations.Any())
+                .ToList();
             }
             catch (Exception ex)
             {
