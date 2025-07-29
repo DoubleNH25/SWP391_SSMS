@@ -105,7 +105,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("students")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetAllStudents()
 		{
 			var students = await _userService.GetAllStudentsAsync();
@@ -163,14 +163,14 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("parents/get-all-parent")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetAllParents()
 		{
 			var parents = await _userService.GetAllParentsAsync();
 			return Ok(parents);
 		}
 		[HttpGet("parents/{parentId}/students")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetStudentsByParentId(string parentId)
 		{
 			var students = await _userService.GetMyStudentsAsync(parentId);
