@@ -3,10 +3,20 @@ export interface IncidentCreateViewModel {
   type: string;
   description: string;
   incidentDate: string;
-  medicalUsageDetails: MedicalUsageDetail[];
+  medicalUsageDetails: MedicalUsageCreate[];
 }
 
 export interface MedicalUsageDetail {
+  id: string;
+  medicalName: string;
+  dosage: string;
+  quantity: number;
+  status: string;
+  supplier: string;
+}
+
+// Thêm type cho tạo mới (không có id, medicalName)
+export interface MedicalUsageCreate {
   medicalStockId: string;
   dosage: string;
   quantity: number;
@@ -24,4 +34,6 @@ export interface Incident {
   status: string;
   incidentDate?: string;
   createdTime?: string;
+  medicalUsageDetails?: MedicalUsageDetail[];
+  medicalUsages?: MedicalUsageDetail[]; // Thêm trường này để khớp với API
 }

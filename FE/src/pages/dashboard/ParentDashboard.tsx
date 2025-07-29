@@ -56,6 +56,13 @@ export default function ParentDashboard() {
     return !isNaN(date.getTime()) && date >= today;
   });
 
+  // Helper function để lấy tên hoạt động có ý nghĩa
+  const getActivityName = (healthActivityId: string) => {
+    // Có thể mở rộng logic này để map với tên thực từ API
+    // Hiện tại trả về tên mặc định, có thể cải thiện bằng cách fetch tên từ API
+    return healthActivityId ? "Khám sức khỏe định kỳ" : "Không xác định";
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen space-y-8">
       <h1 className="text-3xl font-semibold text-gray-800">
@@ -90,18 +97,31 @@ export default function ParentDashboard() {
           />
         </Section>
 
-        {/* Lịch khám */}
+        {/* Lịch khám sức khỏe */}
         <Section title="Lịch khám sức khỏe">
           <Table
             headers={["Tên sự kiện", "Ngày", "Trạng thái"]}
             rows={healthCheckups.map((h) => [
-              h.healthActivityId || "-",
+              getActivityName(h.healthActivityId || ""),
               h.recordDate ? new Date(h.recordDate).toLocaleDateString() : "-",
-              h.checkingStatus === "Abnormal"
-                ? "Bất thường"
-                : h.checkingStatus === "Normal"
-                ? "Bình thường"
-                : "Không xác định",
+              <span
+                className={`
+                  inline-block px-2 py-1 rounded-full text-xs font-semibold
+                  ${
+                    h.checkingStatus === "Normal"
+                      ? "bg-green-100 text-green-800"
+                      : h.checkingStatus === "Abnormal"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-600"
+                  }
+                `}
+              >
+                {h.checkingStatus === "Normal"
+                  ? "Bình thường"
+                  : h.checkingStatus === "Abnormal"
+                  ? "Bất thường"
+                  : "Không xác định"}
+              </span>,
             ])}
           />
         </Section>
@@ -115,7 +135,9 @@ export default function ParentDashboard() {
               v.vaccinatedAt
                 ? new Date(v.vaccinatedAt).toLocaleDateString()
                 : "-",
-              "-",
+              <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                Hoàn thành
+              </span>,
             ])}
           />
         </Section>
@@ -129,13 +151,24 @@ export default function ParentDashboard() {
                 ? new Date(c.meetingDate).toLocaleDateString()
                 : "-",
               c.note || "-",
-              c.status === "Approved"
-                ? "Đã duyệt"
-                : c.status === "Rejected"
-                ? "Từ chối"
-                : c.status === "Pending"
-                ? "Chờ duyệt"
-                : c.status || "Không xác định",
+              <span
+                className={`
+                inline-block px-2 py-1 rounded-full text-xs font-semibold
+                ${
+                  c.status === "Approved"
+                    ? "bg-green-100 text-green-800"
+                    : c.status === "Pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }
+              `}
+              >
+                {c.status === "Approved"
+                  ? "Đã duyệt"
+                  : c.status === "Pending"
+                  ? "Chờ duyệt"
+                  : "Từ chối"}
+              </span>,
             ])}
           />
         </Section>
@@ -151,11 +184,24 @@ export default function ParentDashboard() {
           rows={activityConsents.map((a) => [
             a.activityName || "-",
             a.childName || "-",
-            a.status === "Approved"
-              ? "Đã xác nhận"
-              : a.status === "Pending"
-              ? "Chờ xác nhận"
-              : a.status || "-",
+            <span
+              className={`
+              inline-block px-2 py-1 rounded-full text-xs font-semibold
+              ${
+                a.status === "Approved"
+                  ? "bg-green-100 text-green-800"
+                  : a.status === "Pending"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-600"
+              }
+            `}
+            >
+              {a.status === "Approved"
+                ? "Đã xác nhận"
+                : a.status === "Pending"
+                ? "Chờ xác nhận"
+                : a.status || "-"}
+            </span>,
           ])}
         />
       </div>
@@ -184,7 +230,13 @@ function Section({
 }
 
 // Generic table component
-function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
+function Table({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: React.ReactNode[][];
+}) {
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
       <table className="min-w-full divide-y divide-gray-200 text-sm">

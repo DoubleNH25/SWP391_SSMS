@@ -3,6 +3,8 @@ import { DateUtils } from "@/utils/DateUtils";
 import { MedicalEventUpdateCreateViewModel } from "@/types/MedicalEvent";
 import { VaccinationCampaignsUpdateCreateViewModel } from "@/types/VaccinationCampaigns";
 import { showToast } from "../ui/Toast";
+import { Search, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface DailyScheduleProps {
   selectedDate: string | null;
@@ -13,6 +15,7 @@ interface DailyScheduleProps {
   onSetFormData: (formData: FormDataType | ((prev: FormDataType) => FormDataType)) => void;
   classOptions: { value: string; label: string }[];
   isAdmin?: boolean;
+  onDateSearch?: (date: string) => void;
 }
 type FormDataType =
   | { type: "medical"; data: MedicalEventUpdateCreateViewModel }
@@ -26,15 +29,51 @@ const DailySchedule = ({
   onOpenModal,
   onSetFormData,
   classOptions,
-  isAdmin = false
+  isAdmin = false,
+  onDateSearch
 }: DailyScheduleProps) => {
+  const [searchDate, setSearchDate] = useState(() => {
+    if (selectedDate) {
+      const date = new Date(selectedDate);
+      return date.toISOString().split('T')[0];
+    }
+    return new Date().toISOString().split('T')[0];
+  });
+
+  // Sync searchDate with selectedDate when selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      // Convert selectedDate to YYYY-MM-DD format for date input
+      const date = new Date(selectedDate);
+      const formattedDate = date.toISOString().split('T')[0];
+      setSearchDate(formattedDate);
+    }
+  }, [selectedDate]);
+
   if (!selectedDate) return null;
+
+  const handleDateSearch = () => {
+    if (onDateSearch && searchDate) {
+      // Convert YYYY-MM-DD to the format used by the app
+      const date = new Date(searchDate);
+      const formattedDate = DateUtils.customFormatDate(date);
+      onDateSearch(formattedDate);
+    }
+  };
 
   const eventsForDate = events
     .filter(event => {
-      const eventDate = new Date(event.start).toDateString();
-      const targetDate = new Date(selectedDate).toDateString();
-      return eventDate === targetDate;
+      const eventStartDate = new Date(event.start);
+      const eventEndDate = new Date(event.end);
+      const targetDate = new Date(selectedDate);
+
+      // Set time to 00:00:00 for date comparison only
+      eventStartDate.setHours(0, 0, 0, 0);
+      eventEndDate.setHours(0, 0, 0, 0);
+      targetDate.setHours(0, 0, 0, 0);
+
+      // Check if target date is within the event's date range (inclusive)
+      return targetDate >= eventStartDate && targetDate <= eventEndDate;
     })
     .slice()
     .sort((a, b) => {
@@ -55,7 +94,7 @@ const DailySchedule = ({
     currentDate.setHours(0, 0, 0, 0);
 
     if (selected < currentDate) {
-      showToast.error("Cannot create events in the past!");
+      showToast.error("Không thể tạo sự kiện trong quá khứ!");
       return;
     }
 
@@ -87,22 +126,43 @@ const DailySchedule = ({
 
   return (
     <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-gray-900">
-          Lịch cho {new Date(selectedDate).toLocaleDateString()}
-        </h3>
-        {!isAdmin && (
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-bold text-gray-900">
+            Lịch cho {new Date(selectedDate).toLocaleDateString()}
+          </h3>
+          {!isAdmin && (
+            <button
+              onClick={handleAddEvent}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+              disabled={loading}
+            >
+              Thêm sự kiện
+            </button>
+          )}
+        </div>
+
+        {/* Date Search Section */}
+        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+          <Calendar className="w-5 h-5 text-gray-500" />
+          <label className="text-sm font-medium text-gray-700">Tìm theo ngày:</label>
+          <input
+            type="date"
+            value={searchDate}
+            onChange={(e) => setSearchDate(e.target.value)}
+            className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
           <button
-            onClick={handleAddEvent}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-            disabled={loading}
+            onClick={handleDateSearch}
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium flex items-center gap-1"
           >
-            Thêm sự kiện
+            <Search className="w-4 h-4" />
+            Tìm
           </button>
-        )}
+        </div>
       </div>
 
-      <div className="space-y-3 max-h-[400px] overflow-y-auto">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto">
         {eventsForDate.length > 0 ? (
           eventsForDate.map((event) => {
             const category = eventCategories[event.extendedProps.calendar];
@@ -130,6 +190,8 @@ const DailySchedule = ({
                     <div className="mt-1 ml-2">Loại vaccine: {event.extendedProps.vaccineType}</div>
                     <div className="mt-1 ml-2">Ngày sản xuất: {new Date(event.extendedProps.mfg!).toLocaleDateString()}</div>
                     <div className="mt-1 ml-2">Ngày hết hạn: {new Date(event.extendedProps.exp!).toLocaleDateString()}</div>
+                    <div className="mt-1 ml-2">Ngày bắt đầu: {new Date(event.start).toLocaleDateString()}</div>
+                    <div className="mt-1 ml-2">Ngày kết thúc: {new Date(event.end).toLocaleDateString()}</div>
                   </div>
                 )}
 

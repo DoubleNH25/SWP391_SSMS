@@ -1,4 +1,4 @@
-import { MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/types/MedicalEvent";
+import { MedicalEventParticipantViewModel, MedicalEventUpdateCreateViewModel, MedicalEventViewModel } from "@/types/MedicalEvent";
 import ApiClient from "@/utils/ApiBase";
 
 export async function FecthCreateMedicalEvent(medicalEvent: MedicalEventUpdateCreateViewModel): Promise<MedicalEventViewModel> {
@@ -101,6 +101,26 @@ export async function FecthDeleteMedicalEvents(id: string,): Promise<boolean> {
             endpoint: `/medical-events/health-activities/${id}`
         });
         return true;
+    } catch (err) {
+        console.error("Failed to delete medical event:", err);
+        throw new Error("Unable to delete medical event. Please try again.");
+    }
+}
+
+
+export async function FetchGetEventParticipant(type: string,): Promise<MedicalEventParticipantViewModel[]> {
+    if (!type) {
+        throw new Error("Type is required");
+    }
+    try {
+        const response = await ApiClient<MedicalEventParticipantViewModel[]>({
+            method: 'GET',
+            endpoint: `/medical-events/activity-consents/vaccination-campaigns/activity-type?type=${type}`
+        });
+        if (!response.data) {
+            return [];
+        }
+        return response?.data || [];
     } catch (err) {
         console.error("Failed to delete medical event:", err);
         throw new Error("Unable to delete medical event. Please try again.");

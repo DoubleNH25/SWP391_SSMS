@@ -14,7 +14,6 @@ export async function FetchBlogById(blogId: string): Promise<BlogResponse> {
     method: "GET",
     endpoint: `/blogs/${blogId}`,
   });
-  console.log(response.data);
   return response.data;
 }
 

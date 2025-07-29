@@ -118,7 +118,7 @@ const VaccinationCampaignForm = ({
             </div>
           </div>
           <div className="flex gap-4 mt-3">
-            <div className="w-full">
+            <div className="w-full mt-[2px]">
               <DatePicker
                 id="date-picker-start"
                 label="Ngày bắt đầu *"
@@ -130,11 +130,6 @@ const VaccinationCampaignForm = ({
               {validationErrors.startDate && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.startDate}</p>
               )}
-            </div>
-            <div className="w-full mt-[2px]">
-              <Label className="block text-sm font-semibold text-gray-700 mb-1">
-                Thời gian <span className="text-red-500">*</span>
-              </Label>
               <Input
                 type="time"
                 value={DateUtils.customFormatTime(vaccinationData.startDate)}
@@ -144,7 +139,35 @@ const VaccinationCampaignForm = ({
                   newDate.setHours(hours, minutes);
                   onInputChange("startDate", newDate);
                 }}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+              />
+
+              
+              {/* End time input */}
+              
+            </div>
+            <div className="w-full mt-[2px]">
+              <DatePicker
+                id="date-picker-end"
+                label="Ngày kết thúc *"
+                defaultDate={vaccinationData.endDate || new Date()}
+                onChange={(date) => onInputChange("endDate", Array.isArray(date) ? date[0] || new Date() : date || new Date())}
+                minDate="today"
+                maxDate="9000-12-31"
+              />
+              {validationErrors.startDate && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.endDate}</p>
+              )}
+              <Input
+                type="time"
+                value={DateUtils.customFormatTime(vaccinationData.endDate)}
+                onChange={(e) => {
+                  const [hours, minutes] = e.target.value.split(':').map(Number);
+                  const newDate = new Date(vaccinationData.endDate);
+                  newDate.setHours(hours, minutes);
+                  onInputChange("endDate", newDate);
+                }}
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
               />
             </div>
           </div>

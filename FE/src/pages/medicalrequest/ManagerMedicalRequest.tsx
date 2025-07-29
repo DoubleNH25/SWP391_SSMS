@@ -12,14 +12,15 @@ import DeleteConfirmationModal from "@/components/medicalrequest/DeleteConfirmat
 import { showToast } from "@/components/ui/Toast";
 import {
   FecthMedicalRequest,
-  FecthMedicalRequestById,
+  FecthCreateMedicalRequest,
+  FecthCreateMedicalAdministration,
 } from "@/services/MedicalRequest";
 import { ListMedicalRequestViewModel } from "@/types/MedicalRequest";
 import { MedicationHistoryRecord } from "@/components/medicalrequest/MedicationHistoryTab";
 import AddMedicationModal from "@/components/medicalrequest/AddMedicationModal";
 import { Student } from "@/types/Student";
 import { DecodeJWT } from "@/utils/DecodeJWT";
-import { FecthCreateMedicalRequest } from "@/services/MedicalRequest";
+import ApiClient from "@/utils/ApiBase";
 
 const ManagerMedicalRequest = () => {
   const [loading, setLoading] = useState(false);
@@ -82,42 +83,72 @@ const ManagerMedicalRequest = () => {
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
     [key: string]: string | undefined;
   } | null;
-  console.log("JWT user:", user);
   const isParent =
     user &&
     user["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
       "Parent";
-  const parentId = isParent ? user?.sub : selectedStudent?.parentId || "";
-  console.log("parentId:", parentId);
 
   // Thêm state lưu parentId đã fetch
   const [selectedParentIdForModal, setSelectedParentIdForModal] =
     useState<string>("");
+
+  // Thêm hàm fetchMedicationHistory mới
+  const fetchMedicationHistory = async (date?: string) => {
+    setLoading(true);
+    try {
+      let url = "/medical-request/history/completed";
+      if (date) {
+        url += `/${date}`;
+      } else {
+        url += "/today";
+      }
+      const res = await ApiClient<{
+        success: boolean;
+        data: { completedAdministrations: MedicationHistoryRecord[] };
+      }>({
+        method: "GET",
+        endpoint: url,
+      });
+      // Xử lý response format từ API
+      if (
+        res?.data?.success &&
+        Array.isArray(res.data.data?.completedAdministrations)
+      ) {
+        setMedicationHistory(res.data.data.completedAdministrations);
+      } else {
+        setMedicationHistory([]);
+      }
+    } catch (err: unknown) {
+      setError((err as Error)?.message || "Lỗi khi lấy lịch sử uống thuốc");
+      setMedicationHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Gọi fetchMedicationHistory khi vào tab 'history' hoặc filter ngày thay đổi
+  useEffect(() => {
+    if (activeTab === "history") {
+      if (
+        historyStartDate &&
+        historyEndDate &&
+        historyStartDate === historyEndDate
+      ) {
+        fetchMedicationHistory(historyStartDate);
+      } else if (historyStartDate) {
+        fetchMedicationHistory(historyStartDate); // Ưu tiên ngày bắt đầu
+      } else {
+        fetchMedicationHistory(); // Lấy hôm nay
+      }
+    }
+    // eslint-disable-next-line
+  }, [activeTab, historyStartDate, historyEndDate]);
 
   useEffect(() => {
     setLoading(true);
     FecthMedicalRequest()
       .then((data) => {
         setRequests(data);
-        // Lấy lịch sử cho thuốc từ tất cả đơn thuốc
-        Promise.all(
-          data.map(async (req) => {
-            const detail = await FecthMedicalRequestById(req.id);
-            if (!detail) return [];
-            return detail.administrations.map((adm, idx) => ({
-              id: typeof adm.id === "number" ? adm.id : idx,
-              studentName: detail.studentName,
-              medicationName: detail.medicationName,
-              dosage: adm.doseGiven || req.dosage || "",
-              administeredTime: adm.administeredAt,
-              administeredBy: adm.administratorName || adm.administeredBy,
-              note: adm.notes || "",
-              status: adm.wasTaken ? "Hoàn thành" : "Chưa hoàn thành",
-            }));
-          })
-        ).then((all) => {
-          setMedicationHistory(all.flat());
-        });
         setLoading(false);
       })
       .catch((err) => {
@@ -144,7 +175,6 @@ const ManagerMedicalRequest = () => {
           return res.json();
         })
         .then((data: Student[]) => {
-          console.log("API /api/parents/students trả về:", data);
           setStudents(data.map((s) => ({ value: s.id, label: s.fullName })));
         })
         .catch((err) => {
@@ -212,30 +242,54 @@ const ManagerMedicalRequest = () => {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmAdministration = () => {
+  const handleConfirmAdministration = async () => {
     if (selectedRequestForConfirm) {
-      handleAdministerMedication(selectedRequestForConfirm.id, confirmNote);
+      try {
+        // Gọi API để record medication administration
+        await FecthCreateMedicalAdministration({
+          medicalRequestId: selectedRequestForConfirm.id,
+          doseGiven: selectedRequestForConfirm.dosage,
+          wasTaken: true,
+          administeredAt: new Date(),
+          notes: confirmNote || "Không có ghi chú",
+        });
 
-      // Add to medication history
-      const historyRecord = {
-        id: Date.now(),
-        studentName: selectedRequestForConfirm.studentName,
-        medicationName: selectedRequestForConfirm.medicationName,
-        dosage: selectedRequestForConfirm.dosage,
-        administeredTime: new Date().toLocaleString("vi-VN"),
-        administeredBy: "Y tá Minh",
-        note: confirmNote || "Không có ghi chú",
-        status: "Đã hoàn thành",
-      };
+        // Update local state
+        handleAdministerMedication(selectedRequestForConfirm.id, confirmNote);
 
-      setMedicationHistory((prev) => [historyRecord, ...prev]);
+        // Add to medication history
+        const historyRecord: MedicationHistoryRecord = {
+          id: Date.now().toString(),
+          medicalRequestId: selectedRequestForConfirm.id,
+          studentId: "", // Không có trong ListMedicalRequestViewModel
+          studentName: selectedRequestForConfirm.studentName,
+          studentClass: "", // Không có trong ListMedicalRequestViewModel
+          medicationName: selectedRequestForConfirm.medicationName,
+          form: selectedRequestForConfirm.form,
+          route: "", // Không có trong ListMedicalRequestViewModel
+          plannedDosage: selectedRequestForConfirm.dosage,
+          actualDoseGiven: selectedRequestForConfirm.dosage,
+          scheduledTime: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          wasTaken: true,
+          notes: confirmNote || "Không có ghi chú",
+          administratorId: "current-user",
+          administratorName: "Y tá Minh",
+          status: "Success",
+        };
 
-      // Auto switch to history tab to show the new record
-      setActiveTab("history");
+        setMedicationHistory((prev) => [historyRecord, ...prev]);
 
-      setShowConfirmModal(false);
-      setSelectedRequestForConfirm(null);
-      setConfirmNote("");
+        // Auto switch to history tab to show the new record
+        setActiveTab("history");
+
+        setShowConfirmModal(false);
+        setSelectedRequestForConfirm(null);
+        setConfirmNote("");
+      } catch (error) {
+        console.error("Failed to record medication administration:", error);
+        showToast.error("Không thể xác nhận cho thuốc. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -314,7 +368,7 @@ const ManagerMedicalRequest = () => {
   };
 
   const handleHistorySort = () => {
-    setHistorySortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setHistorySortOrder(historySortOrder === "asc" ? "desc" : "asc");
   };
 
   const handleBack = () => {
@@ -464,7 +518,6 @@ const ManagerMedicalRequest = () => {
                     setFilterEndDate: () => {},
                     onClearFilters: () => {},
                   })}
-              onOpenConfirmModal={handleOpenConfirmModal}
               onOpenUpdateModal={handleOpenUpdateModal}
               onOpenDeleteModal={handleOpenDeleteModal}
             />

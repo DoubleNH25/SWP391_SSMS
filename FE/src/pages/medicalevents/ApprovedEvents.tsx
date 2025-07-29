@@ -11,7 +11,6 @@ import PageHeader from "@/components/ui/PageHeader";
 import { CheckCircle2, Calendar } from "lucide-react";
 import { showToast } from "@/components/ui/Toast";
 
-
 export default function ApprovedEventManager() {
   const navigate = useNavigate();
   const [medicalEvents, setMedicalEvents] = useState<MedicalEventViewModel[]>(
@@ -113,9 +112,13 @@ export default function ApprovedEventManager() {
       }
       console.log(medicalEventDate);
       if (selectedView === "MedicalEvents") {
-        navigate(`/dashboard/medical-health-checkup-record/${medicalEventDate}/${id}`);
+        navigate(
+          `/dashboard/medical-health-checkup-record/${medicalEventDate}/${id}`
+        );
       } else {
-        navigate(`/dashboard/medical-vaccination-record/${medicalEventDate}/${id}`);
+        navigate(
+          `/dashboard/medical-vaccination-record/${medicalEventDate}/${id}`
+        );
       }
     },
     [navigate, selectedView]
