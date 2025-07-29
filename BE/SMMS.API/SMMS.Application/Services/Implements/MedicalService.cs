@@ -1096,7 +1096,7 @@ namespace SMMS.Application.Services.Implements
                 MedicationRequestAdministration administration;
 
                 // Nếu có AdministrationId, tìm và cập nhật bản ghi đã có
-                if (!string.IsNullOrEmpty(request.AdministrationId))
+                if (request.AdministrationId != null)
                 {
                     administration = await _repositoryManager.MedicationRequestAdministrationRepository
                         .FindByCondition(a => a.Id == request.AdministrationId &&
