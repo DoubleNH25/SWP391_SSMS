@@ -1087,6 +1087,7 @@ namespace SMMS.Application.Services.Implements
             {
                 var medicalRequest = await _repositoryManager.MedicalRequestRepository
                     .FindByCondition(m => m.Id == request.MedicalRequestId && !m.DeletedTime.HasValue, true)
+                    .Include(m => m.MedicationRequestAdministrations)
                     .FirstOrDefaultAsync();
 
                 if (medicalRequest == null)
