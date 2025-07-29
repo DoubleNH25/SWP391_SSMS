@@ -1036,44 +1036,33 @@ namespace SMMS.Application.Services.Implements
                         Route = mr.Route,
                         ScheduledTimes = timeToAdminister,
                         Notes = mr.Notes,
-                        TodayAdministrations = timeToAdminister.Select(time =>
-                        {
-                            // Parse thời gian từ string để so sánh chính xác
-                            if (!TimeSpan.TryParse(time, out var scheduledTime))
+                        TodayAdministrations = todayAdministrations
+                            .Where(a => !a.WasTaken) 
+                            .Select(administration =>
                             {
-                                // Nếu không parse được thời gian, trả về trạng thái mặc định
+                                // Tìm thời gian tương ứng trong lịch trình
+                                var correspondingTime = timeToAdminister.FirstOrDefault(time =>
+                                {
+                                    if (TimeSpan.TryParse(time, out var scheduledTime))
+                                    {
+                                        var adminTime = administration.AdministeredAt.TimeOfDay;
+                                        return Math.Abs((adminTime - scheduledTime).TotalMinutes) <= 30;
+                                    }
+                                    return false;
+                                });
+
                                 return new DailyAdministrationStatus
                                 {
-                                    AdministrationId = null,
-                                    ScheduledTime = time,
-                                    CompletedAt = null,
-                                    DoseGiven = null,
-                                    WasTaken = false,
-                                    Notes = "Invalid time format",
-                                    AdministratorName = null
+                                    AdministrationId = administration.Id,
+                                    ScheduledTime = correspondingTime ?? administration.AdministeredAt.ToString("HH:mm"),
+                                    CompletedAt = administration.AdministeredAt,
+                                    DoseGiven = administration.DoseGiven,
+                                    WasTaken = administration.WasTaken,
+                                    Notes = administration.Notes,
+                                    AdministratorName = administration.Administrator?.FullName
                                 };
-                            }
-
-                            var administration = todayAdministrations.FirstOrDefault(a =>
-                            {
-                                var adminTime = a.AdministeredAt.TimeOfDay;
-                                // So sánh với độ chính xác đến phút (cho phép sai lệch 30 phút)
-                                return Math.Abs((adminTime - scheduledTime).TotalMinutes) <= 30;
-                            });
-
-                            return new DailyAdministrationStatus
-                            {
-                                AdministrationId = administration?.Id,
-                                ScheduledTime = time,
-                                CompletedAt = administration?.AdministeredAt,
-                                DoseGiven = administration?.DoseGiven,
-                                WasTaken = administration?.WasTaken ?? false,
-                                Notes = administration?.Notes,
-                                AdministratorName = administration?.Administrator?.FullName
-                            };
-                        })
-                        .Where(status => !status.WasTaken.HasValue || !status.WasTaken.Value) 
-                        .ToList()
+                            })
+                            .ToList()
                     };
                 })
                 .Where(response => response.TodayAdministrations.Any())
