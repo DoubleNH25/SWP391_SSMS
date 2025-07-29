@@ -6,7 +6,7 @@ namespace SMMS.API.Controllers
 {
 	[ApiController]
 	[Route("api")]
-	[Authorize(Roles = "Admin,Manager,Nurse")]
+	[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 	public class DashboardController : ControllerBase
 	{
 		private readonly IUserService _userService;
