@@ -38,7 +38,7 @@ namespace SMMS.API.Controllers
 		}
 
 		[HttpGet("health-activities/pending")]
-		[Authorize(Roles = "Admin,Manager,Nurse")]
+		[Authorize(Roles = "Admin,Manager,Nurse,Parent")]
 		public async Task<IActionResult> GetPendingHealthActivities()
 		{
 			var pending = await _healthActivityService.GetPendingHealthActivitiesAsync();
