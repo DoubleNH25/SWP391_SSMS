@@ -10,7 +10,7 @@ namespace SMMS.API.Controllers
 {
 	[ApiController]
 	[Route("api/nurse")]
-	[Authorize(Roles = "Nurse")]
+	[Authorize(Roles = "Admin,Manager,Nurse")]
 	public class NurseController : ControllerBase
 	{
 		private readonly INurseService _nurseService;
